@@ -8,6 +8,44 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDK (Modular CDN) -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+
+    // ── Firebase Configuration ──
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxRadGAXnaBOfUHABUPIgG3_XUyH0a1vs",
+      authDomain: "swabys-hope-hideaway.firebaseapp.com",
+      projectId: "swabys-hope-hideaway",
+      storageBucket: "swabys-hope-hideaway.firebasestorage.app",
+      messagingSenderId: "183455042448",
+      appId: "1:183455042448:web:cf2bed23dcb20e578ac115"
+    };
+
+    // ── Initialize Firebase ──
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // ── Anonymous Auth (for tracking guest sessions) ──
+    signInAnonymously(auth).catch((error) => {
+      console.warn('Anonymous auth failed:', error.message);
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('Guest session active:', user.uid);
+        window._firebaseUser = user;
+      }
+    });
+
+    // ── Expose Firebase utilities globally for inline onclick handlers ──
+    window._fb = { db, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp };
+  </script>
+
   <style>
     /* ═══════════════════════════════════════════
        DESIGN TOKENS
@@ -1431,6 +1469,10 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     /* ═══════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════ */
@@ -2202,52 +2244,177 @@
 
 
     /* ─────────────────────────────────────────
-       BOOKING & FORM HANDLERS (Firebase placeholders)
+       BOOKING & FORM HANDLERS — Firebase Firestore
        ───────────────────────────────────────── */
     function scrollToBooking() {
-      // TODO: Hook into Firebase-backed booking modal or page
-      // For now, navigate to rooms
       navigateTo('rooms');
     }
 
-    function handleBookRoom(roomId) {
-      // TODO: Open booking modal, write to Firebase
-      // const bookingRef = doc(collection(db, 'bookings'));
-      // await setDoc(bookingRef, { roomId, userId, dates, ... });
-      alert(`Booking flow for "${roomId}" — Firebase integration coming soon.`);
+    /* ── Booking Modal ── */
+    async function handleBookRoom(roomId) {
+      const room = ROOMS_DATA.find(r => r.id === roomId);
+      if (!room) return;
+
+      // Build and show booking modal
+      let overlay = document.getElementById('bookingOverlay');
+      if (overlay) overlay.remove();
+
+      overlay = document.createElement('div');
+      overlay.id = 'bookingOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(27,22,17,0.6);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:fadeIn .3s ease;';
+      overlay.innerHTML = `
+        <div style="background:var(--white);border-radius:var(--radius-xl);max-width:480px;width:100%;padding:var(--space-2xl);box-shadow:var(--shadow-xl);position:relative;">
+          <button onclick="document.getElementById('bookingOverlay').remove()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-secondary);background:var(--white);cursor:pointer;font-size:18px;" aria-label="Close">&times;</button>
+          <div style="margin-bottom:var(--space-lg);">
+            <div class="section-eyebrow">Reserve</div>
+            <h3 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:500;">${room.name}</h3>
+            <p style="color:var(--text-muted);font-size:var(--text-sm);margin-top:4px;">$${room.price} per night</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" class="form-input" id="bookName" placeholder="Your name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email <span class="required">*</span></label>
+            <input type="email" class="form-input" id="bookEmail" placeholder="you@email.com" />
+          </div>
+          <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md);">
+            <div class="form-group">
+              <label class="form-label">Check-in <span class="required">*</span></label>
+              <input type="date" class="form-input" id="bookCheckin" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Check-out <span class="required">*</span></label>
+              <input type="date" class="form-input" id="bookCheckout" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Number of Guests</label>
+            <select class="form-select" id="bookGuests">
+              <option value="1">1 Guest</option>
+              <option value="2" selected>2 Guests</option>
+              <option value="3">3 Guests</option>
+              <option value="4">4 Guests</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Special Requests</label>
+            <textarea class="form-textarea" id="bookRequests" placeholder="Early check-in, extra pillows, dietary needs..." style="min-height:80px;"></textarea>
+          </div>
+          <button class="btn-primary form-submit" id="bookSubmitBtn" onclick="submitBooking('${room.id}')">
+            Confirm Reservation
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
     }
 
-    function handleFormSubmit() {
-      const name = document.getElementById('formName').value;
-      const email = document.getElementById('formEmail').value;
+    async function submitBooking(roomId) {
+      const name = document.getElementById('bookName').value.trim();
+      const email = document.getElementById('bookEmail').value.trim();
+      const checkin = document.getElementById('bookCheckin').value;
+      const checkout = document.getElementById('bookCheckout').value;
+      const guests = document.getElementById('bookGuests').value;
+      const requests = document.getElementById('bookRequests').value.trim();
+
+      if (!name || !email || !checkin || !checkout) {
+        alert('Please fill in your name, email, check-in and check-out dates.');
+        return;
+      }
+
+      const btn = document.getElementById('bookSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31 31"/></svg> Submitting...</span>';
+
+      try {
+        const { db, collection, addDoc, serverTimestamp } = window._fb;
+        await addDoc(collection(db, 'bookings'), {
+          roomId,
+          guestName: name,
+          guestEmail: email,
+          checkIn: checkin,
+          checkOut: checkout,
+          numberOfGuests: parseInt(guests),
+          specialRequests: requests,
+          status: 'pending',
+          userId: window._firebaseUser?.uid || null,
+          createdAt: serverTimestamp()
+        });
+
+        // Success state
+        btn.closest('div[style*="background:var(--white)"]').innerHTML = `
+          <div style="text-align:center;padding:var(--space-2xl) 0;">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-lg);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h3 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:500;margin-bottom:var(--space-sm);">Reservation Received!</h3>
+            <p style="color:var(--text-secondary);margin-bottom:var(--space-lg);line-height:1.7;">Thank you, ${name}. We've received your booking request and will confirm availability to <strong>${email}</strong> within 24 hours.</p>
+            <button class="btn-primary" onclick="document.getElementById('bookingOverlay').remove()" style="margin:0 auto;">
+              Done
+            </button>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Booking error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm Reservation <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+        alert('Something went wrong submitting your reservation. Please try again or contact us directly.');
+      }
+    }
+
+    /* ── Event Inquiry Form ── */
+    async function handleFormSubmit() {
+      const name = document.getElementById('formName').value.trim();
+      const email = document.getElementById('formEmail').value.trim();
       const eventType = document.getElementById('formEventType').value;
       const guests = document.getElementById('formGuests').value;
       const date = document.getElementById('formDate').value;
-      const phone = document.getElementById('formPhone').value;
-      const requests = document.getElementById('formRequests').value;
+      const phone = document.getElementById('formPhone').value.trim();
+      const requests = document.getElementById('formRequests').value.trim();
 
       if (!name || !email || !eventType || !guests) {
         alert('Please fill in all required fields.');
         return;
       }
 
-      // TODO: Write to Firebase Firestore
-      // const inquiryRef = doc(collection(db, 'event_inquiries'));
-      // await setDoc(inquiryRef, { name, email, eventType, guests, date, phone, requests, createdAt: serverTimestamp() });
+      // Get the submit button and show loading
+      const btn = document.querySelector('.form-submit');
+      btn.disabled = true;
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31 31"/></svg> Submitting...</span>';
 
-      const formData = { name, email, eventType, guests, date, phone, requests };
-      console.log('Event Inquiry Submitted (Firebase placeholder):', formData);
+      try {
+        const { db, collection, addDoc, serverTimestamp } = window._fb;
+        await addDoc(collection(db, 'event_inquiries'), {
+          name,
+          email,
+          eventType,
+          estimatedGuests: parseInt(guests),
+          preferredDate: date || null,
+          phone: phone || null,
+          specialRequests: requests || null,
+          status: 'new',
+          userId: window._firebaseUser?.uid || null,
+          createdAt: serverTimestamp()
+        });
 
-      alert(`Thank you, ${name}! Your inquiry has been received. Our events team will be in touch within 24 hours.`);
-
-      // Reset form
-      document.getElementById('formName').value = '';
-      document.getElementById('formEmail').value = '';
-      document.getElementById('formEventType').selectedIndex = 0;
-      document.getElementById('formGuests').value = '';
-      document.getElementById('formDate').value = '';
-      document.getElementById('formPhone').value = '';
-      document.getElementById('formRequests').value = '';
+        // Success — replace form with confirmation
+        document.getElementById('inquiryForm').innerHTML = `
+          <div style="text-align:center;padding:var(--space-2xl) 0;">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto var(--space-lg);">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h3 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:500;margin-bottom:var(--space-sm);">Inquiry Sent!</h3>
+            <p style="color:var(--text-secondary);line-height:1.7;">Thank you, ${name}. Our events team will be in touch at <strong>${email}</strong> within 24 hours to discuss your ${eventType} celebration.</p>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Inquiry submission error:', error);
+        btn.disabled = false;
+        btn.innerHTML = 'Submit Inquiry <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+        alert('Something went wrong. Please try again or email us directly at events@swabyshopehotel.com');
+      }
     }
 
 
