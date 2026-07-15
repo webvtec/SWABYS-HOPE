@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard — Swaby's Hope Hideaway</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover" />
+  <title>Admin — Swaby's Hope Hideaway</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-storage.js';
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
-
     const firebaseConfig = {
       apiKey: "AIzaSyCxRadGAXnaBOfUHABUPIgG3_XUyH0a1vs",
       authDomain: "swabys-hope-hideaway.firebaseapp.com",
@@ -20,952 +21,1141 @@
       messagingSenderId: "183455042448",
       appId: "1:183455042448:web:cf2bed23dcb20e578ac115"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const storage = getStorage(app);
     const auth = getAuth(app);
-
     window._fb = { db, storage, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, ref, uploadBytesResumable, getDownloadURL, deleteObject, signInWithEmailAndPassword, signOut };
-
-    // No login required — show dashboard immediately
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('dashboard').style.display = 'block';
-      document.getElementById('userEmail').textContent = 'Admin';
+      document.getElementById('dashboard').style.display = 'flex';
       loadAllData();
     });
   </script>
 
   <style>
-    :root {
-      /* Dark premium palette */
-      --sidebar-bg:    #111318;
-      --sidebar-surface: #181C24;
-      --topbar-bg:     #13161E;
-      --main-bg:       #1A1E28;
-      --card-bg:       #1E2330;
-      --card-border:   rgba(255,255,255,0.06);
-      --card-hover:    rgba(255,255,255,0.04);
+/* ═══════════════════════════════════════════════════
+   SWABY'S HOPE HIDEAWAY — Admin Console
+   Dark Luxury · Copper · Cormorant + DM Sans
+═══════════════════════════════════════════════════ */
+:root {
+  --noir:          #090B0F;
+  --noir-soft:     #0D1018;
+  --surface:       #111520;
+  --surface-2:     #161B2A;
+  --card:          #1A2035;
+  --card-hover:    rgba(184,115,51,0.04);
+  --border:        rgba(255,255,255,0.06);
+  --border-copper: rgba(184,115,51,0.18);
+  --copper:        #B87333;
+  --copper-light:  #E8A87C;
+  --copper-deep:   #7A4A1E;
+  --copper-shine:  #D4895A;
+  --copper-glow:   rgba(184,115,51,0.35);
+  --copper-soft:   rgba(184,115,51,0.10);
+  --copper-faint:  rgba(184,115,51,0.05);
+  --text:          #EDE8E0;
+  --text-2:        #A8A09A;
+  --text-dim:      #5A5550;
+  --danger:        #E05050;
+  --danger-soft:   rgba(224,80,80,0.10);
+  --success:       #50C878;
+  --success-soft:  rgba(80,200,120,0.10);
+  --warning:       #E8A030;
+  --warning-soft:  rgba(232,160,48,0.10);
+  --ease:          cubic-bezier(0.16, 1, 0.3, 1);
+  --nav-h:         64px;
+  --drawer-w:      280px;
+}
 
-      /* Copper */
-      --copper:        #B87333;
-      --copper-light:  #E8A87C;
-      --copper-deep:   #8B4513;
-      --copper-shine:  #D4895A;
-      --copper-glow:   rgba(184,115,51,0.35);
-      --copper-soft:   rgba(184,115,51,0.12);
-      --copper-faint:  rgba(184,115,51,0.06);
-      --copper-wire:   0 0 8px rgba(184,115,51,0.45), 0 0 20px rgba(184,115,51,0.15);
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; -webkit-font-smoothing: antialiased; }
 
-      /* Text */
-      --text:          #EDE8E0;
-      --text-secondary:#A8B0C0;
-      --text-muted:    #6B7280;
-      --text-dim:      #3E4352;
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--noir);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
 
-      /* Functional */
-      --danger:        #EF4444;
-      --danger-bg:     rgba(239,68,68,0.1);
-      --success:       #22C55E;
-      --success-bg:    rgba(34,197,94,0.1);
-      --warning:       #F59E0B;
-      --warning-bg:    rgba(245,158,11,0.1);
+/* Starfield */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 7% 3%, rgba(184,115,51,0.8) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 19% 6%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 33% 2%, rgba(184,115,51,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 47% 5%, rgba(255,255,255,0.25) 0%, transparent 100%),
+    radial-gradient(2px 2px at 61% 3%, rgba(184,115,51,0.9) 0%, transparent 100%),
+    radial-gradient(1px 1px at 74% 7%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 88% 2%, rgba(184,115,51,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 12% 11%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 28% 9%, rgba(184,115,51,0.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 53% 13%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(2px 2px at 70% 10%, rgba(184,115,51,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 84% 14%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(1px 1px at 5% 18%, rgba(184,115,51,0.3) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 39% 17%, rgba(255,255,255,0.12) 0%, transparent 100%),
+    radial-gradient(1px 1px at 66% 19%, rgba(184,115,51,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 92% 16%, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 24%, rgba(184,115,51,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 58% 22%, rgba(255,255,255,0.08) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 26%, rgba(184,115,51,0.15) 0%, transparent 100%);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
 
-      --border:        rgba(255,255,255,0.07);
-      --border-strong: rgba(255,255,255,0.12);
-      --radius:        10px;
-      --radius-lg:     14px;
-      --shadow:        0 2px 8px rgba(0,0,0,0.35);
-      --shadow-md:     0 8px 24px rgba(0,0,0,0.45);
-      --shadow-lg:     0 20px 60px rgba(0,0,0,0.6);
+/* Watermark */
+body::after {
+  content: 'SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · SWABY · ';
+  position: fixed; inset: -20%; width: 140%; height: 140%;
+  font-family: 'Cormorant Garamond', serif; font-weight: 300;
+  font-size: 12px; letter-spacing: 8px; line-height: 5.5;
+  text-transform: uppercase; color: rgba(184,115,51,0.045);
+  transform: rotate(-35deg);
+  pointer-events: none; z-index: 0;
+  word-break: break-all; overflow: hidden; white-space: normal;
+}
 
-      --sidebar-w:     240px;
-    }
+img { display: block; max-width: 100%; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea, select { font: inherit; }
+a { color: inherit; text-decoration: none; }
 
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    html { height: 100%; }
-    body {
-      font-family: 'DM Sans', system-ui, sans-serif;
-      background: var(--main-bg); color: var(--text);
-      line-height: 1.6; height: 100%;
-      -webkit-font-smoothing: antialiased;
-    }
-    img { display: block; max-width: 100%; }
-    button { font: inherit; cursor: pointer; border: none; background: none; }
-    input, textarea, select { font: inherit; }
+/* ═══ TOPBAR ═══════════════════════════════════════ */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--nav-h); z-index: 8000;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.5rem;
+  background: rgba(9,11,15,0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+}
 
-    /* ── Layout ─────────────────────────────────── */
-    #dashboard { display: none; height: 100vh; }
+.topbar-left { display: flex; align-items: center; gap: 1rem; }
 
-    .admin-shell {
-      display: grid;
-      grid-template-columns: var(--sidebar-w) 1fr;
-      grid-template-rows: auto 1fr;
-      min-height: 100vh;
-    }
+.hamburger {
+  width: 40px; height: 40px;
+  display: flex; flex-direction: column;
+  justify-content: center; gap: 5px;
+  padding: 8px;
+  border: 1px solid var(--border-copper);
+  border-radius: 6px;
+  transition: border-color 0.25s, background 0.25s;
+  flex-shrink: 0;
+}
+.hamburger span {
+  display: block; width: 100%; height: 1px;
+  background: var(--text-2);
+  transition: all 0.3s var(--ease);
+}
+.hamburger:hover { border-color: var(--copper); background: var(--copper-faint); }
+.hamburger:hover span { background: var(--copper-shine); }
 
-    /* ── Sidebar ─────────────────────────────────── */
-    .sidebar {
-      grid-row: 1 / -1;
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column;
-      position: sticky; top: 0; height: 100vh; overflow-y: auto;
-    }
+.topbar-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400; font-size: 1.125rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--text);
+}
+.topbar-brand span { color: var(--copper-shine); }
 
-    .sidebar-brand {
-      padding: 1.75rem 1.5rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .sidebar-brand-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem; font-weight: 600;
-      color: var(--text); line-height: 1.3;
-    }
-    .sidebar-brand-sub {
-      font-size: 0.7rem; color: var(--copper-shine);
-      letter-spacing: 0.15em; text-transform: uppercase;
-      margin-top: 3px; font-weight: 500;
-    }
+.topbar-right { display: flex; align-items: center; gap: 0.75rem; }
 
-    .sidebar-section-label {
-      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em;
-      text-transform: uppercase; color: var(--text-dim);
-      padding: 1.25rem 1.5rem 0.5rem;
-    }
+.topbar-page-label {
+  font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-dim);
+  display: none;
+}
+@media (min-width: 500px) { .topbar-page-label { display: block; } }
 
-    .sidebar-nav { padding: 0.5rem 0.75rem; flex: 1; }
+.btn-bookings-topbar {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1.125rem;
+  background: linear-gradient(135deg, var(--copper-shine) 0%, var(--copper) 60%, var(--copper-deep) 100%);
+  color: #FFF;
+  font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  border-radius: 4px;
+  border: 1px solid rgba(232,168,124,0.3);
+  box-shadow: 0 0 12px rgba(184,115,51,0.3), 0 2px 8px rgba(184,115,51,0.2);
+  transition: all 0.25s var(--ease);
+  white-space: nowrap;
+}
+.btn-bookings-topbar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 20px rgba(184,115,51,0.5), 0 0 40px rgba(184,115,51,0.15), 0 4px 16px rgba(184,115,51,0.3);
+}
+.btn-bookings-topbar svg { width: 12px; height: 12px; }
 
-    .sidebar-tab {
-      display: flex; align-items: center; gap: 0.75rem;
-      width: 100%; padding: 0.65rem 0.85rem;
-      border-radius: var(--radius);
-      font-size: 0.875rem; font-weight: 500;
-      color: var(--text-secondary);
-      transition: all 0.2s;
-      margin-bottom: 2px;
-    }
-    .sidebar-tab svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; transition: opacity 0.2s; }
-    .sidebar-tab:hover { background: var(--card-hover); color: var(--text); }
-    .sidebar-tab:hover svg { opacity: 1; }
-    .sidebar-tab.active {
-      background: var(--copper-soft);
-      color: var(--copper-shine);
-      box-shadow: inset 3px 0 0 var(--copper);
-    }
-    .sidebar-tab.active svg { opacity: 1; color: var(--copper); }
+.pending-pill {
+  display: none;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  background: var(--warning-soft);
+  border: 1px solid rgba(232,160,48,0.25);
+  border-radius: 20px;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--warning);
+  white-space: nowrap;
+}
 
-    .sidebar-divider { height: 1px; background: var(--border); margin: 0.75rem 1.5rem; }
+/* ═══ DRAWER SCRIM ══════════════════════════════════ */
+.drawer-scrim {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 8998;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s;
+}
+.drawer-scrim.show { opacity: 1; pointer-events: auto; }
 
-    .sidebar-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-    .sidebar-user {
-      display: flex; align-items: center; gap: 0.625rem;
-    }
-    .sidebar-avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--copper-shine), var(--copper-deep));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 700; color: white; flex-shrink: 0;
-    }
-    .sidebar-user-info { flex: 1; min-width: 0; }
-    .sidebar-user-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
-    .sidebar-signout {
-      font-size: 0.7rem; color: var(--danger); font-weight: 500;
-      padding: 2px 6px; border-radius: 4px;
-      transition: background 0.2s;
-    }
-    .sidebar-signout:hover { background: var(--danger-bg); }
+/* ═══ SIDE DRAWER ═══════════════════════════════════ */
+.drawer {
+  position: fixed; top: 0; left: 0;
+  width: var(--drawer-w); max-width: 85vw;
+  height: 100vh; height: 100dvh;
+  z-index: 8999;
+  overflow-y: auto;
+  padding: calc(var(--nav-h) + 1.5rem) 1.75rem 2.5rem;
+  background:
+    radial-gradient(ellipse 220px 160px at 25% 6%, rgba(184,115,51,0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 160px 240px at 80% 35%, rgba(184,115,51,0.06) 0%, transparent 60%),
+    linear-gradient(175deg, #0A0C12 0%, #0D1018 40%, #090B10 100%);
+  border-right: 1px solid rgba(184,115,51,0.12);
+  box-shadow: 12px 0 60px rgba(0,0,0,0.8), inset -1px 0 0 rgba(184,115,51,0.06);
+  transform: translateX(-100%);
+  transition: transform 0.38s var(--ease);
+  isolation: isolate;
+}
+.drawer::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 15% 4%, rgba(184,115,51,0.8) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 8%, rgba(255,255,255,0.4) 0%, transparent 100%),
+    radial-gradient(1px 1px at 72% 3%, rgba(184,115,51,0.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 88% 12%, rgba(255,255,255,0.3) 0%, transparent 100%),
+    radial-gradient(2px 2px at 30% 16%, rgba(184,115,51,0.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 20% 28%, rgba(184,115,51,0.35) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 32%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 50% 40%, rgba(184,115,51,0.25) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 45%, rgba(255,255,255,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 50%, rgba(184,115,51,0.18) 0%, transparent 100%);
+}
+.drawer.show { transform: translateX(0); }
+.drawer > * { position: relative; z-index: 1; }
 
-    /* ── Top Header ───────────────────────────────── */
-    .topbar {
-      grid-column: 2;
-      background: var(--topbar-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 0 2rem;
-      height: 64px;
-      display: flex; align-items: center; justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
+.drawer-close {
+  position: absolute; top: calc(var(--nav-h) - 28px); right: 1.25rem;
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--border-copper);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--text-2);
+  transition: all 0.25s;
+}
+.drawer-close:hover { border-color: var(--copper); color: var(--copper-shine); background: var(--copper-faint); }
 
-    .topbar-left { display: flex; align-items: center; gap: 1.5rem; }
-    .topbar-page-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.125rem; font-weight: 500; color: var(--text);
-    }
+.drawer-brand {
+  text-align: center;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  position: relative;
+}
+.drawer-brand::after {
+  content: '';
+  position: absolute; bottom: 0; left: 25%; right: 25%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--copper-shine), transparent);
+}
+.drawer-brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300; font-size: 1.375rem;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--text); margin-bottom: 4px;
+}
+.drawer-brand-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 0.75rem;
+  letter-spacing: 0.15em; color: var(--copper-shine);
+  text-transform: uppercase;
+}
 
-    .topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+.drawer-section-label {
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 1.25rem 0 0.5rem;
+}
 
-    /* ── Bookings Quick Button ─── */
-    .btn-bookings {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 0.5rem 1.25rem;
-      background: linear-gradient(135deg, var(--copper-shine), var(--copper), var(--copper-deep));
-      color: white;
-      font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-      border-radius: var(--radius);
-      border: 1px solid var(--copper-light);
-      box-shadow: var(--copper-wire), 0 4px 12px rgba(184,115,51,0.3);
-      transition: all 0.25s;
-    }
-    .btn-bookings:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 0 16px rgba(184,115,51,0.55), 0 0 32px rgba(184,115,51,0.2), 0 6px 20px rgba(184,115,51,0.35);
-    }
-    .btn-bookings svg { width: 14px; height: 14px; }
+.nav-link {
+  display: flex; align-items: center; gap: 0;
+  width: 100%;
+  color: rgba(232,226,218,0.6);
+  font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid rgba(184,115,51,0.06);
+  cursor: pointer;
+  transition: color 0.25s, padding-left 0.3s var(--ease), border-color 0.25s;
+  background: none; text-align: left;
+  position: relative;
+}
+.nav-link::before {
+  content: '';
+  display: inline-block; width: 0; height: 1px;
+  background: var(--copper-shine);
+  margin-right: 0;
+  transition: width 0.3s var(--ease), margin-right 0.3s var(--ease);
+  flex-shrink: 0;
+}
+.nav-link:hover, .nav-link.active {
+  color: var(--copper-shine);
+  padding-left: 4px;
+  border-bottom-color: rgba(184,115,51,0.15);
+}
+.nav-link:hover::before, .nav-link.active::before {
+  width: 14px; margin-right: 10px;
+}
+.nav-link.active { color: var(--copper-light); }
 
-    .topbar-stat {
-      display: flex; align-items: center; gap: 0.5rem;
-      padding: 0.4rem 0.875rem;
-      background: var(--copper-faint);
-      border: 1px solid var(--copper-soft);
-      border-radius: var(--radius);
-      font-size: 0.8rem; color: var(--copper-shine); font-weight: 500;
-    }
-    .topbar-stat svg { width: 13px; height: 13px; opacity: 0.8; }
+.drawer-divider {
+  height: 1px; margin: 1rem 0;
+  background: linear-gradient(90deg, transparent, rgba(184,115,51,0.2), transparent);
+}
 
-    /* ── Main content area ───────────────────────── */
-    .dash-main {
-      grid-column: 2;
-      padding: 2rem 2.5rem;
-      overflow-y: auto;
-    }
+.drawer-signout {
+  margin-top: 2rem;
+  display: block; width: 100%;
+  text-align: center;
+  font-size: 0.65rem; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 0.875rem;
+  color: var(--text-dim);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 4px;
+  transition: all 0.25s;
+}
+.drawer-signout:hover { color: var(--danger); border-color: rgba(224,80,80,0.2); background: var(--danger-soft); }
 
-    .dash-section { display: none; }
-    .dash-section.active { display: block; }
+/* ═══ MAIN DASHBOARD AREA ══════════════════════════ */
+#dashboard {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative; z-index: 1;
+}
 
-    /* ── Section header ──────────────────────────── */
-    .section-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.75rem;
-      padding-bottom: 1.25rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .section-header-left {}
-    .section-header h2 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.375rem; font-weight: 500; color: var(--text);
-    }
-    .section-header-sub {
-      font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;
-    }
+.dash-main {
+  margin-top: var(--nav-h);
+  padding: 2rem 1.5rem 4rem;
+  max-width: 1200px;
+  width: 100%;
+  margin-left: auto; margin-right: auto;
+}
 
-    /* ── Buttons ─────────────────────────────────── */
-    .btn {
-      display: inline-flex; align-items: center; gap: 0.375rem;
-      padding: 0.5625rem 1.125rem;
-      border-radius: var(--radius);
-      font-size: 0.8125rem; font-weight: 600;
-      transition: all 0.2s; letter-spacing: 0.02em;
-    }
-    .btn-copper {
-      background: linear-gradient(135deg, var(--copper-shine), var(--copper));
-      color: white; border: 1px solid rgba(232,168,124,0.3);
-      box-shadow: 0 2px 8px rgba(184,115,51,0.25);
-    }
-    .btn-copper:hover {
-      background: linear-gradient(135deg, var(--copper-light), var(--copper-shine));
-      box-shadow: 0 4px 16px rgba(184,115,51,0.4); transform: translateY(-1px);
-    }
-    .btn-outline {
-      border: 1px solid var(--border-strong); color: var(--text-secondary);
-      background: transparent;
-    }
-    .btn-outline:hover { border-color: var(--copper); color: var(--copper-shine); }
-    .btn-danger { color: var(--danger); border: 1px solid rgba(239,68,68,0.25); background: var(--danger-bg); }
-    .btn-danger:hover { background: rgba(239,68,68,0.18); }
-    .btn-sm { padding: 0.3125rem 0.75rem; font-size: 0.75rem; }
+.dash-section { display: none; }
+.dash-section.active { display: block; }
 
-    /* ── Form ────────────────────────────────────── */
-    .form-group { margin-bottom: 1.125rem; }
-    .form-label {
-      display: block; font-size: 0.8rem; font-weight: 600;
-      margin-bottom: 0.375rem; color: var(--text-secondary);
-      letter-spacing: 0.03em; text-transform: uppercase;
-    }
-    .form-input, .form-textarea, .form-select {
-      width: 100%; padding: 0.625rem 0.875rem;
-      background: var(--sidebar-bg);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--radius);
-      font-size: 0.875rem; color: var(--text); outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-input:focus, .form-textarea:focus, .form-select:focus {
-      border-color: var(--copper);
-      box-shadow: 0 0 0 3px rgba(184,115,51,0.12);
-    }
-    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
-    .form-textarea { min-height: 80px; resize: vertical; }
-    .form-select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23B87333' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center;
-      padding-right: 36px;
-      background-color: var(--sidebar-bg);
-    }
-    .form-select option { background: var(--sidebar-bg); }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+/* ═══ SECTION HEADER ════════════════════════════════ */
+.section-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-copper);
+  gap: 1rem;
+}
+.section-eyebrow {
+  font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--copper-shine); margin-bottom: 0.375rem;
+}
+.section-eyebrow::before {
+  content: '— ';
+  opacity: 0.5;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400; font-size: 1.75rem;
+  letter-spacing: 0.04em; color: var(--text);
+  line-height: 1.2;
+}
 
-    /* ── Image upload ────────────────────────────── */
-    .img-upload-zone {
-      border: 1px dashed var(--border-strong); border-radius: var(--radius);
-      padding: 1.5rem; text-align: center; cursor: pointer;
-      transition: border-color 0.2s, background 0.2s; position: relative;
-      background: var(--copper-faint);
-    }
-    .img-upload-zone:hover { border-color: var(--copper); background: rgba(184,115,51,0.06); }
-    .img-upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .img-upload-zone .label { font-size: 0.8125rem; color: var(--text-muted); }
-    .img-upload-zone .label strong { color: var(--copper-shine); }
-    .img-preview { margin-top: 0.5rem; border-radius: 6px; max-height: 120px; object-fit: cover; width: 100%; }
-    .progress-bar { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; display: none; }
-    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--copper-shine), var(--copper)); transition: width 0.3s; width: 0%; }
+/* ═══ BUTTONS ═══════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.375rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 4px;
+  font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  transition: all 0.25s var(--ease);
+}
+.btn-copper {
+  background: linear-gradient(135deg, var(--copper-shine), var(--copper));
+  color: white;
+  border: 1px solid rgba(232,168,124,0.25);
+  box-shadow: 0 2px 12px rgba(184,115,51,0.2);
+}
+.btn-copper:hover {
+  background: linear-gradient(135deg, var(--copper-light), var(--copper-shine));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(184,115,51,0.35);
+}
+.btn-outline {
+  border: 1px solid var(--border-copper);
+  color: var(--text-2);
+  background: transparent;
+}
+.btn-outline:hover { border-color: var(--copper); color: var(--copper-shine); }
+.btn-danger {
+  color: var(--danger); border: 1px solid rgba(224,80,80,0.2);
+  background: var(--danger-soft);
+}
+.btn-danger:hover { background: rgba(224,80,80,0.18); }
+.btn-sm { padding: 0.375rem 0.75rem; font-size: 0.65rem; }
 
-    /* ── Items grid ──────────────────────────────── */
-    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.125rem; }
-    .item-card {
-      background: var(--card-bg); border: 1px solid var(--card-border);
-      border-radius: var(--radius-lg); overflow: hidden;
-      transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
-    }
-    .item-card:hover {
-      box-shadow: var(--shadow-md), 0 0 0 1px rgba(184,115,51,0.15);
-      border-color: rgba(184,115,51,0.2);
-      transform: translateY(-2px);
-    }
-    .item-card-img { aspect-ratio: 16/10; overflow: hidden; background: #0E1017; position: relative; }
-    .item-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
-    .item-card:hover .item-card-img img { transform: scale(1.04); }
-    .item-card-img .no-img {
-      display: flex; align-items: center; justify-content: center; height: 100%;
-      color: var(--text-dim); font-size: 0.8rem;
-      background: linear-gradient(135deg, #0E1017, #1A1E28);
-    }
-    .item-card-body { padding: 1rem 1.125rem 0.5rem; }
-    .item-card-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; color: var(--text); }
-    .item-card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
-    .item-card-actions { display: flex; gap: 0.5rem; padding: 0.625rem 1.125rem 1rem; }
+/* ═══ FORM ══════════════════════════════════════════ */
+.form-group { margin-bottom: 1.125rem; }
+.form-label {
+  display: block;
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text-dim); margin-bottom: 0.4rem;
+}
+.form-input, .form-textarea, .form-select {
+  width: 100%; padding: 0.625rem 0.875rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-copper);
+  border-radius: 4px;
+  font-size: 0.875rem; color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: var(--copper);
+  box-shadow: 0 0 0 3px rgba(184,115,51,0.1);
+  background: rgba(184,115,51,0.03);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
+.form-textarea { min-height: 80px; resize: vertical; }
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23B87333' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  background-color: rgba(255,255,255,0.03);
+  padding-right: 36px;
+}
+.form-select option { background: var(--surface); color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
 
-    /* ── Bookings table ───────────────────────────── */
-    .bookings-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
-    .bookings-table {
-      width: 100%; border-collapse: collapse; font-size: 0.8125rem;
-      background: var(--card-bg);
-    }
-    .bookings-table thead tr {
-      background: rgba(184,115,51,0.06);
-      border-bottom: 1px solid rgba(184,115,51,0.2);
-    }
-    .bookings-table th {
-      padding: 0.75rem 1rem; text-align: left;
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--copper-shine);
-    }
-    .bookings-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
-    .bookings-table tbody tr:last-child { border-bottom: none; }
-    .bookings-table tbody tr:hover { background: var(--card-hover); }
-    .bookings-table td { padding: 0.875rem 1rem; color: var(--text-secondary); vertical-align: middle; }
-    .bookings-table td:first-child { color: var(--text); font-weight: 600; }
+/* ═══ IMAGE UPLOAD ══════════════════════════════════ */
+.img-upload-zone {
+  border: 1px dashed var(--border-copper); border-radius: 6px;
+  padding: 1.75rem; text-align: center; cursor: pointer;
+  position: relative;
+  background: var(--copper-faint);
+  transition: border-color 0.2s, background 0.2s;
+}
+.img-upload-zone:hover { border-color: var(--copper); background: rgba(184,115,51,0.07); }
+.img-upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.img-upload-zone .label { font-size: 0.75rem; color: var(--text-dim); }
+.img-upload-zone .label strong { color: var(--copper-shine); }
+.img-preview { margin-top: 0.75rem; border-radius: 4px; max-height: 130px; object-fit: cover; width: 100%; }
+.progress-bar { width: 100%; height: 2px; background: var(--border); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; display: none; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--copper-shine), var(--copper)); transition: width 0.3s; width: 0%; }
 
-    .status-badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      padding: 3px 10px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-    }
-    .status-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-    .status-pending { background: var(--warning-bg); color: var(--warning); }
-    .status-confirmed { background: var(--success-bg); color: var(--success); }
+/* ═══ ITEM CARDS ════════════════════════════════════ */
+.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
 
-    /* ── Modal ───────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-      z-index: 500; display: none; align-items: center; justify-content: center; padding: 1rem;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card-bg); border: 1px solid var(--border-strong);
-      border-radius: var(--radius-lg); max-width: 560px; width: 100%;
-      max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg);
-    }
-    .modal-header {
-      padding: 1.375rem 1.5rem; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(184,115,51,0.04);
-    }
-    .modal-header h3 {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.125rem; font-weight: 500; color: var(--text);
-    }
-    .modal-close {
-      width: 30px; height: 30px; border-radius: 50%;
-      border: 1px solid var(--border-strong);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: var(--text-muted);
-      transition: all 0.2s; line-height: 1;
-    }
-    .modal-close:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
-    .modal-body { padding: 1.5rem; }
-    .modal-footer {
-      padding: 1rem 1.5rem; border-top: 1px solid var(--border);
-      display: flex; justify-content: flex-end; gap: 0.5rem;
-      background: rgba(0,0,0,0.1);
-    }
+.item-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px; overflow: hidden;
+  transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
+}
+.item-card:hover {
+  border-color: var(--border-copper);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(184,115,51,0.1);
+  transform: translateY(-2px);
+}
+.item-card-img { aspect-ratio: 16/10; overflow: hidden; background: #070910; }
+.item-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.item-card:hover .item-card-img img { transform: scale(1.04); }
+.item-card-img .no-img {
+  height: 100%; display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-size: 0.75rem; letter-spacing: 0.08em;
+}
+.item-card-body { padding: 0.875rem 1rem 0.25rem; }
+.item-card-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.0625rem; font-weight: 500; color: var(--text);
+  margin-bottom: 0.25rem; line-height: 1.3;
+}
+.item-card-meta { font-size: 0.75rem; color: var(--text-dim); line-height: 1.5; }
+.item-card-actions {
+  display: flex; gap: 0.5rem;
+  padding: 0.625rem 1rem 0.875rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.75rem;
+}
 
-    .empty-state {
-      text-align: center; padding: 3.5rem 2rem;
-      color: var(--text-dim); font-size: 0.9rem;
-    }
-    .empty-state::before {
-      content: '— ';
-      color: var(--copper);
-    }
-    .empty-state::after { content: ' —'; color: var(--copper); }
+/* Capacity stat card variant */
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.5rem 1.25rem; text-align: center;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.stat-card:hover { border-color: var(--border-copper); box-shadow: 0 0 20px rgba(184,115,51,0.1); }
+.stat-card-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem; font-weight: 400; color: var(--copper-shine);
+  line-height: 1; margin-bottom: 0.375rem;
+}
+.stat-card-label {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+.stat-card-actions { display: flex; gap: 0.5rem; justify-content: center; }
 
-    .toast {
-      position: fixed; bottom: 1.5rem; right: 1.5rem;
-      background: linear-gradient(135deg, var(--copper-shine), var(--copper));
-      color: white;
-      padding: 0.75rem 1.375rem; border-radius: var(--radius); font-size: 0.8125rem; font-weight: 600;
-      box-shadow: var(--shadow-md), var(--copper-wire); z-index: 999;
-      opacity: 0; transform: translateY(10px) scale(0.97);
-      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
-    }
-    .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+/* ═══ BOOKINGS TABLE ════════════════════════════════ */
+.bookings-wrap {
+  border: 1px solid var(--border-copper); border-radius: 8px; overflow: hidden;
+  background: var(--card);
+}
+.bookings-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+.bookings-table thead tr {
+  background: rgba(184,115,51,0.06);
+  border-bottom: 1px solid var(--border-copper);
+}
+.bookings-table th {
+  padding: 0.875rem 1rem; text-align: left;
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--copper-shine);
+  white-space: nowrap;
+}
+.bookings-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+.bookings-table tbody tr:last-child { border-bottom: none; }
+.bookings-table tbody tr:hover { background: var(--card-hover); }
+.bookings-table td { padding: 0.875rem 1rem; color: var(--text-2); vertical-align: middle; }
+.bookings-table td:first-child {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.9375rem; color: var(--text); font-weight: 500;
+}
+.status-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.status-pill::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.st-pending  { background: var(--warning-soft); color: var(--warning); }
+.st-confirmed { background: var(--success-soft); color: var(--success); }
 
-    /* ── Responsive ──────────────────────────────── */
-    @media (max-width: 900px) {
-      :root { --sidebar-w: 200px; }
-    }
-    @media (max-width: 700px) {
-      .admin-shell { grid-template-columns: 1fr; }
-      .sidebar { position: fixed; left: -240px; z-index: 200; transition: left 0.3s; height: 100vh; }
-      .sidebar.open { left: 0; }
-      .topbar { grid-column: 1; padding: 0 1rem; }
-      .dash-main { grid-column: 1; padding: 1.25rem 1rem; }
-      .form-row, .form-row-3 { grid-template-columns: 1fr; }
-      .items-grid { grid-template-columns: 1fr; }
-    }
+/* Mobile bookings card view */
+.booking-cards { display: none; }
+.booking-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1rem 1.125rem; margin-bottom: 0.75rem;
+  border-left: 2px solid var(--copper);
+}
+.booking-card-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; font-weight: 500; color: var(--text); margin-bottom: 0.5rem;
+}
+.booking-card-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 0.75rem; color: var(--text-dim);
+  margin-bottom: 0.25rem;
+}
+.booking-card-row span:last-child { color: var(--text-2); }
+
+@media (max-width: 640px) {
+  .bookings-wrap { display: none; }
+  .booking-cards { display: block; }
+}
+
+/* ═══ MODAL ═════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  z-index: 9000; display: none;
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface-2);
+  border: 1px solid var(--border-copper);
+  border-radius: 10px; max-width: 540px; width: 100%;
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(184,115,51,0.08);
+}
+.modal-header {
+  padding: 1.375rem 1.5rem;
+  border-bottom: 1px solid var(--border-copper);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(184,115,51,0.04);
+}
+.modal-header h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem; font-weight: 400;
+  letter-spacing: 0.06em; color: var(--text);
+}
+.modal-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--border-copper);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: var(--text-2);
+  transition: all 0.2s; line-height: 1;
+}
+.modal-close:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-soft); }
+.modal-body { padding: 1.5rem; }
+.modal-footer {
+  padding: 1rem 1.5rem; border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 0.625rem;
+  background: rgba(0,0,0,0.15);
+}
+
+/* ═══ EMPTY STATE ═══════════════════════════════════ */
+.empty-state {
+  text-align: center; padding: 4rem 2rem;
+  color: var(--text-dim);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 1rem; letter-spacing: 0.04em;
+}
+.empty-state::before { content: '— '; color: var(--copper-shine); opacity: 0.5; }
+.empty-state::after  { content: ' —'; color: var(--copper-shine); opacity: 0.5; }
+
+/* ═══ TOAST ═════════════════════════════════════════ */
+.toast {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  background: linear-gradient(135deg, var(--copper-shine), var(--copper));
+  color: white; padding: 0.75rem 1.5rem;
+  border-radius: 4px; font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  box-shadow: 0 8px 24px rgba(184,115,51,0.35), 0 0 0 1px rgba(232,168,124,0.2);
+  z-index: 9999; opacity: 0; transform: translateY(12px) scale(0.96);
+  transition: all 0.35s var(--ease);
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0) scale(1); }
   </style>
 </head>
 <body>
 
-  <!-- DASHBOARD -->
-  <div id="dashboard">
-    <div class="admin-shell">
+<!-- DRAWER SCRIM -->
+<div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
 
-      <!-- ── SIDEBAR ── -->
-      <aside class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-          <div class="sidebar-brand-name">Swaby's Hope Hideaway</div>
-          <div class="sidebar-brand-sub">Admin Console</div>
-        </div>
-
-        <div class="sidebar-section-label">Content</div>
-        <nav class="sidebar-nav">
-          <button class="sidebar-tab active" onclick="switchTab('features', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Feature Cards
-          </button>
-          <button class="sidebar-tab" onclick="switchTab('rooms', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Rooms
-          </button>
-          <button class="sidebar-tab" onclick="switchTab('events', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-            Events
-          </button>
-          <button class="sidebar-tab" onclick="switchTab('capacity', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            Capacity Stats
-          </button>
-        </nav>
-
-        <div class="sidebar-divider"></div>
-        <div class="sidebar-section-label">Operations</div>
-        <nav class="sidebar-nav" style="padding-top:0;">
-          <button class="sidebar-tab" onclick="switchTab('bookings', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Bookings
-          </button>
-        </nav>
-
-        <div style="flex:1;"></div>
-        <div class="sidebar-footer">
-          <div class="sidebar-user">
-            <div class="sidebar-avatar">A</div>
-            <div class="sidebar-user-info">
-              <div class="sidebar-user-name" id="userEmail">Admin</div>
-            </div>
-            <button class="sidebar-signout" onclick="handleLogout()">Out</button>
-          </div>
-        </div>
-      </aside>
-
-      <!-- ── TOPBAR ── -->
-      <header class="topbar">
-        <div class="topbar-left">
-          <span class="topbar-page-title" id="topbarTitle">Feature Cards</span>
-        </div>
-        <div class="topbar-right">
-          <div class="topbar-stat" id="bookingCountBadge" style="display:none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span id="bookingCountText">0 pending</span>
-          </div>
-          <button class="btn-bookings" onclick="switchTab('bookings', null)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Bookings
-          </button>
-        </div>
-      </header>
-
-      <!-- ── MAIN CONTENT ── -->
-      <main class="dash-main">
-
-        <!-- FEATURES TAB -->
-        <div class="dash-section active" id="tab-features">
-          <div class="section-header">
-            <div class="section-header-left">
-              <h2>Feature Cards</h2>
-              <div class="section-header-sub">Manage the highlight cards shown on the homepage</div>
-            </div>
-            <button class="btn btn-copper" onclick="openFeatureModal()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Feature
-            </button>
-          </div>
-          <div class="items-grid" id="featuresList"></div>
-        </div>
-
-        <!-- ROOMS TAB -->
-        <div class="dash-section" id="tab-rooms">
-          <div class="section-header">
-            <div class="section-header-left">
-              <h2>Rooms</h2>
-              <div class="section-header-sub">Add and manage your boutique rooms</div>
-            </div>
-            <button class="btn btn-copper" onclick="openRoomModal()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Room
-            </button>
-          </div>
-          <div class="items-grid" id="roomsList"></div>
-        </div>
-
-        <!-- EVENTS TAB -->
-        <div class="dash-section" id="tab-events">
-          <div class="section-header">
-            <div class="section-header-left">
-              <h2>Events & Weddings</h2>
-              <div class="section-header-sub">Manage event types displayed on the Events page</div>
-            </div>
-            <button class="btn btn-copper" onclick="openEventModal()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Event
-            </button>
-          </div>
-          <div class="items-grid" id="eventsList"></div>
-        </div>
-
-        <!-- CAPACITY TAB -->
-        <div class="dash-section" id="tab-capacity">
-          <div class="section-header">
-            <div class="section-header-left">
-              <h2>Capacity Stats</h2>
-              <div class="section-header-sub">Numbers shown in the venue capacity banner</div>
-            </div>
-            <button class="btn btn-copper" onclick="openCapacityModal()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Stat
-            </button>
-          </div>
-          <div class="items-grid" id="capacityList"></div>
-        </div>
-
-        <!-- BOOKINGS TAB -->
-        <div class="dash-section" id="tab-bookings">
-          <div class="section-header">
-            <div class="section-header-left">
-              <h2>Bookings</h2>
-              <div class="section-header-sub">All guest reservations submitted through the site</div>
-            </div>
-          </div>
-          <div id="bookingsList"></div>
-        </div>
-
-      </main>
-    </div>
+<!-- SIDE DRAWER -->
+<nav class="drawer" id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">&#215;</button>
+  <div class="drawer-brand">
+    <div class="drawer-brand-name">Swaby's Hope</div>
+    <div class="drawer-brand-sub">Hideaway · Admin</div>
   </div>
 
-  <!-- MODAL -->
-  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
-    <div class="modal">
-      <div class="modal-header">
-        <h3 id="modalTitle">Add Item</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+  <div class="drawer-section-label">Content</div>
+  <button class="nav-link active" onclick="switchTab('features');closeDrawer()">Feature Cards</button>
+  <button class="nav-link" onclick="switchTab('rooms');closeDrawer()">Rooms</button>
+  <button class="nav-link" onclick="switchTab('events');closeDrawer()">Events &amp; Weddings</button>
+  <button class="nav-link" onclick="switchTab('capacity');closeDrawer()">Capacity Stats</button>
+
+  <div class="drawer-divider"></div>
+  <div class="drawer-section-label">Operations</div>
+  <button class="nav-link" onclick="switchTab('bookings');closeDrawer()">Bookings</button>
+
+  <button class="drawer-signout" onclick="handleLogout()">Sign Out</button>
+</nav>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="hamburger" onclick="openDrawer()" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-brand">Swaby's <span>Admin</span></div>
+  </div>
+  <div class="topbar-right">
+    <div class="pending-pill" id="pendingPill">
+      <span id="pendingText">0 pending</span>
+    </div>
+    <span class="topbar-page-label" id="topbarLabel">Feature Cards</span>
+    <button class="btn-bookings-topbar" onclick="switchTab('bookings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Bookings
+    </button>
+  </div>
+</header>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <main class="dash-main">
+
+    <!-- FEATURES -->
+    <div class="dash-section active" id="tab-features">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Homepage</div>
+          <h2 class="section-title">Feature Cards</h2>
+        </div>
+        <button class="btn btn-copper" onclick="openFeatureModal()">Add Feature</button>
       </div>
-      <div class="modal-body" id="modalBody"></div>
-      <div class="modal-footer" id="modalFooter"></div>
+      <div class="items-grid" id="featuresList"></div>
     </div>
+
+    <!-- ROOMS -->
+    <div class="dash-section" id="tab-rooms">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Accommodation</div>
+          <h2 class="section-title">Rooms</h2>
+        </div>
+        <button class="btn btn-copper" onclick="openRoomModal()">Add Room</button>
+      </div>
+      <div class="items-grid" id="roomsList"></div>
+    </div>
+
+    <!-- EVENTS -->
+    <div class="dash-section" id="tab-events">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Celebrations</div>
+          <h2 class="section-title">Events &amp; Weddings</h2>
+        </div>
+        <button class="btn btn-copper" onclick="openEventModal()">Add Event</button>
+      </div>
+      <div class="items-grid" id="eventsList"></div>
+    </div>
+
+    <!-- CAPACITY -->
+    <div class="dash-section" id="tab-capacity">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Venue</div>
+          <h2 class="section-title">Capacity Stats</h2>
+        </div>
+        <button class="btn btn-copper" onclick="openCapacityModal()">Add Stat</button>
+      </div>
+      <div class="items-grid" id="capacityList"></div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="dash-section" id="tab-bookings">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Reservations</div>
+          <h2 class="section-title">Bookings</h2>
+        </div>
+      </div>
+      <!-- Desktop table -->
+      <div class="bookings-wrap">
+        <table class="bookings-table">
+          <thead>
+            <tr>
+              <th>Guest</th><th>Email</th><th>Room</th>
+              <th>Check-in</th><th>Check-out</th><th>Guests</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsTableBody"></tbody>
+        </table>
+      </div>
+      <!-- Mobile cards -->
+      <div class="booking-cards" id="bookingCardsList"></div>
+      <div id="bookingsEmpty" class="empty-state" style="display:none;">No bookings yet</div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Add Item</h3>
+      <button class="modal-close" onclick="closeModal()">&#215;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
   </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
 
-  <script>
-    /* ═══════ HELPERS ═══════ */
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
+<script>
+/* ── Drawer ─────────────────────────────── */
+function openDrawer() {
+  document.getElementById('drawer').classList.add('show');
+  document.getElementById('drawerScrim').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('show');
+  document.getElementById('drawerScrim').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* ── Tab switching ──────────────────────── */
+const TAB_LABELS = {
+  features: 'Feature Cards',
+  rooms: 'Rooms',
+  events: 'Events',
+  capacity: 'Capacity Stats',
+  bookings: 'Bookings'
+};
+
+function switchTab(tab) {
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  // Highlight the matching drawer link (by onclick text match)
+  document.querySelectorAll('.nav-link').forEach(l => {
+    if (l.getAttribute('onclick') && l.getAttribute('onclick').includes("'" + tab + "'")) {
+      l.classList.add('active');
     }
+  });
+  const label = document.getElementById('topbarLabel');
+  if (label) label.textContent = TAB_LABELS[tab] || tab;
+}
 
-    const TAB_TITLES = {
-      features: 'Feature Cards',
-      rooms: 'Rooms',
-      events: 'Events & Weddings',
-      capacity: 'Capacity Stats',
-      bookings: 'Bookings'
-    };
+/* ── Toast ──────────────────────────────── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 
-    // Map tab name to sidebar tab index (0-based in order of sidebar)
-    const TAB_INDEX = { features: 0, rooms: 1, events: 2, capacity: 3, bookings: 4 };
+function handleLogout() { window.location.reload(); }
 
-    function switchTab(tab, el) {
-      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
-      // Activate the correct sidebar tab by index
-      const allTabs = document.querySelectorAll('.sidebar-tab');
-      const idx = TAB_INDEX[tab];
-      if (idx !== undefined && allTabs[idx]) allTabs[idx].classList.add('active');
-      else if (el && el.classList && el.classList.contains('sidebar-tab')) el.classList.add('active');
-      document.getElementById(`tab-${tab}`).classList.add('active');
-      const titleEl = document.getElementById('topbarTitle');
-      if (titleEl) titleEl.textContent = TAB_TITLES[tab] || tab;
-    }
+/* ── Modal ──────────────────────────────── */
+function openModal(title) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
 
-    function openModal(title) {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalOverlay').classList.add('open');
-    }
-    function closeModal() {
-      document.getElementById('modalOverlay').classList.remove('open');
-    }
-
-    function handleLogout() { window.location.reload(); }
-
-    /* ═══════ IMAGE UPLOAD ═══════ */
-    async function uploadImage(file, path) {
-      return new Promise((resolve, reject) => {
-        const { storage, ref, uploadBytesResumable, getDownloadURL } = window._fb;
-        const storageRef = ref(storage, path);
-        const task = uploadBytesResumable(storageRef, file);
-        const bar = document.querySelector('.progress-bar');
-        const fill = document.querySelector('.progress-bar-fill');
-        if (bar) bar.style.display = 'block';
-        task.on('state_changed',
-          (snap) => { if (fill) fill.style.width = `${(snap.bytesTransferred / snap.totalBytes) * 100}%`; },
-          (err) => { reject(err); },
-          async () => {
-            const url = await getDownloadURL(task.snapshot.ref);
-            if (bar) { bar.style.display = 'none'; fill.style.width = '0%'; }
-            resolve(url);
-          }
-        );
-      });
-    }
-
-    function fileInputHtml(id) {
-      return `
-        <div class="img-upload-zone" onclick="this.querySelector('input').click()">
-          <input type="file" accept="image/*" id="${id}" onchange="previewFile(this)" />
-          <div class="label"><strong>Click to upload</strong> or drag image here</div>
-          <img class="img-preview" id="${id}Preview" style="display:none;" />
-          <div class="progress-bar"><div class="progress-bar-fill"></div></div>
-        </div>`;
-    }
-
-    function previewFile(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const preview = document.getElementById(input.id + 'Preview');
-      const reader = new FileReader();
-      reader.onload = (e) => { preview.src = e.target.result; preview.style.display = 'block'; };
-      reader.readAsDataURL(file);
-    }
-
-    /* ═══════ LOAD ALL DATA ═══════ */
-    async function loadAllData() {
-      await Promise.all([loadFeatures(), loadRooms(), loadEvents(), loadCapacity(), loadBookings()]);
-    }
-
-    /* ═══════ FEATURES CRUD ═══════ */
-    async function loadFeatures() {
-      const { db, collection, getDocs, query, orderBy } = window._fb;
-      const snap = await getDocs(query(collection(db, 'features'), orderBy('order')));
-      const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-      const el = document.getElementById('featuresList');
-      if (items.length === 0) { el.innerHTML = '<div class="empty-state">No features yet. Click "+ Add Feature" to create one.</div>'; return; }
-      el.innerHTML = items.map(f => `
-        <div class="item-card">
-          <div class="item-card-img">${f.imageUrl ? `<img src="${f.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
-          <div class="item-card-body">
-            <div class="item-card-title">${f.title}</div>
-            <div class="item-card-meta">${f.description}</div>
-          </div>
-          <div class="item-card-actions">
-            <button class="btn btn-outline btn-sm" onclick="openFeatureModal('${f.id}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteItem('features','${f.id}')">Delete</button>
-          </div>
-        </div>`).join('');
-    }
-
-    function openFeatureModal(editId) {
-      const title = editId ? 'Edit Feature' : 'Add Feature';
-      openModal(title);
-      document.getElementById('modalBody').innerHTML = `
-        <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="mTitle" placeholder="e.g. Boutique Rooms" /></div>
-        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Short description"></textarea></div>
-        <div class="form-group"><label class="form-label">Link to Page (optional)</label><select class="form-select" id="mLink"><option value="">None</option><option value="rooms">Rooms</option><option value="events">Events</option></select></div>
-        <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
-        <div class="form-group"><label class="form-label">Image</label>${fileInputHtml('mImg')}</div>`;
-      document.getElementById('modalFooter').innerHTML = `
-        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-copper" id="mSaveBtn" onclick="saveFeature('${editId||''}')">Save</button>`;
-      if (editId) loadEditData('features', editId, ['mTitle:title','mDesc:description','mLink:linkPage','mOrder:order'], 'mImg');
-    }
-
-    async function saveFeature(editId) {
-      const data = { title: gv('mTitle'), description: gv('mDesc'), linkPage: gv('mLink'), order: parseInt(gv('mOrder')) || 0 };
-      if (!data.title) { alert('Title is required.'); return; }
-      await saveItem('features', editId, data, 'mImg', `features/${Date.now()}`);
-      closeModal(); await loadFeatures(); showToast('Feature saved!');
-    }
-
-    /* ═══════ ROOMS CRUD ═══════ */
-    async function loadRooms() {
-      const { db, collection, getDocs, query, orderBy } = window._fb;
-      const snap = await getDocs(query(collection(db, 'rooms'), orderBy('order')));
-      const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-      const el = document.getElementById('roomsList');
-      if (items.length === 0) { el.innerHTML = '<div class="empty-state">No rooms yet. Click "+ Add Room" to create one.</div>'; return; }
-      el.innerHTML = items.map(r => `
-        <div class="item-card">
-          <div class="item-card-img">${r.imageUrl ? `<img src="${r.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
-          <div class="item-card-body">
-            <div class="item-card-title">${r.name}</div>
-            <div class="item-card-meta">$${r.price}/night · ${r.badge || ''} · ${r.quantity || 1} available</div>
-          </div>
-          <div class="item-card-actions">
-            <button class="btn btn-outline btn-sm" onclick="openRoomModal('${r.id}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteItem('rooms','${r.id}')">Delete</button>
-          </div>
-        </div>`).join('');
-    }
-
-    function openRoomModal(editId) {
-      openModal(editId ? 'Edit Room' : 'Add Room');
-      document.getElementById('modalBody').innerHTML = `
-        <div class="form-group"><label class="form-label">Room Name</label><input class="form-input" id="mName" placeholder="e.g. Spur Tree Suite" /></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Price per Night ($)</label><input type="number" class="form-input" id="mPrice" placeholder="185" min="0" /></div>
-          <div class="form-group"><label class="form-label">Quantity Available</label><input type="number" class="form-input" id="mQty" value="1" min="1" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Badge Label</label><input class="form-input" id="mBadge" placeholder="e.g. Signature, Popular" /></div>
-          <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
-        </div>
-        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the room"></textarea></div>
-        <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
-      document.getElementById('modalFooter').innerHTML = `
-        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-copper" onclick="saveRoom('${editId||''}')">Save</button>`;
-      if (editId) loadEditData('rooms', editId, ['mName:name','mPrice:price','mQty:quantity','mBadge:badge','mOrder:order','mDesc:description'], 'mImg');
-    }
-
-    async function saveRoom(editId) {
-      const data = { name: gv('mName'), price: parseInt(gv('mPrice')) || 0, quantity: parseInt(gv('mQty')) || 1, badge: gv('mBadge'), description: gv('mDesc'), order: parseInt(gv('mOrder')) || 0 };
-      if (!data.name || !data.price) { alert('Name and price are required.'); return; }
-      await saveItem('rooms', editId, data, 'mImg', `rooms/${Date.now()}`);
-      closeModal(); await loadRooms(); showToast('Room saved!');
-    }
-
-    /* ═══════ EVENTS CRUD ═══════ */
-    async function loadEvents() {
-      const { db, collection, getDocs, query, orderBy } = window._fb;
-      const snap = await getDocs(query(collection(db, 'events'), orderBy('order')));
-      const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-      const el = document.getElementById('eventsList');
-      if (items.length === 0) { el.innerHTML = '<div class="empty-state">No events yet. Click "+ Add Event" to create one.</div>'; return; }
-      el.innerHTML = items.map(ev => `
-        <div class="item-card">
-          <div class="item-card-img">${ev.imageUrl ? `<img src="${ev.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
-          <div class="item-card-body">
-            <div class="item-card-title">${ev.title}</div>
-            <div class="item-card-meta">${ev.type} · ${ev.metaText || ''}</div>
-          </div>
-          <div class="item-card-actions">
-            <button class="btn btn-outline btn-sm" onclick="openEventModal('${ev.id}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteItem('events','${ev.id}')">Delete</button>
-          </div>
-        </div>`).join('');
-    }
-
-    function openEventModal(editId) {
-      openModal(editId ? 'Edit Event' : 'Add Event');
-      document.getElementById('modalBody').innerHTML = `
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Event Type</label><input class="form-input" id="mType" placeholder="e.g. Weddings" /></div>
-          <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="mTitle" placeholder="e.g. Hilltop Ceremonies" /></div>
-        </div>
-        <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the event offering"></textarea></div>
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Capacity/Meta Text</label><input class="form-input" id="mMeta" placeholder="e.g. Up to 200 Guests" /></div>
-          <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
-        </div>
-        <div class="form-group"><label class="form-label">Image</label>${fileInputHtml('mImg')}</div>`;
-      document.getElementById('modalFooter').innerHTML = `
-        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-copper" onclick="saveEvent('${editId||''}')">Save</button>`;
-      if (editId) loadEditData('events', editId, ['mType:type','mTitle:title','mDesc:description','mMeta:metaText','mOrder:order'], 'mImg');
-    }
-
-    async function saveEvent(editId) {
-      const data = { type: gv('mType'), title: gv('mTitle'), description: gv('mDesc'), metaText: gv('mMeta'), order: parseInt(gv('mOrder')) || 0 };
-      if (!data.type || !data.title) { alert('Type and title are required.'); return; }
-      await saveItem('events', editId, data, 'mImg', `events/${Date.now()}`);
-      closeModal(); await loadEvents(); showToast('Event saved!');
-    }
-
-    /* ═══════ CAPACITY STATS CRUD ═══════ */
-    async function loadCapacity() {
-      const { db, collection, getDocs, query, orderBy } = window._fb;
-      const snap = await getDocs(query(collection(db, 'capacity_stats'), orderBy('order')));
-      const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-      const el = document.getElementById('capacityList');
-      if (items.length === 0) { el.innerHTML = '<div class="empty-state">No capacity stats yet. Click "+ Add Stat" to create one.</div>'; return; }
-      el.innerHTML = items.map(s => `
-        <div class="item-card">
-          <div class="item-card-body" style="padding:1rem;">
-            <div class="item-card-title" style="font-size:1.5rem;color:var(--copper);">${s.value}</div>
-            <div class="item-card-meta">${s.label}</div>
-          </div>
-          <div class="item-card-actions">
-            <button class="btn btn-outline btn-sm" onclick="openCapacityModal('${s.id}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteItem('capacity_stats','${s.id}')">Delete</button>
-          </div>
-        </div>`).join('');
-    }
-
-    function openCapacityModal(editId) {
-      openModal(editId ? 'Edit Stat' : 'Add Stat');
-      document.getElementById('modalBody').innerHTML = `
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Value</label><input class="form-input" id="mValue" placeholder="e.g. 200" /></div>
-          <div class="form-group"><label class="form-label">Label</label><input class="form-input" id="mLabel" placeholder="e.g. Max Guests" /></div>
-        </div>
-        <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>`;
-      document.getElementById('modalFooter').innerHTML = `
-        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-copper" onclick="saveCapacity('${editId||''}')">Save</button>`;
-      if (editId) loadEditData('capacity_stats', editId, ['mValue:value','mLabel:label','mOrder:order']);
-    }
-
-    async function saveCapacity(editId) {
-      const data = { value: gv('mValue'), label: gv('mLabel'), order: parseInt(gv('mOrder')) || 0 };
-      if (!data.value || !data.label) { alert('Value and label are required.'); return; }
-      await saveItem('capacity_stats', editId, data);
-      closeModal(); await loadCapacity(); showToast('Stat saved!');
-    }
-
-    /* ═══════ BOOKINGS (read-only list) ═══════ */
-    async function loadBookings() {
-      const { db, collection, getDocs, query, orderBy } = window._fb;
-      try {
-        const snap = await getDocs(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')));
-        const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
-        const el = document.getElementById('bookingsList');
-
-        // Update pending count badge in topbar
-        const pendingCount = items.filter(b => (b.status || 'pending') === 'pending').length;
-        const badge = document.getElementById('bookingCountBadge');
-        const badgeText = document.getElementById('bookingCountText');
-        if (badge && pendingCount > 0) {
-          badge.style.display = 'flex';
-          badgeText.textContent = `${pendingCount} pending`;
-        }
-
-        if (items.length === 0) { el.innerHTML = '<div class="empty-state">No bookings yet</div>'; return; }
-
-        el.innerHTML = `<div class="bookings-table-wrap"><table class="bookings-table">
-          <thead><tr>
-            <th>Guest</th><th>Email</th><th>Room</th>
-            <th>Check-in</th><th>Check-out</th><th>Guests</th><th>Status</th>
-          </tr></thead>
-          <tbody>${items.map(b => {
-            const st = b.status || 'pending';
-            const statusClass = st === 'pending' ? 'status-pending' : 'status-confirmed';
-            return `<tr>
-              <td>${b.guestName||'—'}</td>
-              <td>${b.guestEmail||'—'}</td>
-              <td>${b.roomId||'—'}</td>
-              <td>${b.checkIn||'—'}</td>
-              <td>${b.checkOut||'—'}</td>
-              <td>${b.numberOfGuests||'—'}</td>
-              <td><span class="status-badge ${statusClass}">${st}</span></td>
-            </tr>`;
-          }).join('')}</tbody>
-        </table></div>`;
-      } catch(e) { console.warn('Bookings error:', e); }
-    }
-
-    /* ═══════ GENERIC CRUD HELPERS ═══════ */
-    function gv(id) { return document.getElementById(id)?.value?.trim() || ''; }
-
-    async function saveItem(collName, editId, data, imgInputId, storagePath) {
-      const { db, collection, addDoc, doc, updateDoc } = window._fb;
-      // Handle image upload if file selected
-      if (imgInputId) {
-        const fileInput = document.getElementById(imgInputId);
-        if (fileInput && fileInput.files && fileInput.files[0]) {
-          data.imageUrl = await uploadImage(fileInput.files[0], storagePath);
-        }
+/* ── Image upload ───────────────────────── */
+async function uploadImage(file, path) {
+  return new Promise((resolve, reject) => {
+    const { storage, ref, uploadBytesResumable, getDownloadURL } = window._fb;
+    const storageRef = ref(storage, path);
+    const task = uploadBytesResumable(storageRef, file);
+    const bar = document.querySelector('.progress-bar');
+    const fill = document.querySelector('.progress-bar-fill');
+    if (bar) bar.style.display = 'block';
+    task.on('state_changed',
+      snap => { if (fill) fill.style.width = `${(snap.bytesTransferred / snap.totalBytes) * 100}%`; },
+      err => reject(err),
+      async () => {
+        const url = await getDownloadURL(task.snapshot.ref);
+        if (bar) { bar.style.display = 'none'; if(fill) fill.style.width = '0%'; }
+        resolve(url);
       }
-      if (editId) {
-        await updateDoc(doc(db, collName, editId), data);
-      } else {
-        await addDoc(collection(db, collName), data);
-      }
+    );
+  });
+}
+
+function fileInputHtml(id) {
+  return `<div class="img-upload-zone" onclick="this.querySelector('input').click()">
+    <input type="file" accept="image/*" id="${id}" onchange="previewFile(this)" />
+    <div class="label"><strong>Click to upload</strong> or drag image here</div>
+    <img class="img-preview" id="${id}Preview" style="display:none;" />
+    <div class="progress-bar"><div class="progress-bar-fill"></div></div>
+  </div>`;
+}
+
+function previewFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const preview = document.getElementById(input.id + 'Preview');
+  const reader = new FileReader();
+  reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+  reader.readAsDataURL(file);
+}
+
+function gv(id) { return document.getElementById(id)?.value?.trim() || ''; }
+
+/* ── Load all ───────────────────────────── */
+async function loadAllData() {
+  await Promise.all([loadFeatures(), loadRooms(), loadEvents(), loadCapacity(), loadBookings()]);
+}
+
+/* ── Generic CRUD helpers ───────────────── */
+async function saveItem(collName, editId, data, imgInputId, storagePath) {
+  const { db, collection, addDoc, doc, updateDoc } = window._fb;
+  if (imgInputId) {
+    const fi = document.getElementById(imgInputId);
+    if (fi && fi.files && fi.files[0]) data.imageUrl = await uploadImage(fi.files[0], storagePath);
+  }
+  if (editId) { await updateDoc(doc(db, collName, editId), data); }
+  else { await addDoc(collection(db, collName), data); }
+}
+
+async function deleteItem(collName, docId) {
+  if (!confirm('Delete this item?')) return;
+  const { db, doc, deleteDoc } = window._fb;
+  await deleteDoc(doc(db, collName, docId));
+  showToast('Deleted.');
+  await loadAllData();
+}
+
+async function loadEditData(collName, docId, fieldMappings, imgInputId) {
+  const { doc: docRef } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+  const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+  const snap = await getDoc(docRef(window._fb.db, collName, docId));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  fieldMappings.forEach(m => {
+    const [elId, field] = m.split(':');
+    const el = document.getElementById(elId);
+    if (el && data[field] !== undefined) el.value = data[field];
+  });
+  if (imgInputId && data.imageUrl) {
+    const p = document.getElementById(imgInputId + 'Preview');
+    if (p) { p.src = data.imageUrl; p.style.display = 'block'; }
+  }
+}
+
+/* ── Features ───────────────────────────── */
+async function loadFeatures() {
+  const { db, collection, getDocs, query, orderBy } = window._fb;
+  const snap = await getDocs(query(collection(db, 'features'), orderBy('order')));
+  const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+  const el = document.getElementById('featuresList');
+  if (items.length === 0) { el.innerHTML = '<div class="empty-state">No features yet</div>'; return; }
+  el.innerHTML = items.map(f => `
+    <div class="item-card">
+      <div class="item-card-img">${f.imageUrl ? `<img src="${f.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
+      <div class="item-card-body">
+        <div class="item-card-title">${f.title}</div>
+        <div class="item-card-meta">${f.description || ''}</div>
+      </div>
+      <div class="item-card-actions">
+        <button class="btn btn-outline btn-sm" onclick="openFeatureModal('${f.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('features','${f.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function openFeatureModal(editId) {
+  openModal(editId ? 'Edit Feature' : 'Add Feature');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="mTitle" placeholder="e.g. Boutique Rooms" /></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Short description"></textarea></div>
+    <div class="form-group"><label class="form-label">Link to Page (optional)</label><select class="form-select" id="mLink"><option value="">None</option><option value="rooms">Rooms</option><option value="events">Events</option></select></div>
+    <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
+    <div class="form-group"><label class="form-label">Image</label>${fileInputHtml('mImg')}</div>`;
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-copper" onclick="saveFeature('${editId||''}')">Save</button>`;
+  if (editId) loadEditData('features', editId, ['mTitle:title','mDesc:description','mLink:linkPage','mOrder:order'], 'mImg');
+}
+
+async function saveFeature(editId) {
+  const data = { title: gv('mTitle'), description: gv('mDesc'), linkPage: gv('mLink'), order: parseInt(gv('mOrder')) || 0 };
+  if (!data.title) { alert('Title is required.'); return; }
+  await saveItem('features', editId, data, 'mImg', `features/${Date.now()}`);
+  closeModal(); await loadFeatures(); showToast('Feature saved');
+}
+
+/* ── Rooms ──────────────────────────────── */
+async function loadRooms() {
+  const { db, collection, getDocs, query, orderBy } = window._fb;
+  const snap = await getDocs(query(collection(db, 'rooms'), orderBy('order')));
+  const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+  const el = document.getElementById('roomsList');
+  if (items.length === 0) { el.innerHTML = '<div class="empty-state">No rooms yet</div>'; return; }
+  el.innerHTML = items.map(r => `
+    <div class="item-card">
+      <div class="item-card-img">${r.imageUrl ? `<img src="${r.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
+      <div class="item-card-body">
+        <div class="item-card-title">${r.name}</div>
+        <div class="item-card-meta">$${r.price}/night &middot; ${r.badge || ''} &middot; ${r.quantity || 1} available</div>
+      </div>
+      <div class="item-card-actions">
+        <button class="btn btn-outline btn-sm" onclick="openRoomModal('${r.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('rooms','${r.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function openRoomModal(editId) {
+  openModal(editId ? 'Edit Room' : 'Add Room');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-group"><label class="form-label">Room Name</label><input class="form-input" id="mName" placeholder="e.g. Spur Tree Suite" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Price per Night ($)</label><input type="number" class="form-input" id="mPrice" placeholder="185" min="0" /></div>
+      <div class="form-group"><label class="form-label">Quantity Available</label><input type="number" class="form-input" id="mQty" value="1" min="1" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Badge Label</label><input class="form-input" id="mBadge" placeholder="Signature, Popular…" /></div>
+      <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the room"></textarea></div>
+    <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-copper" onclick="saveRoom('${editId||''}')">Save</button>`;
+  if (editId) loadEditData('rooms', editId, ['mName:name','mPrice:price','mQty:quantity','mBadge:badge','mOrder:order','mDesc:description'], 'mImg');
+}
+
+async function saveRoom(editId) {
+  const data = { name: gv('mName'), price: parseInt(gv('mPrice')) || 0, quantity: parseInt(gv('mQty')) || 1, badge: gv('mBadge'), description: gv('mDesc'), order: parseInt(gv('mOrder')) || 0 };
+  if (!data.name || !data.price) { alert('Name and price are required.'); return; }
+  await saveItem('rooms', editId, data, 'mImg', `rooms/${Date.now()}`);
+  closeModal(); await loadRooms(); showToast('Room saved');
+}
+
+/* ── Events ─────────────────────────────── */
+async function loadEvents() {
+  const { db, collection, getDocs, query, orderBy } = window._fb;
+  const snap = await getDocs(query(collection(db, 'events'), orderBy('order')));
+  const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+  const el = document.getElementById('eventsList');
+  if (items.length === 0) { el.innerHTML = '<div class="empty-state">No events yet</div>'; return; }
+  el.innerHTML = items.map(ev => `
+    <div class="item-card">
+      <div class="item-card-img">${ev.imageUrl ? `<img src="${ev.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
+      <div class="item-card-body">
+        <div class="item-card-title">${ev.title}</div>
+        <div class="item-card-meta">${ev.type} &middot; ${ev.metaText || ''}</div>
+      </div>
+      <div class="item-card-actions">
+        <button class="btn btn-outline btn-sm" onclick="openEventModal('${ev.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('events','${ev.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function openEventModal(editId) {
+  openModal(editId ? 'Edit Event' : 'Add Event');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Event Type</label><input class="form-input" id="mType" placeholder="e.g. Weddings" /></div>
+      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="mTitle" placeholder="e.g. Hilltop Ceremonies" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the event offering"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Capacity / Meta Text</label><input class="form-input" id="mMeta" placeholder="e.g. Up to 200 Guests" /></div>
+      <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Image</label>${fileInputHtml('mImg')}</div>`;
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-copper" onclick="saveEvent('${editId||''}')">Save</button>`;
+  if (editId) loadEditData('events', editId, ['mType:type','mTitle:title','mDesc:description','mMeta:metaText','mOrder:order'], 'mImg');
+}
+
+async function saveEvent(editId) {
+  const data = { type: gv('mType'), title: gv('mTitle'), description: gv('mDesc'), metaText: gv('mMeta'), order: parseInt(gv('mOrder')) || 0 };
+  if (!data.type || !data.title) { alert('Type and title are required.'); return; }
+  await saveItem('events', editId, data, 'mImg', `events/${Date.now()}`);
+  closeModal(); await loadEvents(); showToast('Event saved');
+}
+
+/* ── Capacity Stats ─────────────────────── */
+async function loadCapacity() {
+  const { db, collection, getDocs, query, orderBy } = window._fb;
+  const snap = await getDocs(query(collection(db, 'capacity_stats'), orderBy('order')));
+  const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+  const el = document.getElementById('capacityList');
+  if (items.length === 0) { el.innerHTML = '<div class="empty-state">No capacity stats yet</div>'; return; }
+  el.innerHTML = items.map(s => `
+    <div class="stat-card">
+      <div class="stat-card-value">${s.value}</div>
+      <div class="stat-card-label">${s.label}</div>
+      <div class="stat-card-actions">
+        <button class="btn btn-outline btn-sm" onclick="openCapacityModal('${s.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteItem('capacity_stats','${s.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function openCapacityModal(editId) {
+  openModal(editId ? 'Edit Stat' : 'Add Stat');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Value</label><input class="form-input" id="mValue" placeholder="e.g. 200" /></div>
+      <div class="form-group"><label class="form-label">Label</label><input class="form-input" id="mLabel" placeholder="e.g. Max Guests" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>`;
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-copper" onclick="saveCapacity('${editId||''}')">Save</button>`;
+  if (editId) loadEditData('capacity_stats', editId, ['mValue:value','mLabel:label','mOrder:order']);
+}
+
+async function saveCapacity(editId) {
+  const data = { value: gv('mValue'), label: gv('mLabel'), order: parseInt(gv('mOrder')) || 0 };
+  if (!data.value || !data.label) { alert('Value and label are required.'); return; }
+  await saveItem('capacity_stats', editId, data);
+  closeModal(); await loadCapacity(); showToast('Stat saved');
+}
+
+/* ── Bookings ───────────────────────────── */
+async function loadBookings() {
+  const { db, collection, getDocs, query, orderBy } = window._fb;
+  try {
+    const snap = await getDocs(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')));
+    const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
+
+    const pendingCount = items.filter(b => (b.status || 'pending') === 'pending').length;
+    const pill = document.getElementById('pendingPill');
+    if (pill && pendingCount > 0) {
+      pill.style.display = 'inline-flex';
+      document.getElementById('pendingText').textContent = `${pendingCount} pending`;
     }
 
-    async function deleteItem(collName, docId) {
-      if (!confirm('Are you sure you want to delete this item?')) return;
-      const { db, doc, deleteDoc } = window._fb;
-      await deleteDoc(doc(db, collName, docId));
-      showToast('Deleted.');
-      await loadAllData();
-    }
+    const emptyEl = document.getElementById('bookingsEmpty');
+    if (items.length === 0) { emptyEl.style.display = 'block'; return; }
+    emptyEl.style.display = 'none';
 
-    async function loadEditData(collName, docId, fieldMappings, imgInputId) {
-      const { db, getDocs, collection, query } = window._fb;
-      // We already have the data in the list, but let's fetch fresh
-      const { doc: docRef } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
-      const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
-      const snap = await getDoc(docRef(db, collName, docId));
-      if (!snap.exists()) return;
-      const data = snap.data();
-      fieldMappings.forEach(m => {
-        const [elId, field] = m.split(':');
-        const el = document.getElementById(elId);
-        if (el && data[field] !== undefined && data[field] !== null) el.value = data[field];
-      });
-      if (imgInputId && data.imageUrl) {
-        const preview = document.getElementById(imgInputId + 'Preview');
-        if (preview) { preview.src = data.imageUrl; preview.style.display = 'block'; }
-      }
-    }
-  </script>
+    // Desktop table rows
+    document.getElementById('bookingsTableBody').innerHTML = items.map(b => {
+      const st = b.status || 'pending';
+      return `<tr>
+        <td>${b.guestName || '—'}</td>
+        <td>${b.guestEmail || '—'}</td>
+        <td>${b.roomId || '—'}</td>
+        <td>${b.checkIn || '—'}</td>
+        <td>${b.checkOut || '—'}</td>
+        <td>${b.numberOfGuests || '—'}</td>
+        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : 'st-confirmed'}">${st}</span></td>
+      </tr>`;
+    }).join('');
+
+    // Mobile cards
+    document.getElementById('bookingCardsList').innerHTML = items.map(b => {
+      const st = b.status || 'pending';
+      return `<div class="booking-card">
+        <div class="booking-card-name">${b.guestName || '—'}</div>
+        <div class="booking-card-row"><span>Email</span><span>${b.guestEmail || '—'}</span></div>
+        <div class="booking-card-row"><span>Room</span><span>${b.roomId || '—'}</span></div>
+        <div class="booking-card-row"><span>Check-in</span><span>${b.checkIn || '—'}</span></div>
+        <div class="booking-card-row"><span>Check-out</span><span>${b.checkOut || '—'}</span></div>
+        <div class="booking-card-row"><span>Guests</span><span>${b.numberOfGuests || '—'}</span></div>
+        <div class="booking-card-row" style="margin-top:0.5rem;">
+          <span>Status</span>
+          <span class="status-pill ${st === 'pending' ? 'st-pending' : 'st-confirmed'}">${st}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.warn('Bookings error:', e); }
+}
+</script>
 </body>
 </html>
