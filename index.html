@@ -221,7 +221,7 @@
       --space-5xl: 10rem;
 
       --max-width:  1280px;
-      --nav-height: 80px;
+      --nav-height: 68px;
       --radius-sm:  4px;
       --radius-md:  8px;
       --radius-lg:  12px;
@@ -360,6 +360,8 @@
       top: 0; left: 0; right: 0;
       z-index: 1000;
       height: var(--nav-height);
+      min-height: unset;
+      padding: 0;
       display: flex;
       align-items: center;
       background: rgba(42,45,53,0.15);
@@ -378,15 +380,15 @@
       width: 100%;
       max-width: var(--max-width);
       margin: 0 auto;
-      padding: 0 var(--space-xl);
+      padding: 0 var(--space-lg);
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .nav-brand { display: flex; flex-direction: column; transition: color var(--duration) var(--ease-out); }
-    .nav-brand-name { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 600; letter-spacing: 0.02em; line-height: 1.2; }
-    .nav-brand-sub { font-family: var(--font-accent); font-size: var(--text-xs); font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; font-style: italic; }
+    .nav-brand-name { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; letter-spacing: 0.02em; line-height: 1.2; }
+    .nav-brand-sub { font-family: var(--font-accent); font-size: 0.65rem; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; font-style: italic; }
 
     .nav:not(.scrolled) .nav-brand { color: var(--lux-white); }
     .nav.scrolled .nav-brand { color: var(--text-primary); }
@@ -407,48 +409,102 @@
     .nav.scrolled .nav-link { color: var(--text-secondary); }
     .nav.scrolled .nav-link:hover, .nav.scrolled .nav-link.active { color: var(--copper); }
 
-    .nav-cta {
-      display: inline-flex; align-items: center; gap: var(--space-sm);
-      padding: 10px 24px;
-      background: transparent; color: var(--copper);
-      font-size: var(--text-sm); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--copper);
-      box-shadow: var(--copper-wire);
+    .nav-cta { display: none; }
+
+    .nav-location-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px;
+      border: none; border-radius: 0;
+      background: none;
+      color: var(--copper-shine);
+      flex-shrink: 0;
       transition: all 0.3s var(--ease-out);
     }
-    .nav-cta:hover {
-      background: rgba(184,115,51,0.12);
-      box-shadow: var(--copper-glow-strong);
-      transform: translateY(-1px);
+    .nav-location-btn svg { width: 26px; height: 26px; stroke-width: 2.5; }
+    .nav:not(.scrolled) .nav-location-btn { color: var(--copper-shine); }
+    .nav.scrolled .nav-location-btn { color: var(--copper); }
+    .nav-location-btn:hover {
+      color: var(--copper-light);
+      transform: translateY(-2px);
+      filter: drop-shadow(0 0 8px rgba(184,115,51,0.6));
     }
 
-    .nav-toggle { display: none; flex-direction: column; gap: 5px; padding: 4px; cursor: pointer; }
-    .nav-toggle span { width: 24px; height: 2px; background: var(--lux-white); transition: background 0.3s, transform 0.3s, opacity 0.3s; }
-    .nav-toggle.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-    .nav-toggle.open span:nth-child(2) { opacity: 0; }
-    .nav-toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+    /* When sub-nav is open, inner pages need extra top offset */
+    .sub-nav.open ~ .page,
+    body.subnav-open .page { padding-top: 0; }
 
-    .mobile-menu {
-      display: none; position: fixed; top: 0; right: 0;
-      width: auto; min-width: 220px; max-width: 72vw;
-      z-index: 999; background: var(--grey-base); flex-direction: column;
-      padding: calc(var(--nav-height) + var(--space-lg)) var(--space-xl) var(--space-xl);
-      gap: 0; box-shadow: -8px 0 40px rgba(0,0,0,0.6);
-      transform: translateX(100%); transition: transform 0.4s var(--ease-out);
-      border-left: 1px solid rgba(184,115,51,0.2);
-      /* Height shrinks to content — no bottom: 0 */
-      border-bottom-left-radius: var(--radius-lg);
-      border-bottom: 1px solid rgba(184,115,51,0.15);
+    /* Push page content below sub-nav when visible */
+    #page-rooms, #page-events {
+      padding-top: 0; /* pages already account for nav-height via page-hero */
     }
-    .mobile-menu.open { display: flex; transform: translateX(0); }
-    .mobile-menu-backdrop {
-      display: none; position: fixed; inset: 0; z-index: 998;
-      background: rgba(30,33,40,0.7); backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.4s;
+
+    .nav-toggle { display: none; }
+
+    /* ─── SUB-NAV BAR ─────────────────────────────────
+       Appears just below the main nav when triggered.
+       Hidden by default, slides down on show.
+    ─────────────────────────────────────────────────── */
+    .sub-nav {
+      position: fixed;
+      top: var(--nav-height);
+      left: 0; right: 0;
+      z-index: 999;
+      background: rgba(15,17,22,0.2);
+      backdrop-filter: blur(12px) saturate(1.6);
+      -webkit-backdrop-filter: blur(12px) saturate(1.6);
+      border-bottom: 1px solid rgba(184,115,51,0.08);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: max-height 0.45s var(--ease-out), opacity 0.35s var(--ease-out);
     }
-    .mobile-menu-backdrop.open { display: block; opacity: 1; }
-    .mobile-menu .nav-link { color: var(--grey-mist); font-family: var(--font-display); font-size: var(--text-base); font-weight: 400; letter-spacing: 0.02em; padding: 0.625rem 0; border-bottom: 1px solid rgba(184,115,51,0.08); display: block; }
-    .mobile-menu .nav-link:hover { color: var(--copper-shine); }
+    .sub-nav.open {
+      max-height: 36px;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sub-nav-link {
+      display: inline-flex; align-items: center;
+      padding: 0.5rem 1.5rem;
+      font-family: var(--font-body);
+      font-size: var(--text-xs); font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: rgba(232,226,216,0.7);
+      cursor: pointer; background: none; border: none;
+      position: relative;
+      transition: color 0.3s;
+      white-space: nowrap;
+      height: 36px;
+    }
+    .sub-nav-link::after {
+      content: '';
+      position: absolute; bottom: 0; left: 50%; right: 50%;
+      height: 2px;
+      background: var(--copper);
+      box-shadow: 0 0 8px rgba(184,115,51,0.6);
+      transition: left 0.35s var(--ease-out), right 0.35s var(--ease-out);
+    }
+    .sub-nav-link:hover { color: var(--copper-shine); }
+    .sub-nav-link:hover::after, .sub-nav-link.active::after { left: 1rem; right: 1rem; }
+    .sub-nav-link.active { color: var(--copper-shine); }
+
+    .sub-nav-divider {
+      width: 1px; height: 18px;
+      background: rgba(184,115,51,0.2);
+      flex-shrink: 0;
+    }
+
+    /* mobile: slightly smaller padding */
+    @media (max-width: 480px) {
+      .sub-nav-link { padding: 0.5rem 0.875rem; font-size: 0.65rem; letter-spacing: 0.10em; height: 36px; }
+    }
 
     /* ═══════════════════════════════════════════
        HERO SECTION
@@ -870,11 +926,10 @@
       .capacity-banner { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
-      :root { --nav-height: 64px; }
+      :root { --nav-height: 60px; }
       .container { padding: 0 var(--space-md); }
       .nav-links { display: none; }
       .nav-cta.desktop { display: none; }
-      .nav-toggle { display: flex; }
       .hero { min-height: 600px; }
       .hero-content { padding: 0 var(--space-md) var(--space-3xl); }
       .hero-actions { flex-direction: column; align-items: flex-start; }
@@ -908,23 +963,19 @@
         <li><a class="nav-link" data-page="rooms" onclick="navigateTo('rooms')">Accommodation</a></li>
         <li><a class="nav-link" data-page="events" onclick="navigateTo('events')">Weddings &amp; Events</a></li>
       </ul>
-      <button class="nav-cta desktop" onclick="scrollToBooking()">
-        Book Now
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
-      <button class="nav-toggle" id="navToggle" onclick="toggleMobileMenu()">
-        <span></span><span></span><span></span>
-      </button>
+      <a class="nav-location-btn" href="https://maps.google.com/?q=Spur+Tree+Hill,+Mandeville,+Manchester,+Jamaica" target="_blank" rel="noopener" aria-label="Get directions">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      </a>
     </div>
   </nav>
 
-  <!-- Mobile Menu -->
-  <div class="mobile-menu-backdrop" id="mobileBackdrop" onclick="toggleMobileMenu()"></div>
-  <div class="mobile-menu" id="mobileMenu">
-    <a class="nav-link" onclick="navigateTo('home'); toggleMobileMenu();">Home</a>
-    <a class="nav-link" onclick="navigateTo('rooms'); toggleMobileMenu();">Accommodation</a>
-    <a class="nav-link" onclick="navigateTo('events'); toggleMobileMenu();">Weddings &amp; Events</a>
-    <button class="btn-hero-solid" onclick="navigateTo('rooms'); toggleMobileMenu();" style="margin-top:var(--space-md);width:100%;justify-content:center;">Book Now</button>
+  <!-- SUB-NAV BAR -->
+  <div class="sub-nav" id="subNav">
+    <button class="sub-nav-link active" id="snHome" onclick="subNavGo('home')">Home</button>
+    <div class="sub-nav-divider"></div>
+    <button class="sub-nav-link" id="snRooms" onclick="subNavGo('rooms')">Rooms</button>
+    <div class="sub-nav-divider"></div>
+    <button class="sub-nav-link" id="snEvents" onclick="subNavGo('events')">Weddings &amp; Events</button>
   </div>
 
   <!-- PAGE 1: HOME -->
@@ -943,7 +994,7 @@
         <p class="hero-description reveal" style="transition-delay:0.15s;">An intimate boutique retreat perched in Jamaica's cool, tranquil hills where warmth, elegance, and panoramic beauty meet.</p>
         <div class="hero-actions reveal" style="transition-delay:0.3s;">
           <button class="btn-hero-solid" onclick="navigateTo('rooms')">
-            Explore Our Rooms
+            Explore Accommodation
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
@@ -1269,29 +1320,31 @@
       document.querySelectorAll('.nav-link[data-page]').forEach(link => link.classList.toggle('active', link.dataset.page === page));
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (page === 'rooms' && !window._roomsRendered) { renderRooms(); window._roomsRendered = true; }
-      // Re-init reveal for newly shown page
       setTimeout(initReveal, 100);
+      // Open sub-nav and sync active link
+      document.getElementById('subNav').classList.add('open');
+      const snMap = { home: 'snHome', rooms: 'snRooms', events: 'snEvents' };
+      document.querySelectorAll('.sub-nav-link').forEach(l => l.classList.remove('active'));
+      const snTarget = document.getElementById(snMap[page]);
+      if (snTarget) snTarget.classList.add('active');
     }
 
     window.addEventListener('scroll', () => {
       document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 60);
     });
 
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobileMenu');
-      const backdrop = document.getElementById('mobileBackdrop');
-      const toggle = document.getElementById('navToggle');
-      const isOpen = menu.classList.contains('open');
-      if (isOpen) {
-        menu.style.transform = 'translateX(100%)';
-        backdrop.classList.remove('open'); toggle.classList.remove('open');
-        document.body.style.overflow = '';
-        setTimeout(() => menu.classList.remove('open'), 400);
-      } else {
-        menu.classList.add('open'); backdrop.classList.add('open'); toggle.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        requestAnimationFrame(() => { menu.style.transform = 'translateX(0)'; });
-      }
+    /* ── Sub-nav ─────────────────────────────────── */
+    function openSubNav() {
+      document.getElementById('subNav').classList.add('open');
+    }
+
+    function subNavGo(page) {
+      navigateTo(page);
+      // Update active state on sub-nav links
+      const map = { home: 'snHome', rooms: 'snRooms', events: 'snEvents' };
+      document.querySelectorAll('.sub-nav-link').forEach(l => l.classList.remove('active'));
+      const target = document.getElementById(map[page]);
+      if (target) target.classList.add('active');
     }
 
     function scrollToBooking() { navigateTo('rooms'); }
