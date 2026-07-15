@@ -99,9 +99,6 @@
         <div class="feature-card" ${f.linkPage ? `onclick="navigateTo('${f.linkPage}')"` : ''}>
           <img src="${f.imageUrl || ''}" alt="${f.title}" />
           <div class="feature-card-overlay">
-            <div class="feature-card-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg>
-            </div>
             <h3 class="feature-card-title">${f.title}</h3>
             <p class="feature-card-desc">${f.description}</p>
           </div>
@@ -140,7 +137,6 @@
       if (stats.length === 0) return;
       grid.innerHTML = stats.map(s => `
         <div class="capacity-stat">
-          <div class="capacity-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/></svg></div>
           <div class="capacity-stat-number">${s.value}</div>
           <div class="capacity-stat-label">${s.label}</div>
         </div>`).join('');
@@ -464,6 +460,13 @@
       pointer-events: none;
       transition: max-height 0.45s var(--ease-out), opacity 0.35s var(--ease-out);
     }
+    /* Hide sub-nav on desktop — the main nav already shows these links */
+    @media (min-width: 769px) {
+      .sub-nav,
+      .sub-nav.open {
+        display: none !important;
+      }
+    }
     .sub-nav.open {
       max-height: 36px;
       opacity: 1;
@@ -767,7 +770,7 @@
        FOOTER
        ═══════════════════════════════════════════ */
     .footer {
-      background: linear-gradient(180deg, #1A1D22 0%, #131519 100%);
+      background: url('https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/Screenshot%202026-07-14%20215125.png?alt=media&token=93632a86-7db1-425f-84d6-ffae5182b210') center center / cover no-repeat;
       padding: var(--space-4xl) 0 var(--space-xl);
       color: var(--grey-silver);
       position: relative;
@@ -776,6 +779,12 @@
       content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
       background: linear-gradient(90deg, transparent, var(--copper), transparent);
       box-shadow: 0 0 10px rgba(184,115,51,0.4);
+    }
+    .footer .container,
+    .footer-grid,
+    .footer-bottom {
+      position: relative;
+      z-index: 2;
     }
     .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--space-3xl); margin-bottom: var(--space-3xl); padding-bottom: var(--space-3xl); border-bottom: 1px solid rgba(184,115,51,0.08); }
     .footer-brand .nav-brand-name { color: var(--lux-white); margin-bottom: var(--space-sm); }
@@ -1299,6 +1308,9 @@
 
   <!-- FOOTER -->
   <footer class="footer">
+
+
+
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
