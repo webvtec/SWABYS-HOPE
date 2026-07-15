@@ -555,9 +555,9 @@
        ═══════════════════════════════════════════ */
     .features {
       padding: var(--space-5xl) 0;
-      /* Semi-transparent so fluid canvas breathes through */
-      background: rgba(245,240,234,0.82);
-      backdrop-filter: blur(0px);
+      /* Transparent so fluid canvas breathes through — metallic grey base */
+      background: rgba(44,46,48,0.72);
+      backdrop-filter: blur(1px);
       position: relative;
     }
     /* Subtle copper shimmer on section edges */
@@ -569,8 +569,8 @@
 
     .features-header { text-align: center; margin-bottom: var(--space-4xl); }
     .features-header .section-eyebrow { justify-content: center; }
-    .features-header .section-title { font-size: clamp(var(--text-3xl), 3.5vw, var(--text-5xl)); margin-bottom: var(--space-md); font-weight: 400; color: var(--text-primary); }
-    .features-header .section-subtitle { margin: 0 auto; color: var(--text-secondary); }
+    .features-header .section-title { font-size: clamp(var(--text-3xl), 3.5vw, var(--text-5xl)); margin-bottom: var(--space-md); font-weight: 400; color: #FFFFFF; }
+    .features-header .section-subtitle { margin: 0 auto; color: #E0E0E0; }
 
     .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); }
 
@@ -724,9 +724,9 @@
     /* ═══════════════════════════════════════════
        ROOMS SECTION — Lux white
        ═══════════════════════════════════════════ */
-    .rooms-section { padding: var(--space-5xl) 0; background: rgba(245,240,234,0.82); }
+    .rooms-section { padding: var(--space-5xl) 0; background: rgba(44,46,48,0.72); backdrop-filter: blur(1px); }
     .rooms-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-2xl); }
-    .room-card { border-radius: var(--radius-lg); overflow: hidden; background: rgba(250,248,245,0.92); border: 1px solid rgba(184,115,51,0.18); transition: box-shadow 0.6s, transform 0.6s, border-color 0.6s; }
+    .room-card { border-radius: var(--radius-lg); overflow: hidden; background: rgba(42,45,53,0.92); border: 1px solid rgba(184,115,51,0.18); transition: box-shadow 0.6s, transform 0.6s, border-color 0.6s; }
     .room-card:hover { box-shadow: var(--shadow-xl), 0 0 24px rgba(184,115,51,0.25); transform: translateY(-4px); border-color: var(--copper); }
     .room-card-image { position: relative; aspect-ratio: 16/10; overflow: hidden; }
     .room-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s var(--ease-out); }
@@ -734,19 +734,19 @@
     .room-card-badge { position: absolute; top: var(--space-md); left: var(--space-md); padding: 6px 14px; background: rgba(30,33,40,0.7); color: var(--copper-shine); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; border-radius: var(--radius-sm); border: 1px solid var(--copper); box-shadow: var(--copper-wire); backdrop-filter: blur(8px); }
     .room-card-body { padding: var(--space-xl); }
     .room-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-md); }
-    .room-card-name { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 500; color: var(--text-primary); }
+    .room-card-name { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 500; color: #FFFFFF; }
     .room-card-price { text-align: right; }
     .room-card-price .price { font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 600; color: var(--copper); }
-    .room-card-price .per-night { font-size: var(--text-xs); color: var(--text-muted); }
-    .room-card-desc { font-size: var(--text-sm); color: var(--text-secondary); line-height: 1.7; margin-bottom: var(--space-lg); }
+    .room-card-price .per-night { font-size: var(--text-xs); color: #B8BEC8; }
+    .room-card-desc { font-size: var(--text-sm); color: #E0E0E0; line-height: 1.7; margin-bottom: var(--space-lg); }
     .room-amenities { display: flex; flex-wrap: wrap; gap: var(--space-md); padding: var(--space-lg) 0; border-top: 1px solid rgba(184,115,51,0.12); border-bottom: 1px solid rgba(184,115,51,0.12); margin-bottom: var(--space-lg); }
-    .amenity { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-secondary); font-weight: 500; }
+    .amenity { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: #B8BEC8; font-weight: 500; }
     .amenity svg { width: 18px; height: 18px; color: var(--copper); }
-    .room-calendar { background: var(--lux-pearl); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-lg); border: 1px solid rgba(184,115,51,0.15); }
+    .room-calendar { background: rgba(30,33,40,0.7); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-lg); border: 1px solid rgba(184,115,51,0.15); }
     .room-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); }
-    .room-calendar-title { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
+    .room-calendar-title { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 600; color: #FFFFFF; }
     .room-calendar-nav { display: flex; gap: var(--space-xs); }
-    .room-calendar-nav button { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid rgba(184,115,51,0.2); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); background: rgba(250,248,245,0.6); transition: all 0.2s; }
+    .room-calendar-nav button { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid rgba(184,115,51,0.2); display: flex; align-items: center; justify-content: center; color: #B8BEC8; background: rgba(42,45,53,0.6); transition: all 0.2s; }
     .room-calendar-nav button:hover { border-color: var(--copper); color: var(--copper); box-shadow: 0 0 8px rgba(184,115,51,0.35); }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
     .calendar-day-label { text-align: center; font-size: 10px; font-weight: 600; color: var(--text-muted); padding: 4px; text-transform: uppercase; }
@@ -1254,98 +1254,128 @@
       resize();
       window.addEventListener('resize', resize);
 
+      // ── Highly responsive scroll listener with high damping ──
       window.addEventListener('scroll', () => {
         const sy = window.scrollY;
-        scrollVel = (sy - lastScrollY) * 0.6; // gentle nudge only
+        scrollVel = (sy - lastScrollY) * 1.4; // responsive to scroll speed
         lastScrollY = sy;
       }, { passive: true });
 
-      // ── The three unmixed paints drifting over grey base ──
-      // Each "blob" is a large soft paint deposit
       const seed = () => Math.random();
 
+      // ── "UNFINISHED MIX" — Copper Orange & Premium White over Grey ──
       const PAINT_GROUPS = [
-        // 1) Warm lux white/cream — largest blobs, very soft
-        { r:250, g:246, b:240, label:'cream',  count:4, alpha:[0.13,0.10,0.09,0.08], rScale:[0.55,0.45,0.40,0.35] },
-        // 2) Metallic copper-orange — medium blobs
-        { r:184, g:115, b:51,  label:'copper', count:3, alpha:[0.14,0.11,0.09],      rScale:[0.32,0.26,0.22] },
-        // 3) Silver/platinum — thinner streaks
-        { r:192, g:198, b:210, label:'silver', count:3, alpha:[0.09,0.07,0.06],      rScale:[0.40,0.30,0.25] },
+        // 1) Premium White (#F5F7FA) — distinct bright ribbons
+        { r:245, g:247, b:250, label:'white',  count:5,
+          alpha:[0.18,0.15,0.13,0.11,0.09],
+          rScale:[0.48,0.40,0.35,0.30,0.25] },
+        // 2) Metallic Copper Orange (#D17A38 / #B86221) — brilliant veins
+        { r:209, g:122, b:56,  label:'copper', count:4,
+          alpha:[0.20,0.16,0.13,0.10],
+          rScale:[0.36,0.30,0.24,0.19] },
+        // 3) Deep copper accent (#B86221) — darker streaks for depth
+        { r:184, g:98,  b:33,  label:'deepcopper', count:3,
+          alpha:[0.14,0.11,0.08],
+          rScale:[0.28,0.22,0.17] },
       ];
 
       const blobs = [];
       PAINT_GROUPS.forEach(g => {
         for (let i = 0; i < g.count; i++) {
           blobs.push({
-            // Spread across viewport, don't cluster
-            x:     0.08 + seed() * 0.84,
-            y:     0.05 + seed() * 0.90,
+            x:     0.06 + seed() * 0.88,
+            y:     0.04 + seed() * 0.92,
             r:     g.rScale[i],
-            // Very slow autonomous drift
-            vx:    (seed() - 0.5) * 0.000055,
-            vy:    (seed() - 0.5) * 0.000045,
+            // Barely perceptible idle drift
+            vx:    (seed() - 0.5) * 0.000035,
+            vy:    (seed() - 0.5) * 0.000028,
             phase: seed() * Math.PI * 2,
-            // Each blob breathes at slightly different rate
-            breatheX: 0.0004 + seed() * 0.0003,
-            breatheY: 0.0003 + seed() * 0.0002,
-            // Warp offsets for organic shape
+            breatheX: 0.0003 + seed() * 0.0002,
+            breatheY: 0.00025 + seed() * 0.00015,
             wx: seed() * Math.PI * 2,
             wy: seed() * Math.PI * 2,
-            // Paint
             r_col: g.r, g_col: g.g, b_col: g.b,
             alpha: g.alpha[i],
-            // Subtle scroll sensitivity — each blob different
-            scrollSens: (seed() * 0.3 + 0.05),
+            // Each blob reacts to scroll differently for organic feel
+            scrollSensX: (seed() * 0.5 + 0.15),
+            scrollSensY: (seed() * 0.3 + 0.05),
+            // Rotation angle for swirl on scroll
+            scrollAngle: seed() * Math.PI * 2,
           });
         }
       });
 
       function draw() {
-        time += 0.0018; // very slow — paint moves like treacle
-        smoothScroll += (scrollVel - smoothScroll) * 0.06;
-        scrollVel *= 0.88;
+        time += 0.0012; // extremely slow idle — paint moves like honey
+
+        // HIGH DAMPING — scroll energy dies fast when user stops
+        smoothScroll += (scrollVel - smoothScroll) * 0.08;
+        scrollVel *= 0.82; // high viscosity decay
 
         ctx.clearRect(0, 0, W, H);
 
-        // ① Solid rich metallic grey base — this is the dominant colour
-        ctx.fillStyle = '#2B2E38';
+        // ① SOLID METALLIC GREY BASE — #3A3D40 with subtle gradient for depth
+        const baseGrad = ctx.createLinearGradient(0, 0, W, H);
+        baseGrad.addColorStop(0,   '#3A3D40');
+        baseGrad.addColorStop(0.3, '#353840');
+        baseGrad.addColorStop(0.6, '#2C2E30');
+        baseGrad.addColorStop(1,   '#3A3D40');
+        ctx.fillStyle = baseGrad;
         ctx.fillRect(0, 0, W, H);
 
-        // ② Subtle dark vignette at edges to frame the paint
-        const vig = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.9);
+        // ② SPECULAR REFLECTION — polished metallic sheen on base
+        const sheenX = W * (0.35 + Math.sin(time * 0.05) * 0.12);
+        const sheenY = H * (0.3 + Math.cos(time * 0.04) * 0.08);
+        const sheen = ctx.createRadialGradient(sheenX, sheenY, 0, sheenX, sheenY, H * 0.7);
+        sheen.addColorStop(0,   'rgba(255,255,255,0.04)');
+        sheen.addColorStop(0.3, 'rgba(200,205,215,0.025)');
+        sheen.addColorStop(0.6, 'rgba(150,155,165,0.01)');
+        sheen.addColorStop(1,   'rgba(0,0,0,0)');
+        ctx.fillStyle = sheen;
+        ctx.fillRect(0, 0, W, H);
+
+        // Vignette for depth
+        const vig = ctx.createRadialGradient(W/2, H/2, H*0.15, W/2, H/2, H*0.95);
         vig.addColorStop(0, 'rgba(0,0,0,0)');
-        vig.addColorStop(1, 'rgba(15,17,22,0.35)');
+        vig.addColorStop(1, 'rgba(10,12,16,0.3)');
         ctx.fillStyle = vig;
         ctx.fillRect(0, 0, W, H);
 
-        // ③ Draw each paint blob — organic, slow, unmixed
+        // ③ PAINT BLOBS — swirl actively on scroll, barely move when idle
+        const scrollMag = Math.abs(smoothScroll);
+
         blobs.forEach(b => {
-          // Autonomous slow drift
-          b.x += b.vx + Math.sin(time * b.breatheX * 1000 + b.phase) * 0.000038;
-          b.y += b.vy + Math.cos(time * b.breatheY * 900  + b.phase) * 0.000030;
+          // Idle: barely perceptible drift
+          b.x += b.vx + Math.sin(time * b.breatheX * 800 + b.phase) * 0.000025;
+          b.y += b.vy + Math.cos(time * b.breatheY * 700 + b.phase) * 0.000020;
 
-          // Very gentle scroll nudge — horizontal only, barely perceptible
-          const scrollNudge = smoothScroll * b.scrollSens * 0.0008;
+          // SCROLL STIRRING — orbits around blob's position when scrolling
+          const stirAngle = b.scrollAngle + time * 0.5;
+          const stirRadius = scrollMag * 0.0015;
+          const scrollNudgeX = Math.cos(stirAngle) * stirRadius * b.scrollSensX;
+          const scrollNudgeY = Math.sin(stirAngle) * stirRadius * b.scrollSensY;
 
-          // Soft bounce at edges
-          if (b.x < -0.15) b.vx += 0.000015;
-          if (b.x >  1.15) b.vx -= 0.000015;
-          if (b.y < -0.15) b.vy += 0.000012;
-          if (b.y >  1.15) b.vy -= 0.000012;
+          // Soft edge bounce
+          if (b.x < -0.12) b.vx += 0.000012;
+          if (b.x >  1.12) b.vx -= 0.000012;
+          if (b.y < -0.12) b.vy += 0.000010;
+          if (b.y >  1.12) b.vy -= 0.000010;
 
-          // Centre of blob — slow organic warp
-          const cx = (b.x + Math.sin(time * 0.38 + b.wx) * 0.04 + scrollNudge) * W;
-          const cy = (b.y + Math.cos(time * 0.29 + b.wy) * 0.035) * H;
+          // Centre — organic warp + scroll stirring
+          const cx = (b.x + Math.sin(time * 0.28 + b.wx) * 0.03 + scrollNudgeX) * W;
+          const cy = (b.y + Math.cos(time * 0.22 + b.wy) * 0.025 + scrollNudgeY) * H;
 
-          // Blob is wider than tall — like paint spreading on a surface
-          const rx = b.r * W * (1 + Math.sin(time * 0.55 + b.phase) * 0.07);
-          const ry = b.r * H * (0.55 + Math.cos(time * 0.47 + b.phase) * 0.07);
+          // Shape warps slightly with scroll for organic feel
+          const warpFactor = 1 + scrollMag * 0.0002;
+          const rx = b.r * W * (warpFactor + Math.sin(time * 0.4 + b.phase) * 0.06);
+          const ry = b.r * H * (0.5 + Math.cos(time * 0.35 + b.phase) * 0.06);
 
-          // Radial gradient — soft feathered edge like real paint
+          // Radial gradient — distinct edges, not muddy
           const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
           grad.addColorStop(0,    `rgba(${b.r_col},${b.g_col},${b.b_col},${b.alpha})`);
-          grad.addColorStop(0.35, `rgba(${b.r_col},${b.g_col},${b.b_col},${b.alpha * 0.65})`);
-          grad.addColorStop(0.70, `rgba(${b.r_col},${b.g_col},${b.b_col},${b.alpha * 0.25})`);
+          grad.addColorStop(0.25, `rgba(${b.r_col},${b.g_col},${b.b_col},${b.alpha * 0.75})`);
+          grad.addColorStop(0.55, `rgba(${b.r_col},${b.g_col},${b.b_col},${b.alpha * 0.35})`);
+          grad.addColorStop(0.85, `rgba(${b.r_col},${b.g_col},${b.b_col},${b.alpha * 0.08})`);
           grad.addColorStop(1,    `rgba(${b.r_col},${b.g_col},${b.b_col},0)`);
 
           ctx.save();
@@ -1358,29 +1388,29 @@
           ctx.restore();
         });
 
-        // ④ One thin copper streak that slowly rotates — like a stirring mark
+        // ④ Copper vein streak — rotates gently, stirs with scroll
         {
-          const angle = time * 0.08;
-          const cx = W * (0.5 + Math.sin(time * 0.11) * 0.18);
-          const cy = H * (0.5 + Math.cos(time * 0.09) * 0.15);
-          const len = Math.min(W, H) * 0.45;
+          const scrollTwist = smoothScroll * 0.002;
+          const angle = time * 0.06 + scrollTwist;
+          const cx = W * (0.5 + Math.sin(time * 0.09) * 0.16);
+          const cy = H * (0.5 + Math.cos(time * 0.07) * 0.13);
+          const len = Math.min(W, H) * 0.5;
           const x1 = cx + Math.cos(angle) * len;
           const y1 = cy + Math.sin(angle) * len;
           const x2 = cx - Math.cos(angle) * len;
           const y2 = cy - Math.sin(angle) * len;
 
           const streakGrad = ctx.createLinearGradient(x1, y1, x2, y2);
-          streakGrad.addColorStop(0,   'rgba(184,115,51,0)');
-          streakGrad.addColorStop(0.25,'rgba(184,115,51,0.07)');
-          streakGrad.addColorStop(0.5, 'rgba(212,140,80,0.10)');
-          streakGrad.addColorStop(0.75,'rgba(184,115,51,0.07)');
-          streakGrad.addColorStop(1,   'rgba(184,115,51,0)');
+          streakGrad.addColorStop(0,   'rgba(209,122,56,0)');
+          streakGrad.addColorStop(0.2, 'rgba(209,122,56,0.08)');
+          streakGrad.addColorStop(0.5, 'rgba(230,145,70,0.12)');
+          streakGrad.addColorStop(0.8, 'rgba(209,122,56,0.08)');
+          streakGrad.addColorStop(1,   'rgba(209,122,56,0)');
 
           ctx.save();
           ctx.strokeStyle = streakGrad;
-          ctx.lineWidth = Math.min(W, H) * 0.09;
+          ctx.lineWidth = Math.min(W, H) * 0.08;
           ctx.lineCap = 'round';
-          ctx.globalAlpha = 1;
           ctx.beginPath();
           ctx.moveTo(x1, y1);
           ctx.lineTo(x2, y2);
@@ -1388,17 +1418,47 @@
           ctx.restore();
         }
 
-        // ⑤ One silver sheen arc — gives that metallic feel
+        // ⑤ White vein streak — second stirring mark
         {
-          const arc_cx = W * (0.5 + Math.sin(time * 0.07 + 1.2) * 0.22);
-          const arc_cy = H * (0.5 + Math.cos(time * 0.06 + 0.8) * 0.18);
-          const arc_r  = Math.min(W, H) * (0.35 + Math.sin(time * 0.04) * 0.05);
+          const scrollTwist2 = smoothScroll * -0.0015;
+          const angle2 = time * 0.045 + scrollTwist2 + 1.8;
+          const cx2 = W * (0.5 + Math.cos(time * 0.065) * 0.2);
+          const cy2 = H * (0.5 + Math.sin(time * 0.055) * 0.16);
+          const len2 = Math.min(W, H) * 0.42;
+          const x1b = cx2 + Math.cos(angle2) * len2;
+          const y1b = cy2 + Math.sin(angle2) * len2;
+          const x2b = cx2 - Math.cos(angle2) * len2;
+          const y2b = cy2 - Math.sin(angle2) * len2;
 
-          const sheenG = ctx.createRadialGradient(arc_cx, arc_cy, arc_r * 0.6, arc_cx, arc_cy, arc_r);
-          sheenG.addColorStop(0,   'rgba(210,216,228,0)');
-          sheenG.addColorStop(0.5, 'rgba(210,216,228,0.055)');
-          sheenG.addColorStop(0.8, 'rgba(192,198,212,0.04)');
-          sheenG.addColorStop(1,   'rgba(192,198,212,0)');
+          const whiteStreak = ctx.createLinearGradient(x1b, y1b, x2b, y2b);
+          whiteStreak.addColorStop(0,   'rgba(245,247,250,0)');
+          whiteStreak.addColorStop(0.25,'rgba(245,247,250,0.07)');
+          whiteStreak.addColorStop(0.5, 'rgba(245,247,250,0.10)');
+          whiteStreak.addColorStop(0.75,'rgba(245,247,250,0.07)');
+          whiteStreak.addColorStop(1,   'rgba(245,247,250,0)');
+
+          ctx.save();
+          ctx.strokeStyle = whiteStreak;
+          ctx.lineWidth = Math.min(W, H) * 0.06;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(x1b, y1b);
+          ctx.lineTo(x2b, y2b);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // ⑥ Specular highlight arc — brushed metal feel
+        {
+          const arc_cx = W * (0.55 + Math.sin(time * 0.05 + 1.2) * 0.2);
+          const arc_cy = H * (0.45 + Math.cos(time * 0.04 + 0.8) * 0.15);
+          const arc_r  = Math.min(W, H) * (0.3 + Math.sin(time * 0.03) * 0.04);
+
+          const sheenG = ctx.createRadialGradient(arc_cx, arc_cy, arc_r * 0.5, arc_cx, arc_cy, arc_r);
+          sheenG.addColorStop(0,   'rgba(255,255,255,0)');
+          sheenG.addColorStop(0.4, 'rgba(255,255,255,0.03)');
+          sheenG.addColorStop(0.7, 'rgba(220,225,235,0.02)');
+          sheenG.addColorStop(1,   'rgba(200,205,215,0)');
           ctx.beginPath();
           ctx.arc(arc_cx, arc_cy, arc_r, 0, Math.PI * 2);
           ctx.fillStyle = sheenG;
