@@ -38,143 +38,414 @@
 
   <style>
     :root {
-      --copper: #B87333;
-      --copper-light: #E8A87C;
-      --copper-deep: #8B4513;
-      --bg: #FAFAFA;
-      --surface: #FFFFFF;
-      --text: #1A1D26;
-      --text-secondary: #4A5060;
-      --text-muted: #6B7280;
-      --border: #E5E7EB;
-      --border-copper: rgba(184,115,51,0.2);
-      --danger: #DC2626;
-      --danger-bg: #FEF2F2;
-      --success: #16A34A;
-      --success-bg: #F0FDF4;
-      --radius: 8px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.08);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      /* Dark premium palette */
+      --sidebar-bg:    #111318;
+      --sidebar-surface: #181C24;
+      --topbar-bg:     #13161E;
+      --main-bg:       #1A1E28;
+      --card-bg:       #1E2330;
+      --card-border:   rgba(255,255,255,0.06);
+      --card-hover:    rgba(255,255,255,0.04);
+
+      /* Copper */
+      --copper:        #B87333;
+      --copper-light:  #E8A87C;
+      --copper-deep:   #8B4513;
+      --copper-shine:  #D4895A;
+      --copper-glow:   rgba(184,115,51,0.35);
+      --copper-soft:   rgba(184,115,51,0.12);
+      --copper-faint:  rgba(184,115,51,0.06);
+      --copper-wire:   0 0 8px rgba(184,115,51,0.45), 0 0 20px rgba(184,115,51,0.15);
+
+      /* Text */
+      --text:          #EDE8E0;
+      --text-secondary:#A8B0C0;
+      --text-muted:    #6B7280;
+      --text-dim:      #3E4352;
+
+      /* Functional */
+      --danger:        #EF4444;
+      --danger-bg:     rgba(239,68,68,0.1);
+      --success:       #22C55E;
+      --success-bg:    rgba(34,197,94,0.1);
+      --warning:       #F59E0B;
+      --warning-bg:    rgba(245,158,11,0.1);
+
+      --border:        rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.12);
+      --radius:        10px;
+      --radius-lg:     14px;
+      --shadow:        0 2px 8px rgba(0,0,0,0.35);
+      --shadow-md:     0 8px 24px rgba(0,0,0,0.45);
+      --shadow-lg:     0 20px 60px rgba(0,0,0,0.6);
+
+      --sidebar-w:     240px;
     }
+
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    html { height: 100%; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--main-bg); color: var(--text);
+      line-height: 1.6; height: 100%;
+      -webkit-font-smoothing: antialiased;
+    }
     img { display: block; max-width: 100%; }
     button { font: inherit; cursor: pointer; border: none; background: none; }
     input, textarea, select { font: inherit; }
 
-    /* Dashboard */
-    #dashboard { display: none; }
+    /* ── Layout ─────────────────────────────────── */
+    #dashboard { display: none; height: 100vh; }
+
+    .admin-shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ─────────────────────────────────── */
+    .sidebar {
+      grid-row: 1 / -1;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 1.75rem 1.5rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 600;
+      color: var(--text); line-height: 1.3;
+    }
+    .sidebar-brand-sub {
+      font-size: 0.7rem; color: var(--copper-shine);
+      letter-spacing: 0.15em; text-transform: uppercase;
+      margin-top: 3px; font-weight: 500;
+    }
+
+    .sidebar-section-label {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--text-dim);
+      padding: 1.25rem 1.5rem 0.5rem;
+    }
+
+    .sidebar-nav { padding: 0.5rem 0.75rem; flex: 1; }
+
+    .sidebar-tab {
+      display: flex; align-items: center; gap: 0.75rem;
+      width: 100%; padding: 0.65rem 0.85rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem; font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      margin-bottom: 2px;
+    }
+    .sidebar-tab svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; transition: opacity 0.2s; }
+    .sidebar-tab:hover { background: var(--card-hover); color: var(--text); }
+    .sidebar-tab:hover svg { opacity: 1; }
+    .sidebar-tab.active {
+      background: var(--copper-soft);
+      color: var(--copper-shine);
+      box-shadow: inset 3px 0 0 var(--copper);
+    }
+    .sidebar-tab.active svg { opacity: 1; color: var(--copper); }
+
+    .sidebar-divider { height: 1px; background: var(--border); margin: 0.75rem 1.5rem; }
+
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 0.625rem;
+    }
+    .sidebar-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--copper-shine), var(--copper-deep));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: white; flex-shrink: 0;
+    }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name { font-size: 0.8125rem; font-weight: 600; color: var(--text); }
+    .sidebar-signout {
+      font-size: 0.7rem; color: var(--danger); font-weight: 500;
+      padding: 2px 6px; border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .sidebar-signout:hover { background: var(--danger-bg); }
+
+    /* ── Top Header ───────────────────────────────── */
     .topbar {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 0.75rem 2rem; display: flex; align-items: center; justify-content: space-between;
+      grid-column: 2;
+      background: var(--topbar-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
       position: sticky; top: 0; z-index: 100;
     }
-    .topbar-brand { font-family: 'Playfair Display', serif; font-size: 1.125rem; font-weight: 500; }
-    .topbar-right { display: flex; align-items: center; gap: 1rem; font-size: 0.875rem; color: var(--text-muted); }
-    .topbar-right button { font-size: 0.8rem; color: var(--danger); font-weight: 500; }
 
-    .dash-nav {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 0 2rem; display: flex; gap: 0;
+    .topbar-left { display: flex; align-items: center; gap: 1.5rem; }
+    .topbar-page-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.125rem; font-weight: 500; color: var(--text);
     }
-    .dash-tab {
-      padding: 0.75rem 1.25rem; font-size: 0.875rem; font-weight: 500;
-      color: var(--text-muted); border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .dash-tab:hover { color: var(--text); }
-    .dash-tab.active { color: var(--copper); border-bottom-color: var(--copper); }
 
-    .dash-content { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+    .topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* ── Bookings Quick Button ─── */
+    .btn-bookings {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      background: linear-gradient(135deg, var(--copper-shine), var(--copper), var(--copper-deep));
+      color: white;
+      font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      border-radius: var(--radius);
+      border: 1px solid var(--copper-light);
+      box-shadow: var(--copper-wire), 0 4px 12px rgba(184,115,51,0.3);
+      transition: all 0.25s;
+    }
+    .btn-bookings:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 16px rgba(184,115,51,0.55), 0 0 32px rgba(184,115,51,0.2), 0 6px 20px rgba(184,115,51,0.35);
+    }
+    .btn-bookings svg { width: 14px; height: 14px; }
+
+    .topbar-stat {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.875rem;
+      background: var(--copper-faint);
+      border: 1px solid var(--copper-soft);
+      border-radius: var(--radius);
+      font-size: 0.8rem; color: var(--copper-shine); font-weight: 500;
+    }
+    .topbar-stat svg { width: 13px; height: 13px; opacity: 0.8; }
+
+    /* ── Main content area ───────────────────────── */
+    .dash-main {
+      grid-column: 2;
+      padding: 2rem 2.5rem;
+      overflow-y: auto;
+    }
+
     .dash-section { display: none; }
     .dash-section.active { display: block; }
 
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-    .section-header h2 { font-family: 'Playfair Display', serif; font-size: 1.375rem; font-weight: 500; }
-
-    /* Buttons */
-    .btn { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.5rem 1rem; border-radius: var(--radius); font-size: 0.8125rem; font-weight: 600; transition: all 0.2s; }
-    .btn-copper { background: var(--copper); color: white; }
-    .btn-copper:hover { background: var(--copper-deep); }
-    .btn-outline { border: 1px solid var(--border); color: var(--text-secondary); background: var(--surface); }
-    .btn-outline:hover { border-color: var(--copper); color: var(--copper); }
-    .btn-danger { color: var(--danger); border: 1px solid #FECACA; background: var(--danger-bg); }
-    .btn-danger:hover { background: #FEE2E2; }
-    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
-
-    /* Form */
-    .form-group { margin-bottom: 1rem; }
-    .form-label { display: block; font-size: 0.8125rem; font-weight: 500; margin-bottom: 0.375rem; color: var(--text-secondary); }
-    .form-input, .form-textarea, .form-select {
-      width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border);
-      border-radius: var(--radius); font-size: 0.875rem; color: var(--text); outline: none;
-      transition: border-color 0.2s;
+    /* ── Section header ──────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
     }
-    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--copper); }
+    .section-header-left {}
+    .section-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.375rem; font-weight: 500; color: var(--text);
+    }
+    .section-header-sub {
+      font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;
+    }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.5625rem 1.125rem;
+      border-radius: var(--radius);
+      font-size: 0.8125rem; font-weight: 600;
+      transition: all 0.2s; letter-spacing: 0.02em;
+    }
+    .btn-copper {
+      background: linear-gradient(135deg, var(--copper-shine), var(--copper));
+      color: white; border: 1px solid rgba(232,168,124,0.3);
+      box-shadow: 0 2px 8px rgba(184,115,51,0.25);
+    }
+    .btn-copper:hover {
+      background: linear-gradient(135deg, var(--copper-light), var(--copper-shine));
+      box-shadow: 0 4px 16px rgba(184,115,51,0.4); transform: translateY(-1px);
+    }
+    .btn-outline {
+      border: 1px solid var(--border-strong); color: var(--text-secondary);
+      background: transparent;
+    }
+    .btn-outline:hover { border-color: var(--copper); color: var(--copper-shine); }
+    .btn-danger { color: var(--danger); border: 1px solid rgba(239,68,68,0.25); background: var(--danger-bg); }
+    .btn-danger:hover { background: rgba(239,68,68,0.18); }
+    .btn-sm { padding: 0.3125rem 0.75rem; font-size: 0.75rem; }
+
+    /* ── Form ────────────────────────────────────── */
+    .form-group { margin-bottom: 1.125rem; }
+    .form-label {
+      display: block; font-size: 0.8rem; font-weight: 600;
+      margin-bottom: 0.375rem; color: var(--text-secondary);
+      letter-spacing: 0.03em; text-transform: uppercase;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%; padding: 0.625rem 0.875rem;
+      background: var(--sidebar-bg);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      font-size: 0.875rem; color: var(--text); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      border-color: var(--copper);
+      box-shadow: 0 0 0 3px rgba(184,115,51,0.12);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--text-dim); }
     .form-textarea { min-height: 80px; resize: vertical; }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23B87333' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      padding-right: 36px;
+      background-color: var(--sidebar-bg);
+    }
+    .form-select option { background: var(--sidebar-bg); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 
-    /* Image upload */
+    /* ── Image upload ────────────────────────────── */
     .img-upload-zone {
-      border: 2px dashed var(--border); border-radius: var(--radius);
+      border: 1px dashed var(--border-strong); border-radius: var(--radius);
       padding: 1.5rem; text-align: center; cursor: pointer;
       transition: border-color 0.2s, background 0.2s; position: relative;
+      background: var(--copper-faint);
     }
-    .img-upload-zone:hover { border-color: var(--copper); background: rgba(184,115,51,0.03); }
+    .img-upload-zone:hover { border-color: var(--copper); background: rgba(184,115,51,0.06); }
     .img-upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
     .img-upload-zone .label { font-size: 0.8125rem; color: var(--text-muted); }
-    .img-upload-zone .label strong { color: var(--copper); }
+    .img-upload-zone .label strong { color: var(--copper-shine); }
     .img-preview { margin-top: 0.5rem; border-radius: 6px; max-height: 120px; object-fit: cover; width: 100%; }
-    .progress-bar { width: 100%; height: 4px; background: var(--border); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; display: none; }
-    .progress-bar-fill { height: 100%; background: var(--copper); transition: width 0.3s; width: 0%; }
+    .progress-bar { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; display: none; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--copper-shine), var(--copper)); transition: width 0.3s; width: 0%; }
 
-    /* Items grid */
-    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    /* ── Items grid ──────────────────────────────── */
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.125rem; }
     .item-card {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-      overflow: hidden; transition: box-shadow 0.2s;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg); overflow: hidden;
+      transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s;
     }
-    .item-card:hover { box-shadow: var(--shadow-md); }
-    .item-card-img { aspect-ratio: 16/10; overflow: hidden; background: #F3F4F6; position: relative; }
-    .item-card-img img { width: 100%; height: 100%; object-fit: cover; }
-    .item-card-img .no-img { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.8rem; }
-    .item-card-body { padding: 0.75rem 1rem; }
-    .item-card-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; }
-    .item-card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .item-card-actions { display: flex; gap: 0.5rem; padding: 0.5rem 1rem 0.75rem; }
+    .item-card:hover {
+      box-shadow: var(--shadow-md), 0 0 0 1px rgba(184,115,51,0.15);
+      border-color: rgba(184,115,51,0.2);
+      transform: translateY(-2px);
+    }
+    .item-card-img { aspect-ratio: 16/10; overflow: hidden; background: #0E1017; position: relative; }
+    .item-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+    .item-card:hover .item-card-img img { transform: scale(1.04); }
+    .item-card-img .no-img {
+      display: flex; align-items: center; justify-content: center; height: 100%;
+      color: var(--text-dim); font-size: 0.8rem;
+      background: linear-gradient(135deg, #0E1017, #1A1E28);
+    }
+    .item-card-body { padding: 1rem 1.125rem 0.5rem; }
+    .item-card-title { font-weight: 600; font-size: 0.9375rem; margin-bottom: 0.25rem; color: var(--text); }
+    .item-card-meta { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+    .item-card-actions { display: flex; gap: 0.5rem; padding: 0.625rem 1.125rem 1rem; }
 
-    /* Modal */
+    /* ── Bookings table ───────────────────────────── */
+    .bookings-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); }
+    .bookings-table {
+      width: 100%; border-collapse: collapse; font-size: 0.8125rem;
+      background: var(--card-bg);
+    }
+    .bookings-table thead tr {
+      background: rgba(184,115,51,0.06);
+      border-bottom: 1px solid rgba(184,115,51,0.2);
+    }
+    .bookings-table th {
+      padding: 0.75rem 1rem; text-align: left;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--copper-shine);
+    }
+    .bookings-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .bookings-table tbody tr:last-child { border-bottom: none; }
+    .bookings-table tbody tr:hover { background: var(--card-hover); }
+    .bookings-table td { padding: 0.875rem 1rem; color: var(--text-secondary); vertical-align: middle; }
+    .bookings-table td:first-child { color: var(--text); font-weight: 600; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .status-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .status-pending { background: var(--warning-bg); color: var(--warning); }
+    .status-confirmed { background: var(--success-bg); color: var(--success); }
+
+    /* ── Modal ───────────────────────────────────── */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
       z-index: 500; display: none; align-items: center; justify-content: center; padding: 1rem;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--surface); border-radius: 12px; max-width: 560px; width: 100%;
-      max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      background: var(--card-bg); border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg); max-width: 560px; width: 100%;
+      max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg);
     }
     .modal-header {
-      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+      padding: 1.375rem 1.5rem; border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
+      background: rgba(184,115,51,0.04);
     }
-    .modal-header h3 { font-family: 'Playfair Display', serif; font-size: 1.125rem; font-weight: 500; }
-    .modal-close { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-muted); }
+    .modal-header h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.125rem; font-weight: 500; color: var(--text);
+    }
+    .modal-close {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1px solid var(--border-strong);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--text-muted);
+      transition: all 0.2s; line-height: 1;
+    }
+    .modal-close:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
     .modal-body { padding: 1.5rem; }
-    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; }
-
-    .empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 0.9rem; }
-    .toast {
-      position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1A1D26; color: white;
-      padding: 0.75rem 1.25rem; border-radius: var(--radius); font-size: 0.8125rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.2); z-index: 999; opacity: 0; transform: translateY(10px);
-      transition: all 0.3s;
+    .modal-footer {
+      padding: 1rem 1.5rem; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 0.5rem;
+      background: rgba(0,0,0,0.1);
     }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    @media (max-width: 768px) {
-      .topbar { padding: 0.75rem 1rem; }
-      .dash-nav { padding: 0 1rem; overflow-x: auto; }
-      .dash-content { padding: 1rem; }
+
+    .empty-state {
+      text-align: center; padding: 3.5rem 2rem;
+      color: var(--text-dim); font-size: 0.9rem;
+    }
+    .empty-state::before {
+      content: '— ';
+      color: var(--copper);
+    }
+    .empty-state::after { content: ' —'; color: var(--copper); }
+
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem;
+      background: linear-gradient(135deg, var(--copper-shine), var(--copper));
+      color: white;
+      padding: 0.75rem 1.375rem; border-radius: var(--radius); font-size: 0.8125rem; font-weight: 600;
+      box-shadow: var(--shadow-md), var(--copper-wire); z-index: 999;
+      opacity: 0; transform: translateY(10px) scale(0.97);
+      transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+    }
+    .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 900px) {
+      :root { --sidebar-w: 200px; }
+    }
+    @media (max-width: 700px) {
+      .admin-shell { grid-template-columns: 1fr; }
+      .sidebar { position: fixed; left: -240px; z-index: 200; transition: left 0.3s; height: 100vh; }
+      .sidebar.open { left: 0; }
+      .topbar { grid-column: 1; padding: 0 1rem; }
+      .dash-main { grid-column: 1; padding: 1.25rem 1rem; }
       .form-row, .form-row-3 { grid-template-columns: 1fr; }
       .items-grid { grid-template-columns: 1fr; }
     }
@@ -184,66 +455,148 @@
 
   <!-- DASHBOARD -->
   <div id="dashboard">
-    <div class="topbar">
-      <div class="topbar-brand">Admin Dashboard</div>
-      <div class="topbar-right">
-        <span id="userEmail"></span>
-        <button onclick="handleLogout()">Sign Out</button>
-      </div>
-    </div>
-    <div class="dash-nav">
-      <button class="dash-tab active" onclick="switchTab('features', this)">Features</button>
-      <button class="dash-tab" onclick="switchTab('rooms', this)">Rooms</button>
-      <button class="dash-tab" onclick="switchTab('events', this)">Events</button>
-      <button class="dash-tab" onclick="switchTab('capacity', this)">Capacity Stats</button>
-      <button class="dash-tab" onclick="switchTab('bookings', this)">Bookings</button>
-    </div>
+    <div class="admin-shell">
 
-    <div class="dash-content">
-
-      <!-- FEATURES TAB -->
-      <div class="dash-section active" id="tab-features">
-        <div class="section-header">
-          <h2>Feature Cards</h2>
-          <button class="btn btn-copper" onclick="openFeatureModal()">+ Add Feature</button>
+      <!-- ── SIDEBAR ── -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <div class="sidebar-brand-name">Swaby's Hope Hideaway</div>
+          <div class="sidebar-brand-sub">Admin Console</div>
         </div>
-        <div class="items-grid" id="featuresList"></div>
-      </div>
 
-      <!-- ROOMS TAB -->
-      <div class="dash-section" id="tab-rooms">
-        <div class="section-header">
-          <h2>Rooms</h2>
-          <button class="btn btn-copper" onclick="openRoomModal()">+ Add Room</button>
-        </div>
-        <div class="items-grid" id="roomsList"></div>
-      </div>
+        <div class="sidebar-section-label">Content</div>
+        <nav class="sidebar-nav">
+          <button class="sidebar-tab active" onclick="switchTab('features', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Feature Cards
+          </button>
+          <button class="sidebar-tab" onclick="switchTab('rooms', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Rooms
+          </button>
+          <button class="sidebar-tab" onclick="switchTab('events', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            Events
+          </button>
+          <button class="sidebar-tab" onclick="switchTab('capacity', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Capacity Stats
+          </button>
+        </nav>
 
-      <!-- EVENTS TAB -->
-      <div class="dash-section" id="tab-events">
-        <div class="section-header">
-          <h2>Event Types</h2>
-          <button class="btn btn-copper" onclick="openEventModal()">+ Add Event</button>
-        </div>
-        <div class="items-grid" id="eventsList"></div>
-      </div>
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section-label">Operations</div>
+        <nav class="sidebar-nav" style="padding-top:0;">
+          <button class="sidebar-tab" onclick="switchTab('bookings', this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Bookings
+          </button>
+        </nav>
 
-      <!-- CAPACITY TAB -->
-      <div class="dash-section" id="tab-capacity">
-        <div class="section-header">
-          <h2>Capacity Stats</h2>
-          <button class="btn btn-copper" onclick="openCapacityModal()">+ Add Stat</button>
+        <div style="flex:1;"></div>
+        <div class="sidebar-footer">
+          <div class="sidebar-user">
+            <div class="sidebar-avatar">A</div>
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-name" id="userEmail">Admin</div>
+            </div>
+            <button class="sidebar-signout" onclick="handleLogout()">Out</button>
+          </div>
         </div>
-        <div class="items-grid" id="capacityList"></div>
-      </div>
+      </aside>
 
-      <!-- BOOKINGS TAB -->
-      <div class="dash-section" id="tab-bookings">
-        <div class="section-header">
-          <h2>Bookings</h2>
+      <!-- ── TOPBAR ── -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-page-title" id="topbarTitle">Feature Cards</span>
         </div>
-        <div id="bookingsList"></div>
-      </div>
+        <div class="topbar-right">
+          <div class="topbar-stat" id="bookingCountBadge" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="bookingCountText">0 pending</span>
+          </div>
+          <button class="btn-bookings" onclick="switchTab('bookings', null)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Bookings
+          </button>
+        </div>
+      </header>
+
+      <!-- ── MAIN CONTENT ── -->
+      <main class="dash-main">
+
+        <!-- FEATURES TAB -->
+        <div class="dash-section active" id="tab-features">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2>Feature Cards</h2>
+              <div class="section-header-sub">Manage the highlight cards shown on the homepage</div>
+            </div>
+            <button class="btn btn-copper" onclick="openFeatureModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Feature
+            </button>
+          </div>
+          <div class="items-grid" id="featuresList"></div>
+        </div>
+
+        <!-- ROOMS TAB -->
+        <div class="dash-section" id="tab-rooms">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2>Rooms</h2>
+              <div class="section-header-sub">Add and manage your boutique rooms</div>
+            </div>
+            <button class="btn btn-copper" onclick="openRoomModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Room
+            </button>
+          </div>
+          <div class="items-grid" id="roomsList"></div>
+        </div>
+
+        <!-- EVENTS TAB -->
+        <div class="dash-section" id="tab-events">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2>Events & Weddings</h2>
+              <div class="section-header-sub">Manage event types displayed on the Events page</div>
+            </div>
+            <button class="btn btn-copper" onclick="openEventModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Event
+            </button>
+          </div>
+          <div class="items-grid" id="eventsList"></div>
+        </div>
+
+        <!-- CAPACITY TAB -->
+        <div class="dash-section" id="tab-capacity">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2>Capacity Stats</h2>
+              <div class="section-header-sub">Numbers shown in the venue capacity banner</div>
+            </div>
+            <button class="btn btn-copper" onclick="openCapacityModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Stat
+            </button>
+          </div>
+          <div class="items-grid" id="capacityList"></div>
+        </div>
+
+        <!-- BOOKINGS TAB -->
+        <div class="dash-section" id="tab-bookings">
+          <div class="section-header">
+            <div class="section-header-left">
+              <h2>Bookings</h2>
+              <div class="section-header-sub">All guest reservations submitted through the site</div>
+            </div>
+          </div>
+          <div id="bookingsList"></div>
+        </div>
+
+      </main>
     </div>
   </div>
 
@@ -269,11 +622,28 @@
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
+    const TAB_TITLES = {
+      features: 'Feature Cards',
+      rooms: 'Rooms',
+      events: 'Events & Weddings',
+      capacity: 'Capacity Stats',
+      bookings: 'Bookings'
+    };
+
+    // Map tab name to sidebar tab index (0-based in order of sidebar)
+    const TAB_INDEX = { features: 0, rooms: 1, events: 2, capacity: 3, bookings: 4 };
+
     function switchTab(tab, el) {
-      document.querySelectorAll('.dash-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
-      el.classList.add('active');
+      // Activate the correct sidebar tab by index
+      const allTabs = document.querySelectorAll('.sidebar-tab');
+      const idx = TAB_INDEX[tab];
+      if (idx !== undefined && allTabs[idx]) allTabs[idx].classList.add('active');
+      else if (el && el.classList && el.classList.contains('sidebar-tab')) el.classList.add('active');
       document.getElementById(`tab-${tab}`).classList.add('active');
+      const titleEl = document.getElementById('topbarTitle');
+      if (titleEl) titleEl.textContent = TAB_TITLES[tab] || tab;
     }
 
     function openModal(title) {
@@ -517,19 +887,37 @@
         const snap = await getDocs(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')));
         const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
         const el = document.getElementById('bookingsList');
-        if (items.length === 0) { el.innerHTML = '<div class="empty-state">No bookings yet.</div>'; return; }
-        el.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.8125rem;">
-          <thead><tr style="border-bottom:2px solid var(--border);text-align:left;">
-            <th style="padding:0.5rem;">Guest</th><th style="padding:0.5rem;">Email</th><th style="padding:0.5rem;">Room</th>
-            <th style="padding:0.5rem;">Check-in</th><th style="padding:0.5rem;">Check-out</th><th style="padding:0.5rem;">Status</th>
-          </tr></thead><tbody>${items.map(b => `<tr style="border-bottom:1px solid var(--border);">
-            <td style="padding:0.5rem;font-weight:500;">${b.guestName||''}</td>
-            <td style="padding:0.5rem;">${b.guestEmail||''}</td>
-            <td style="padding:0.5rem;">${b.roomId||''}</td>
-            <td style="padding:0.5rem;">${b.checkIn||''}</td>
-            <td style="padding:0.5rem;">${b.checkOut||''}</td>
-            <td style="padding:0.5rem;"><span style="background:${b.status==='pending'?'#FEF3C7':'var(--success-bg)'};color:${b.status==='pending'?'#92400E':'var(--success)'};padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;">${b.status||'pending'}</span></td>
-          </tr>`).join('')}</tbody></table></div>`;
+
+        // Update pending count badge in topbar
+        const pendingCount = items.filter(b => (b.status || 'pending') === 'pending').length;
+        const badge = document.getElementById('bookingCountBadge');
+        const badgeText = document.getElementById('bookingCountText');
+        if (badge && pendingCount > 0) {
+          badge.style.display = 'flex';
+          badgeText.textContent = `${pendingCount} pending`;
+        }
+
+        if (items.length === 0) { el.innerHTML = '<div class="empty-state">No bookings yet</div>'; return; }
+
+        el.innerHTML = `<div class="bookings-table-wrap"><table class="bookings-table">
+          <thead><tr>
+            <th>Guest</th><th>Email</th><th>Room</th>
+            <th>Check-in</th><th>Check-out</th><th>Guests</th><th>Status</th>
+          </tr></thead>
+          <tbody>${items.map(b => {
+            const st = b.status || 'pending';
+            const statusClass = st === 'pending' ? 'status-pending' : 'status-confirmed';
+            return `<tr>
+              <td>${b.guestName||'—'}</td>
+              <td>${b.guestEmail||'—'}</td>
+              <td>${b.roomId||'—'}</td>
+              <td>${b.checkIn||'—'}</td>
+              <td>${b.checkOut||'—'}</td>
+              <td>${b.numberOfGuests||'—'}</td>
+              <td><span class="status-badge ${statusClass}">${st}</span></td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>`;
       } catch(e) { console.warn('Bookings error:', e); }
     }
 

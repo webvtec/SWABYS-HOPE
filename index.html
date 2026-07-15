@@ -613,6 +613,15 @@
       box-shadow: var(--shadow-md);
       transition: box-shadow 0.6s var(--ease-out), transform 0.6s var(--ease-out), border-color 0.6s;
     }
+    /* On wide screens (1025–1279px) show 2 columns of landscape-wide cards */
+    @media (min-width: 1025px) and (max-width: 1279px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); gap: var(--space-xl); }
+      .feature-card { aspect-ratio: 4/3; }
+    }
+    /* On XL screens (1280px+) show 4 columns; cards stay at 3/4 but with extra gap so they're roomier */
+    @media (min-width: 1280px) {
+      .features-grid { gap: var(--space-xl); }
+    }
     .feature-card:hover { box-shadow: var(--shadow-xl), 0 0 24px rgba(184,115,51,0.35); border-color: var(--copper); transform: translateY(-6px); }
     .feature-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease-out); }
     .feature-card:hover img { transform: scale(1.08); }
@@ -1223,16 +1232,6 @@
               </div>
               <p class="room-card-desc">${room.description}</p>
               <div class="room-amenities">${amenitiesHtml}</div>
-              <div class="room-calendar">
-                <div class="room-calendar-header">
-                  <span class="room-calendar-title" id="${calTitleId}">${getMonthName(currentMonth)} ${currentYear}</span>
-                  <div class="room-calendar-nav">
-                    <button onclick="changeCalMonth('${room.id}', -1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-                    <button onclick="changeCalMonth('${room.id}', 1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
-                  </div>
-                </div>
-                <div class="calendar-grid" id="${calId}">${generateCalendar(currentYear, currentMonth)}</div>
-              </div>
               <div class="room-card-actions">
                 <button class="btn-primary" onclick="handleBookRoom('${room.id}')">Book Now <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
               </div>
