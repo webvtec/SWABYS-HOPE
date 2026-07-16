@@ -194,8 +194,8 @@
         } else {
           imgHtml = imgs.map((u, i) => `<img src="${u}" alt="${f.title}" class="feature-slide-img${i===0?' active':''}" />`).join('');
         }
-        const hasDots = imgs.length > 1;
-        const dots = hasDots ? `<div class="feature-slide-dots">${imgs.map((_,i) => `<span class="feature-slide-dot${i===0?' active':''}"></span>`).join('')}</div>` : '';
+        const hasDots = false;
+        const dots = '';
         return `
         <div class="feature-card feature-slideshow" id="fcard-${fi}" data-slide-count="${imgs.length}" ${f.linkPage ? `onclick="navigateTo('${f.linkPage}')"` : ''}>
           ${imgHtml}
@@ -226,7 +226,6 @@
           if (!card) return;
           const cur = _featureSlideState[idx];
           card.querySelectorAll('.feature-slide-img').forEach((img, i) => img.classList.toggle('active', i === cur));
-          card.querySelectorAll('.feature-slide-dot').forEach((d, i) => d.classList.toggle('active', i === cur));
         }, 3500);
       }, delay);
     }
@@ -2165,19 +2164,24 @@
         <div class="footer-social">
           <!-- Instagram -->
           <a href="https://www.instagram.com/swabyshopehideaway_official?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener" aria-label="Instagram" class="social-instagram">
-            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <radialGradient id="ig-grad" cx="30%" cy="107%" r="120%">
-                  <stop offset="0%" stop-color="#fdf497"/>
-                  <stop offset="5%" stop-color="#fdf497"/>
+                <radialGradient id="ig-grad" cx="30%" cy="107%" r="130%">
+                  <stop offset="0%"  stop-color="#fdf497"/>
+                  <stop offset="5%"  stop-color="#fdf497"/>
                   <stop offset="45%" stop-color="#fd5949"/>
                   <stop offset="60%" stop-color="#d6249f"/>
                   <stop offset="90%" stop-color="#285AEB"/>
                 </radialGradient>
               </defs>
-              <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#ig-grad)"/>
-              <circle cx="12" cy="12" r="4.5" stroke="white" stroke-width="1.8" fill="none"/>
-              <circle cx="17.2" cy="6.8" r="1.1" fill="white"/>
+              <!-- Background -->
+              <rect width="24" height="24" rx="6" fill="url(#ig-grad)"/>
+              <!-- Outer square outline -->
+              <rect x="4" y="4" width="16" height="16" rx="4" stroke="white" stroke-width="1.5" fill="none"/>
+              <!-- Lens circle -->
+              <circle cx="12" cy="12" r="3.8" stroke="white" stroke-width="1.5" fill="none"/>
+              <!-- Dot top-right -->
+              <circle cx="16.5" cy="7.5" r="1" fill="white"/>
             </svg>
           </a>
           <!-- TikTok -->
