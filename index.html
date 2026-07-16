@@ -468,17 +468,45 @@
       background: rgba(15,17,22,0.35);
       backdrop-filter: blur(12px) saturate(1.6);
       -webkit-backdrop-filter: blur(12px) saturate(1.6);
-      border-bottom: 1px solid rgba(184,115,51,0.08);
+      border-bottom: none;
       box-shadow: 0 8px 32px rgba(0,0,0,0.35);
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0;
-      overflow: hidden;
+      overflow: visible;
       max-height: 0;
       opacity: 0;
       pointer-events: none;
       transition: max-height 0.45s var(--ease-out), opacity 0.35s var(--ease-out);
+    }
+
+    /* running glow line under sub-nav */
+    .sub-nav::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 20%,
+        rgba(184,115,51,0.15) 30%,
+        rgba(232,168,124,1) 45%,
+        rgba(255,200,80,1) 50%,
+        rgba(232,168,124,1) 55%,
+        rgba(184,115,51,0.15) 70%,
+        transparent 80%,
+        transparent 100%
+      );
+      background-size: 200% 100%;
+      box-shadow: 0 0 6px rgba(232,168,124,0.8), 0 0 18px rgba(184,115,51,0.6), 0 0 36px rgba(184,115,51,0.3);
+      animation: subNavGlowRun 2.4s linear infinite;
+    }
+
+    @keyframes subNavGlowRun {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
     /* Hide sub-nav on desktop — the main nav already shows these links */
     @media (min-width: 769px) {
@@ -1083,6 +1111,107 @@
       font-size: var(--text-xs); color: var(--text-muted);
       letter-spacing: 0.03em;
     }
+
+    /* ═══ ESCAPE BANNER WIPE + BUTTON GLOW ═══ */
+    .escape-banner {
+      overflow: hidden;
+    }
+
+    /* text wipes in from left */
+    .escape-text {
+      opacity: 0;
+      transform: translateX(-60px);
+      transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+    }
+    .escape-banner.escape-in .escape-text {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* button wrapper wipes in from right */
+    .escape-btn-wrap {
+      opacity: 0;
+      transform: translateX(60px);
+      transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s, transform 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s;
+    }
+    .escape-banner.escape-in .escape-btn-wrap {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* solid copper button */
+    .btn-escape-solid {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 40px;
+      background: linear-gradient(135deg, var(--copper-shine) 0%, var(--copper) 50%, var(--copper-deep) 100%);
+      color: var(--lux-white);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow:
+        0 0 18px rgba(184,115,51,0.0),
+        0 0 40px rgba(184,115,51,0.0),
+        0 4px 20px rgba(184,115,51,0.3);
+    }
+
+    /* shimmer sweep + glow once banner is visible */
+    .escape-banner.escape-in .btn-escape-solid {
+      animation: escapeShineSweep 3s ease-in-out infinite;
+    }
+
+    .btn-escape-solid::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+      border-radius: inherit;
+      transition: none;
+    }
+    .escape-banner.escape-in .btn-escape-solid::before {
+      animation: escapeShimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes escapeShimmer {
+      0%   { left: -100%; opacity: 0; }
+      15%  { opacity: 1; }
+      45%  { left: 160%; opacity: 1; }
+      46%  { opacity: 0; }
+      100% { left: 160%; opacity: 0; }
+    }
+
+    @keyframes escapeShineSweep {
+      0%   { box-shadow: 0 4px 24px rgba(184,115,51,0.45), 0 0 48px rgba(184,115,51,0.2); transform: translateY(0); }
+      30%  { box-shadow: 0 8px 40px rgba(184,115,51,0.75), 0 0 80px rgba(184,115,51,0.4), 0 0 120px rgba(184,115,51,0.15); transform: translateY(-3px); }
+      60%  { box-shadow: 0 4px 24px rgba(184,115,51,0.45), 0 0 48px rgba(184,115,51,0.2); transform: translateY(0); }
+      100% { box-shadow: 0 4px 24px rgba(184,115,51,0.45), 0 0 48px rgba(184,115,51,0.2); transform: translateY(0); }
+    }
+
+    /* wrap */
+    .escape-btn-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .btn-escape-solid:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 12px 48px rgba(184,115,51,0.8), 0 0 100px rgba(184,115,51,0.4);
+    }
+    .btn-escape-solid svg {
+      transition: transform 0.3s ease;
+    }
+    .btn-escape-solid:hover svg {
+      transform: translateX(5px);
+    }
+    /* ═══ END ESCAPE BANNER ═══ */
   </style>
 </head>
 <body>
@@ -1194,14 +1323,16 @@
           <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);font-style:italic;">Loading features...</div>
         </div>
         <!-- CTA below images -->
-        <div class="accent-banner-inner reveal" style="margin-top:var(--space-3xl);padding-top:var(--space-2xl);border-top:1px solid rgba(184,115,51,0.15);">
-          <div class="accent-banner-text">
+        <div class="accent-banner-inner escape-banner" id="escapeBanner" style="margin-top:var(--space-3xl);padding-top:var(--space-2xl);border-top:1px solid rgba(184,115,51,0.15);">
+          <div class="accent-banner-text escape-text">
             <h3>Ready to Escape the Ordinary?</h3>
             <p>Limited rooms available — each stay is as unique as you are.</p>
           </div>
-          <button class="btn-primary reveal reveal-right" onclick="navigateTo('rooms')">View Accommodation
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
+          <div class="escape-btn-wrap">
+            <button class="btn-escape-solid" onclick="navigateTo('rooms')">View Accommodation
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -1587,7 +1718,22 @@
     document.addEventListener('DOMContentLoaded', () => {
       window.dispatchEvent(new Event('scroll'));
     });
-  </script>
+  
+    /* ── Escape Banner Intersection Observer ── */
+    (function(){
+      var banner = document.getElementById('escapeBanner');
+      if (!banner) return;
+      var obs = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting) {
+            banner.classList.add('escape-in');
+            obs.unobserve(banner);
+          }
+        });
+      }, { threshold: 0.35 });
+      obs.observe(banner);
+    })();
 
+  </script>
 </body>
 </html>
