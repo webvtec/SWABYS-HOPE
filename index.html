@@ -141,6 +141,19 @@
           ? `<div class="hpb-swipe ${stripes[idx % stripes.length]}">Swipe for more discounts <span class="hpb-swipe-arrow">→</span></div>`
           : '';
         return `<div class="hero-promo-banner">
+          <svg class="hpb-border-svg" viewBox="0 0 500 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hpbGradStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="rgba(255,220,140,0)"/>
+                <stop offset="40%" stop-color="rgba(255,210,130,1)"/>
+                <stop offset="50%" stop-color="#FFFFFF"/>
+                <stop offset="60%" stop-color="rgba(255,210,130,1)"/>
+                <stop offset="100%" stop-color="rgba(255,220,140,0)"/>
+              </linearGradient>
+            </defs>
+            <rect class="hpb-border-track" x="1" y="1" width="498" height="78" rx="7"/>
+            <rect class="hpb-border-glow"  x="1" y="1" width="498" height="78" rx="7" pathLength="10000"/>
+          </svg>
           <div class="hpb-inner">
             <div class="hpb-body">
               <span class="hpb-icon">🎉</span>
@@ -1401,63 +1414,43 @@
       z-index: 1;
     }
 
-    /* Glowing border that travels around all 4 sides */
+    /* Banner wrapper — glow traces the edge */
     .hero-promo-banner {
       border-radius: var(--radius-md);
       overflow: visible;
       position: relative;
-      box-shadow:
-        0 0 0 1px rgba(232,168,124,0.4),
-        0 16px 48px rgba(0,0,0,0.6);
       animation: promoBannerSlideIn 0.55s var(--ease-out) both;
     }
 
-    /* Rotating conic glow that sweeps around the border */
-    .hero-promo-banner::before {
-      content: '';
+    /* SVG border trace sits behind the card */
+    .hpb-border-svg {
       position: absolute;
       inset: -2px;
-      border-radius: calc(var(--radius-md) + 2px);
-      background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        transparent 60deg,
-        rgba(255,200,120,0.9) 90deg,
-        rgba(232,168,124,1) 100deg,
-        rgba(255,220,140,1) 110deg,
-        rgba(232,168,124,0.9) 120deg,
-        transparent 150deg,
-        transparent 360deg
-      );
-      animation: hpbRotate 2s linear infinite;
-      z-index: -1;
-      filter: blur(3px);
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      pointer-events: none;
+      z-index: 0;
+      border-radius: var(--radius-md);
+      overflow: visible;
     }
-
-    /* Second layer — wider outer glow */
-    .hero-promo-banner::after {
-      content: '';
-      position: absolute;
-      inset: -8px;
-      border-radius: calc(var(--radius-md) + 8px);
-      background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        transparent 55deg,
-        rgba(184,115,51,0.5) 85deg,
-        rgba(232,168,124,0.8) 100deg,
-        rgba(184,115,51,0.5) 115deg,
-        transparent 145deg,
-        transparent 360deg
-      );
-      animation: hpbRotate 2s linear infinite;
-      z-index: -2;
-      filter: blur(12px);
+    .hpb-border-track {
+      fill: none;
+      stroke: rgba(184,115,51,0.18);
+      stroke-width: 1.5;
     }
-
-    @keyframes hpbRotate {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
+    .hpb-border-glow {
+      fill: none;
+      stroke: url(#hpbGradStroke);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px rgba(232,168,124,1)) drop-shadow(0 0 16px rgba(184,115,51,0.9)) drop-shadow(0 0 32px rgba(184,115,51,0.6));
+      stroke-dasharray: 80 10000;
+      stroke-dashoffset: 0;
+      animation: hpbTrace 3s linear infinite;
+    }
+    @keyframes hpbTrace {
+      from { stroke-dashoffset: 0; }
+      to   { stroke-dashoffset: -10000; }
     }
     @keyframes promoBannerSlideIn {
       from { opacity: 0; transform: translateY(10px); }
