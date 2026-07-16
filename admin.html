@@ -1371,13 +1371,46 @@ async function loadRooms() {
       <div class="item-card-img">${r.imageUrl ? `<img src="${r.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
       <div class="item-card-body">
         <div class="item-card-title">${r.name}</div>
-        <div class="item-card-meta">$${r.price}/night &middot; ${r.badge || ''} &middot; ${r.quantity || 1} available</div>
+        <div class="item-card-meta">$${r.price}/night &middot; ${r.badge || ''} &middot; ${r.quantity || 1} available${Array.isArray(r.amenities) && r.amenities.length ? '<br><span style="font-size:1rem;letter-spacing:2px;">' + r.amenities.map(k => { const found = [{ key:'wifi',emoji:'📶'},{ key:'tv',emoji:'📺'},{ key:'hotwater',emoji:'🚿'},{ key:'security',emoji:'🔒'},{ key:'breakfast',emoji:'🍳'},{ key:'ac',emoji:'❄️'},{ key:'minibar',emoji:'🍹'},{ key:'balcony',emoji:'🌄'},{ key:'pool',emoji:'🏊'},{ key:'parking',emoji:'🅿️'},{ key:'kitchenette',emoji:'🍽️'},{ key:'safe',emoji:'🔐'},{ key:'jacuzzi',emoji:'🛁'},{ key:'ocean',emoji:'⛰️'},{ key:'laundry',emoji:'👕'}].find(a=>a.key===k); return found ? found.emoji : ''; }).join(' ') + '</span>' : ''}</div>
       </div>
       <div class="item-card-actions">
         <button class="btn btn-outline btn-sm" onclick="openRoomModal('${r.id}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteItem('rooms','${r.id}')">Delete</button>
       </div>
     </div>`).join('');
+}
+
+const ROOM_AMENITIES = [
+  { key: 'wifi',        label: 'Free Wi-Fi',       emoji: '📶' },
+  { key: 'tv',          label: 'Smart TV',          emoji: '📺' },
+  { key: 'hotwater',    label: 'Hot Water',         emoji: '🚿' },
+  { key: 'security',    label: '24hr Security',     emoji: '🔒' },
+  { key: 'breakfast',   label: 'Breakfast',         emoji: '🍳' },
+  { key: 'ac',          label: 'Air Conditioning',  emoji: '❄️' },
+  { key: 'minibar',     label: 'Mini Bar',          emoji: '🍹' },
+  { key: 'balcony',     label: 'Private Balcony',   emoji: '🌄' },
+  { key: 'pool',        label: 'Pool Access',       emoji: '🏊' },
+  { key: 'parking',     label: 'Free Parking',      emoji: '🅿️' },
+  { key: 'kitchenette', label: 'Kitchenette',       emoji: '🍽️' },
+  { key: 'safe',        label: 'In-Room Safe',      emoji: '🔐' },
+  { key: 'jacuzzi',     label: 'Jacuzzi',           emoji: '🛁' },
+  { key: 'ocean',       label: 'Mountain View',     emoji: '⛰️' },
+  { key: 'laundry',     label: 'Laundry Service',   emoji: '👕' },
+];
+
+function amenityCheckboxesHtml(selected = []) {
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.5rem;margin-top:0.25rem;">
+    ${ROOM_AMENITIES.map(a => `
+      <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.625rem;background:rgba(255,255,255,0.03);border:1px solid var(--border-copper);border-radius:5px;cursor:pointer;font-size:0.78rem;color:var(--text-2);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--copper)'" onmouseout="this.style.borderColor='var(--border-copper)'">
+        <input type="checkbox" data-amenity="${a.key}" style="accent-color:var(--copper);width:14px;height:14px;flex-shrink:0;" ${selected.includes(a.key) ? 'checked' : ''} />
+        <span style="font-size:1rem;">${a.emoji}</span>
+        <span>${a.label}</span>
+      </label>`).join('')}
+  </div>`;
+}
+
+function getSelectedAmenities() {
+  return Array.from(document.querySelectorAll('input[data-amenity]:checked')).map(i => i.dataset.amenity);
 }
 
 function openRoomModal(editId) {
@@ -1393,15 +1426,38 @@ function openRoomModal(editId) {
       <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
     </div>
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the room"></textarea></div>
+    <div class="form-group">
+      <label class="form-label">Amenities & Inclusions</label>
+      <div id="mAmenitiesWrap">${amenityCheckboxesHtml([])}</div>
+    </div>
     <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
     <button class="btn btn-copper" onclick="saveRoom('${editId||''}')">Save</button>`;
-  if (editId) loadEditData('rooms', editId, ['mName:name','mPrice:price','mQty:quantity','mBadge:badge','mOrder:order','mDesc:description'], 'mImg');
+  if (editId) {
+    loadEditData('rooms', editId, ['mName:name','mPrice:price','mQty:quantity','mBadge:badge','mOrder:order','mDesc:description'], 'mImg');
+    // Load existing amenities
+    loadRoomAmenities(editId);
+  }
+}
+
+async function loadRoomAmenities(editId) {
+  const { db } = window._fb;
+  const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+  const snap = await getDoc(doc(db, 'rooms', editId));
+  if (!snap.exists()) return;
+  const selected = snap.data().amenities || [];
+  const wrap = document.getElementById('mAmenitiesWrap');
+  if (wrap) wrap.innerHTML = amenityCheckboxesHtml(selected);
 }
 
 async function saveRoom(editId) {
-  const data = { name: gv('mName'), price: parseInt(gv('mPrice')) || 0, quantity: parseInt(gv('mQty')) || 1, badge: gv('mBadge'), description: gv('mDesc'), order: parseInt(gv('mOrder')) || 0 };
+  const data = {
+    name: gv('mName'), price: parseInt(gv('mPrice')) || 0,
+    quantity: parseInt(gv('mQty')) || 1, badge: gv('mBadge'),
+    description: gv('mDesc'), order: parseInt(gv('mOrder')) || 0,
+    amenities: getSelectedAmenities()
+  };
   if (!data.name || !data.price) { alert('Name and price are required.'); return; }
   await saveItem('rooms', editId, data, 'mImg', `rooms/${Date.now()}`);
   closeModal(); await loadRooms(); showToast('Room saved');

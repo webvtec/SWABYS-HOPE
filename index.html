@@ -984,8 +984,8 @@
     .page-hero-bg::after { display: none; }
     .page-hero-content { position: relative; z-index: 2; width: 100%; max-width: var(--max-width); margin: 0 auto; padding: 0 var(--space-xl) var(--space-3xl); }
     .page-hero-content .section-eyebrow { color: var(--copper-shine); text-shadow: 0 1px 8px rgba(0,0,0,0.6); }
-    .page-hero-content .section-title { font-size: clamp(var(--text-4xl), 5vw, var(--text-6xl)); color: var(--lux-white); margin-bottom: var(--space-sm); text-shadow: 0 2px 16px rgba(0,0,0,0.7); }
-    .page-hero-content .section-subtitle { color: rgba(232,226,216,0.9); text-shadow: 0 1px 10px rgba(0,0,0,0.65); }
+    .page-hero-content .section-title { font-size: clamp(var(--text-4xl), 5vw, var(--text-6xl)); color: var(--lux-white); margin-bottom: var(--space-sm); text-shadow: 0 0 30px rgba(184,115,51,0.8), 0 0 60px rgba(184,115,51,0.4), 0 2px 16px rgba(0,0,0,0.7); }
+    .page-hero-content .section-subtitle { color: rgba(232,226,216,0.95); text-shadow: 0 0 20px rgba(184,115,51,0.6), 0 1px 10px rgba(0,0,0,0.65); }
 
     /* ═══════════════════════════════════════════
        ROOMS SECTION — Lux white
@@ -1546,13 +1546,13 @@
       </div>
       <div class="hero-content">
         <h1 class="hero-tagline reveal">Use Our <em>Hideaway</em><br/>for Your Getaway</h1>
-        <p class="hero-description reveal" style="transition-delay:0.15s;color:#FFFFFF;" id="heroPromoSlot"></p>
-        <div class="hero-actions reveal" style="transition-delay:0.3s;">
+        <div class="hero-actions reveal" style="transition-delay:0.15s;">
           <button class="btn-hero-solid" onclick="navigateTo('rooms')">
             Explore Accommodation
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
+        <div id="heroPromoSlot" style="margin-top:1.25rem;"></div>
       </div>
       <div class="hero-scroll">
         <div class="hero-scroll-line"></div>
@@ -1779,13 +1779,23 @@
     /* ════════════════════════════════════════
        ROOM DATA — loaded from Firebase
     ════════════════════════════════════════ */
-    const AMENITIES = [
-      { label: 'Free Wi-Fi',    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>' },
-      { label: 'Smart TV',      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>' },
-      { label: 'Hot Water',     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2c-5.33 4-8 7.33-8 10a8 8 0 0016 0c0-2.67-2.67-6-8-10z"/></svg>' },
-      { label: '24hr Security', icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
-      { label: 'Breakfast',     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>' }
-    ];
+    const ALL_AMENITIES = {
+      'wifi':        { label: 'Free Wi-Fi',       emoji: '📶' },
+      'tv':          { label: 'Smart TV',          emoji: '📺' },
+      'hotwater':    { label: 'Hot Water',         emoji: '🚿' },
+      'security':    { label: '24hr Security',     emoji: '🔒' },
+      'breakfast':   { label: 'Breakfast',         emoji: '🍳' },
+      'ac':          { label: 'Air Conditioning',  emoji: '❄️' },
+      'minibar':     { label: 'Mini Bar',          emoji: '🍹' },
+      'balcony':     { label: 'Private Balcony',   emoji: '🌄' },
+      'pool':        { label: 'Pool Access',       emoji: '🏊' },
+      'parking':     { label: 'Free Parking',      emoji: '🅿️' },
+      'kitchenette': { label: 'Kitchenette',       emoji: '🍽️' },
+      'safe':        { label: 'In-Room Safe',      emoji: '🔐' },
+      'jacuzzi':     { label: 'Jacuzzi',           emoji: '🛁' },
+      'ocean':       { label: 'Mountain View',     emoji: '⛰️' },
+      'laundry':     { label: 'Laundry Service',   emoji: '👕' },
+    };
 
     /* Calendar */
     function generateCalendar(year, month) {
@@ -1819,7 +1829,14 @@
       let currentMonth = now.getMonth(), currentYear = now.getFullYear();
 
       grid.innerHTML = rooms.map(room => {
-        const amenitiesHtml = AMENITIES.map(a => `<div class="amenity">${a.icon}<span>${a.label}</span></div>`).join('');
+        // Use room-specific amenities array, fall back to empty
+        const roomAmenities = Array.isArray(room.amenities) ? room.amenities : [];
+        const amenitiesHtml = roomAmenities.length > 0
+          ? roomAmenities.map(key => {
+              const a = ALL_AMENITIES[key];
+              return a ? `<div class="amenity"><span style="font-size:1rem;line-height:1;">${a.emoji}</span><span>${a.label}</span></div>` : '';
+            }).join('')
+          : '';
         const calId = `cal-${room.id}`, calTitleId = `cal-title-${room.id}`;
         const quantityLabel = room.quantity > 1 ? `<span style="font-size:var(--text-xs);color:var(--text-muted);font-weight:400;margin-left:8px;">(${room.quantity} available)</span>` : '';
         return `
