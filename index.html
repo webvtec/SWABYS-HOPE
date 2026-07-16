@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Swaby's Hope Hideaway Ltd — Use Our Hideaway for Your Getaway</title>
+  <link rel="icon" type="image/jpeg" href="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpeg?alt=media&token=00d097fc-4086-4a83-8440-db922cb50c1e">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpeg?alt=media&token=00d097fc-4086-4a83-8440-db922cb50c1e">
   <meta name="description" content="An intimate boutique hotel perched in the cool, tranquil hills of Spur Tree, Mandeville, Manchester, Jamaica. Elegance meets serenity." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -505,7 +507,38 @@
       justify-content: space-between;
     }
 
-    .nav-brand { display: flex; flex-direction: column; transition: color var(--duration) var(--ease-out); }
+    .nav-brand { display: flex; align-items: center; transition: opacity var(--duration) var(--ease-out); }
+    .nav-logo-img {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 6px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+      transition: filter 0.3s, transform 0.3s;
+    }
+    .nav:not(.scrolled) .nav-logo-img {
+      filter: drop-shadow(0 0 10px rgba(184,115,51,0.4)) brightness(1.05);
+    }
+    .nav-brand:hover .nav-logo-img { transform: scale(1.04); filter: drop-shadow(0 0 16px rgba(184,115,51,0.6)); }
+
+    /* Footer logo */
+    .footer-logo-wrap {
+      text-align: center;
+      padding-bottom: 2rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(184,115,51,0.1);
+    }
+    .footer-logo-img {
+      height: 80px;
+      width: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 16px rgba(184,115,51,0.35));
+      transition: opacity 0.3s, filter 0.3s;
+    }
+    .footer-logo-img:hover { opacity: 1; filter: drop-shadow(0 0 28px rgba(184,115,51,0.6)); }
+
     .nav-brand-name { font-family: var(--font-display); font-size: var(--text-base); font-weight: 600; letter-spacing: 0.02em; line-height: 1.2; }
     .nav-brand-sub { font-family: var(--font-accent); font-size: 0.65rem; font-weight: 400; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.7; font-style: italic; }
 
@@ -968,8 +1001,6 @@
       z-index: 2;
     }
     .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2xl); margin-bottom: var(--space-xl); padding-bottom: var(--space-xl); border-bottom: 1px solid rgba(184,115,51,0.08); }
-    .footer-brand .nav-brand-name { color: var(--lux-white); margin-bottom: var(--space-sm); }
-    .footer-brand .nav-brand-sub { color: var(--grey-silver); margin-bottom: var(--space-lg); }
     .footer-brand-desc { font-size: var(--text-sm); line-height: 1.7; color: var(--grey-silver); max-width: 320px; }
     .footer-col-title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 500; color: var(--lux-white); margin-bottom: var(--space-lg); }
     .footer-links { list-style: none; display: flex; flex-direction: column; gap: var(--space-sm); }
@@ -1838,8 +1869,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
         </button>
         <a href="#" class="nav-brand" onclick="navigateTo('home')">
-          <span class="nav-brand-name">Swaby's Hope Hideaway Ltd</span>
-          <span class="nav-brand-sub">Spur Tree, Jamaica</span>
+          <img src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpeg?alt=media&token=00d097fc-4086-4a83-8440-db922cb50c1e" alt="Swaby's Hope Hideaway" class="nav-logo-img" />
         </a>
       </div>
       <ul class="nav-links">
@@ -2103,6 +2133,9 @@
 
 
     <div class="container">
+      <div class="footer-logo-wrap">
+        <img src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpeg?alt=media&token=00d097fc-4086-4a83-8440-db922cb50c1e" alt="Swaby's Hope Hideaway" class="footer-logo-img" />
+      </div>
       <div class="footer-grid">
         <div>
           <h4 class="footer-col-title">Services</h4>
