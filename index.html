@@ -51,6 +51,23 @@
       try {
         const { db, collection, getDocs, query, orderBy } = window._fb;
 
+        // Load page hero images
+        try {
+          const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+          const snap = await getDoc(doc(db, 'site_settings', 'page_images'));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.roomsHeroUrl) {
+              const img = document.querySelector('#page-rooms .page-hero-bg img');
+              if (img) img.src = data.roomsHeroUrl;
+            }
+            if (data.eventsHeroUrl) {
+              const img = document.querySelector('#page-events .page-hero-bg img');
+              if (img) img.src = data.eventsHeroUrl;
+            }
+          }
+        } catch(e) { console.warn('Page hero load error:', e); }
+
         // Load features
         try {
           const fSnap = await getDocs(query(collection(db, 'features'), orderBy('order')));

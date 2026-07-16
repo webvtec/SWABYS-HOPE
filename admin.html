@@ -669,6 +669,7 @@ a { color: inherit; text-decoration: none; }
   <button class="nav-link" onclick="switchTab('rooms');closeDrawer()">Rooms</button>
   <button class="nav-link" onclick="switchTab('events');closeDrawer()">Events &amp; Weddings</button>
   <button class="nav-link" onclick="switchTab('capacity');closeDrawer()">Capacity Stats</button>
+  <button class="nav-link" onclick="switchTab('pageimages');closeDrawer()">Page Images</button>
 
   <div class="drawer-divider"></div>
   <div class="drawer-section-label">Operations</div>
@@ -751,6 +752,49 @@ a { color: inherit; text-decoration: none; }
       <div class="items-grid" id="capacityList"></div>
     </div>
 
+    <!-- PAGE IMAGES -->
+    <div class="dash-section" id="tab-pageimages">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Accommodation Page</div>
+          <h2 class="section-title">Page Images</h2>
+        </div>
+      </div>
+      <div style="max-width:560px;">
+        <div style="background:var(--card);border:1px solid var(--border-copper);border-radius:10px;padding:1.5rem;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:var(--text);margin-bottom:0.25rem;">Accommodation Hero Image</div>
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:1.25rem;letter-spacing:0.03em;">The background image shown behind "Our Boutique Rooms / Every room tells a story…"</div>
+          <div id="roomsHeroCurrentWrap" style="margin-bottom:1rem;display:none;">
+            <div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;">Current Image</div>
+            <img id="roomsHeroCurrent" src="" style="width:100%;height:160px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" />
+          </div>
+          <div class="img-upload-zone" onclick="this.querySelector('input').click()" id="roomsHeroUploadZone">
+            <input type="file" accept="image/*" id="roomsHeroFile" onchange="previewRoomsHero(this)" />
+            <div class="label"><strong>Click to upload</strong> or drag image here</div>
+            <img class="img-preview" id="roomsHeroFilePreview" style="display:none;" />
+            <div class="progress-bar" id="roomsHeroProgress" style="display:none;"><div class="progress-bar-fill" id="roomsHeroFill"></div></div>
+          </div>
+          <button class="btn btn-copper" style="margin-top:1rem;width:100%;justify-content:center;" onclick="saveRoomsHero()">Save Image</button>
+        </div>
+
+        <div style="background:var(--card);border:1px solid var(--border-copper);border-radius:10px;padding:1.5rem;margin-top:1.5rem;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:var(--text);margin-bottom:0.25rem;">Weddings &amp; Events Hero Image</div>
+          <div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:1.25rem;letter-spacing:0.03em;">The background image shown behind "Weddings &amp; Events / Where milestone moments meet the magic…"</div>
+          <div id="eventsHeroCurrentWrap" style="margin-bottom:1rem;display:none;">
+            <div style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.5rem;">Current Image</div>
+            <img id="eventsHeroCurrent" src="" style="width:100%;height:160px;object-fit:cover;border-radius:6px;border:1px solid var(--border);" />
+          </div>
+          <div class="img-upload-zone" onclick="this.querySelector('input').click()">
+            <input type="file" accept="image/*" id="eventsHeroFile" onchange="previewEventsHero(this)" />
+            <div class="label"><strong>Click to upload</strong> or drag image here</div>
+            <img class="img-preview" id="eventsHeroFilePreview" style="display:none;" />
+            <div class="progress-bar" id="eventsHeroProgress" style="display:none;"><div class="progress-bar-fill" id="eventsHeroFill"></div></div>
+          </div>
+          <button class="btn btn-copper" id="eventsHeroSaveBtn" style="margin-top:1rem;width:100%;justify-content:center;" onclick="saveEventsHero()">Save Image</button>
+        </div>
+      </div>
+    </div>
+
     <!-- BOOKINGS -->
     <div class="dash-section" id="tab-bookings">
       <div class="section-header">
@@ -812,6 +856,7 @@ const TAB_LABELS = {
   rooms: 'Rooms',
   events: 'Events',
   capacity: 'Capacity Stats',
+  pageimages: 'Page Images',
   bookings: 'Bookings'
 };
 
@@ -1155,6 +1200,140 @@ async function loadBookings() {
     }).join('');
   } catch(e) { console.warn('Bookings error:', e); }
 }
+
+/* ── Page Images: Rooms Hero ─────────────── */
+function previewRoomsHero(input) {
+  const file = input.files[0]; if (!file) return;
+  const preview = document.getElementById('roomsHeroFilePreview');
+  const reader = new FileReader();
+  reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+  reader.readAsDataURL(file);
+}
+
+async function loadRoomsHeroImage() {
+  try {
+    const { db, doc } = window._fb;
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+    const snap = await getDoc(doc(db, 'site_settings', 'page_images'));
+    if (snap.exists() && snap.data().roomsHeroUrl) {
+      const url = snap.data().roomsHeroUrl;
+      const img = document.getElementById('roomsHeroCurrent');
+      const wrap = document.getElementById('roomsHeroCurrentWrap');
+      if (img) { img.src = url; wrap.style.display = 'block'; }
+    }
+  } catch(e) { console.warn('Could not load rooms hero:', e); }
+}
+
+async function saveRoomsHero() {
+  const fileInput = document.getElementById('roomsHeroFile');
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+    showToast('Please select an image first.'); return;
+  }
+  const btn = document.querySelector('#tab-pageimages .btn-copper');
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  try {
+    const { storage, ref, uploadBytesResumable, getDownloadURL, db, doc, updateDoc } = window._fb;
+    const { setDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+
+    // Upload to Firebase Storage
+    const storageRef = ref(storage, `site/rooms_hero_${Date.now()}`);
+    const bar = document.getElementById('roomsHeroProgress');
+    const fill = document.getElementById('roomsHeroFill');
+    if (bar) bar.style.display = 'block';
+    const url = await new Promise((resolve, reject) => {
+      const task = uploadBytesResumable(storageRef, fileInput.files[0]);
+      task.on('state_changed',
+        snap => { if (fill) fill.style.width = `${(snap.bytesTransferred / snap.totalBytes) * 100}%`; },
+        reject,
+        async () => { resolve(await getDownloadURL(task.snapshot.ref)); }
+      );
+    });
+    if (bar) { bar.style.display = 'none'; if(fill) fill.style.width = '0%'; }
+
+    // Save URL to Firestore site_settings/page_images
+    await setDoc(doc(db, 'site_settings', 'page_images'), { roomsHeroUrl: url }, { merge: true });
+
+    // Update preview
+    const img = document.getElementById('roomsHeroCurrent');
+    const wrap = document.getElementById('roomsHeroCurrentWrap');
+    if (img) { img.src = url; wrap.style.display = 'block'; }
+
+    showToast('Image saved!');
+  } catch(e) {
+    console.error(e); showToast('Upload failed. Try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Image';
+  }
+}
+
+/* ── Page Images: Events Hero ────────────── */
+function previewEventsHero(input) {
+  const file = input.files[0]; if (!file) return;
+  const preview = document.getElementById('eventsHeroFilePreview');
+  const reader = new FileReader();
+  reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
+  reader.readAsDataURL(file);
+}
+
+async function loadEventsHeroImage() {
+  try {
+    const { db, doc } = window._fb;
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+    const snap = await getDoc(doc(db, 'site_settings', 'page_images'));
+    if (snap.exists() && snap.data().eventsHeroUrl) {
+      const url = snap.data().eventsHeroUrl;
+      const img = document.getElementById('eventsHeroCurrent');
+      const wrap = document.getElementById('eventsHeroCurrentWrap');
+      if (img) { img.src = url; wrap.style.display = 'block'; }
+    }
+  } catch(e) { console.warn('Could not load events hero:', e); }
+}
+
+async function saveEventsHero() {
+  const fileInput = document.getElementById('eventsHeroFile');
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+    showToast('Please select an image first.'); return;
+  }
+  const btn = document.getElementById('eventsHeroSaveBtn');
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  try {
+    const { storage, ref, uploadBytesResumable, getDownloadURL, db, doc } = window._fb;
+    const { setDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+
+    const storageRef = ref(storage, `site/events_hero_${Date.now()}`);
+    const bar = document.getElementById('eventsHeroProgress');
+    const fill = document.getElementById('eventsHeroFill');
+    if (bar) bar.style.display = 'block';
+    const url = await new Promise((resolve, reject) => {
+      const task = uploadBytesResumable(storageRef, fileInput.files[0]);
+      task.on('state_changed',
+        snap => { if (fill) fill.style.width = `${(snap.bytesTransferred / snap.totalBytes) * 100}%`; },
+        reject,
+        async () => { resolve(await getDownloadURL(task.snapshot.ref)); }
+      );
+    });
+    if (bar) { bar.style.display = 'none'; if(fill) fill.style.width = '0%'; }
+
+    await setDoc(doc(db, 'site_settings', 'page_images'), { eventsHeroUrl: url }, { merge: true });
+
+    const img = document.getElementById('eventsHeroCurrent');
+    const wrap = document.getElementById('eventsHeroCurrentWrap');
+    if (img) { img.src = url; wrap.style.display = 'block'; }
+
+    showToast('Image saved!');
+  } catch(e) {
+    console.error(e); showToast('Upload failed. Try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Image';
+  }
+}
+
+// Load both hero images on tab switch
+const _origSwitchTab = switchTab;
+window.switchTab = function(tab) {
+  _origSwitchTab(tab);
+  if (tab === 'pageimages') { loadRoomsHeroImage(); loadEventsHeroImage(); }
+};
 </script>
 </body>
 </html>
