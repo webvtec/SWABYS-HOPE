@@ -34,17 +34,16 @@
       console.warn('Anonymous auth failed:', error.message);
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window._firebaseUser = user;
-      }
-    });
-
     window._fb = { db, storage, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, ref, uploadBytesResumable, getDownloadURL, deleteObject, signInWithEmailAndPassword, signOut };
 
-    // Load all dynamic content from Firebase on startup
-    window.addEventListener('load', async () => {
-      await loadAllContent();
+    // Load all dynamic content only after auth is confirmed
+    let _contentLoaded = false;
+    onAuthStateChanged(auth, async (user) => {
+      window._firebaseUser = user;
+      if (!_contentLoaded) {
+        _contentLoaded = true;
+        await loadAllContent();
+      }
     });
 
     async function loadAllContent() {
