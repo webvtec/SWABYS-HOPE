@@ -142,7 +142,6 @@
           : '';
         return `<div class="hero-promo-banner">
           <div class="hpb-inner">
-            <div class="hpb-runner"></div>
             <div class="hpb-body">
               <span class="hpb-icon">🎉</span>
               <div class="hpb-text">
@@ -1426,45 +1425,6 @@
         0 0 130px rgba(184,115,51,0.15);
     }
 
-    /* The running comet — gradient direction changes per side in keyframes */
-    .hpb-runner {
-      position: absolute;
-      z-index: 20;
-      pointer-events: none;
-      box-shadow:
-        0 0 4px rgba(255,220,120,1),
-        0 0 14px rgba(232,168,124,1),
-        0 0 32px rgba(184,115,51,0.95),
-        0 0 64px rgba(184,115,51,0.55),
-        0 0 100px rgba(184,115,51,0.25);
-      animation: hpbRun 5.5s linear infinite;
-    }
-
-    @keyframes hpbRun {
-      /* ── TOP: left → right ── */
-      0%   { top:0; left:-180px; right:auto; bottom:auto; width:180px; height:3px;
-             background:linear-gradient(90deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      24.9%{ top:0; left:100%;   right:auto; bottom:auto; width:180px; height:3px;
-             background:linear-gradient(90deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      /* ── RIGHT: top → bottom ── */
-      25%  { top:0;    left:auto; right:0; bottom:auto; width:3px; height:0;
-             background:linear-gradient(180deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      49.9%{ top:100%; left:auto; right:0; bottom:auto; width:3px; height:180px;
-             background:linear-gradient(180deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      /* ── BOTTOM: right → left ── */
-      50%  { top:auto; left:auto; right:-180px; bottom:0; width:180px; height:3px;
-             background:linear-gradient(270deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      74.9%{ top:auto; left:auto; right:100%;   bottom:0; width:180px; height:3px;
-             background:linear-gradient(270deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      /* ── LEFT: bottom → top ── */
-      75%  { top:auto; left:0; right:auto; bottom:0;    width:3px; height:0;
-             background:linear-gradient(0deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      99.9%{ top:auto; left:0; right:auto; bottom:100%; width:3px; height:180px;
-             background:linear-gradient(0deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-      /* ── back to TOP ── */
-      100% { top:0; left:-180px; right:auto; bottom:auto; width:180px; height:3px;
-             background:linear-gradient(90deg, rgba(184,115,51,0) 0%, rgba(232,168,124,0.8) 30%, rgba(255,230,140,1) 50%, rgba(232,168,124,0.8) 70%, rgba(184,115,51,0) 100%); }
-    }
     @keyframes promoBannerSlideIn {
       from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
