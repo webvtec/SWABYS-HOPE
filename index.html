@@ -128,16 +128,19 @@
         return;
       }
 
-      const colors = ['hpb-c0','hpb-c1','hpb-c2','hpb-c3','hpb-c4','hpb-c5'];
-      const buildCard = (p, colorClass) => {
+      const stripes = ['hpb-stripe-copper','hpb-stripe-blue','hpb-stripe-white','hpb-stripe-emerald','hpb-stripe-purple','hpb-stripe-rose'];
+
+      const buildCard = (p, idx, total) => {
         const discLabel = p.discountType === 'percent'
           ? p.discountValue + '% OFF'
           : '$' + Number(p.discountValue).toLocaleString() + ' OFF';
         const btn = p.showBookBtn
           ? `<button class="hpb-btn" onclick="navigateTo('rooms')">Book Now</button>`
           : '';
-        return `<div class="hero-promo-banner ${colorClass}">
-          <div class="hpb-side"></div>
+        const swipe = total > 1
+          ? `<div class="hpb-swipe ${stripes[idx % stripes.length]}">Swipe for more discounts <span class="hpb-swipe-arrow">→</span></div>`
+          : '';
+        return `<div class="hero-promo-banner">
           <div class="hpb-body">
             <span class="hpb-icon">🎉</span>
             <div class="hpb-text">
@@ -146,6 +149,7 @@
             </div>
             ${btn}
           </div>
+          ${swipe}
         </div>`;
       };
 
@@ -154,7 +158,7 @@
         : '';
 
       slot.innerHTML = `<div class="hero-promo-wrap">
-        <div id="hpbCardSlot">${buildCard(promos[0], colors[0])}</div>
+        <div id="hpbCardSlot">${buildCard(promos[0], 0, promos.length)}</div>
         ${dots}
       </div>`;
       slot.style.fontStyle = 'normal';
@@ -164,7 +168,7 @@
         _promoTimer = setInterval(() => {
           _promoIdx = (_promoIdx + 1) % promos.length;
           const card = document.getElementById('hpbCardSlot');
-          if (card) card.innerHTML = buildCard(promos[_promoIdx], colors[_promoIdx % colors.length]);
+          if (card) card.innerHTML = buildCard(promos[_promoIdx], _promoIdx, promos.length);
           allDots().forEach((d,i) => d.classList.toggle('active', i === _promoIdx));
         }, 4000);
       }
@@ -1381,18 +1385,16 @@
       }
     }
     /* ═══════════════════════════════════════════
-       PROMO BANNER (hero slot)
+       PROMO BANNER (hero slot) — frosted glass
        ═══════════════════════════════════════════ */
     #heroPromoSlot { transition: opacity 0.4s; }
 
+    .hero-promo-wrap { display: flex; flex-direction: column; max-width: 500px; }
+
     .hero-promo-banner {
-      display: flex;
-      align-items: stretch;
-      gap: 0;
-      max-width: 520px;
       border-radius: var(--radius-md);
       overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1);
       animation: promoBannerSlideIn 0.55s var(--ease-out) both;
     }
     @keyframes promoBannerSlideIn {
@@ -1400,62 +1402,82 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Color palette — copper-luxury theme */
-    .hpb-c0 { --hpb-bg: #B87333; --hpb-accent: #7A4A1E; }
-    .hpb-c1 { --hpb-bg: #5C6272; --hpb-accent: #363A45; }
-    .hpb-c2 { --hpb-bg: #2563EB; --hpb-accent: #1D4ED8; }
-    .hpb-c3 { --hpb-bg: #059669; --hpb-accent: #047857; }
-    .hpb-c4 { --hpb-bg: #7C3AED; --hpb-accent: #5B21B6; }
-    .hpb-c5 { --hpb-bg: #DC2626; --hpb-accent: #B91C1C; }
-
-    .hpb-side {
-      width: 5px;
-      background: var(--hpb-accent, #7A4A1E);
-      flex-shrink: 0;
-    }
+    /* Main frosted body — always glass */
     .hpb-body {
-      flex: 1;
-      background: var(--hpb-bg, #B87333);
-      padding: 14px 16px;
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-bottom: none;
+      padding: 16px 18px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 13px;
     }
-    .hpb-icon { font-size: 20px; flex-shrink: 0; line-height: 1; }
+    .hpb-icon { font-size: 22px; flex-shrink: 0; line-height: 1; }
     .hpb-text { flex: 1; min-width: 0; }
     .hpb-title {
       font-family: var(--font-body);
-      font-size: 0.625rem; font-weight: 700;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: rgba(255,255,255,0.9); margin-bottom: 3px;
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: rgba(255,255,255,0.75); margin-bottom: 4px;
     }
     .hpb-desc {
       font-family: var(--font-accent);
-      font-style: italic; font-size: 0.9375rem;
-      color: rgba(255,255,255,0.95); line-height: 1.35;
+      font-style: italic; font-size: 1rem;
+      color: #FFFFFF; line-height: 1.35;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.3);
     }
     .hpb-btn {
       flex-shrink: 0;
       padding: 8px 14px;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.22);
+      border: 1px solid rgba(255,255,255,0.45);
       border-radius: var(--radius-sm);
       color: #FFF;
       font-family: var(--font-body);
       font-size: 0.6rem; font-weight: 700;
       letter-spacing: 0.14em; text-transform: uppercase;
       cursor: pointer; white-space: nowrap;
+      backdrop-filter: blur(6px);
       transition: background 0.2s, transform 0.2s;
     }
-    .hpb-btn:hover { background: rgba(255,255,255,0.28); transform: translateY(-1px); }
+    .hpb-btn:hover { background: rgba(255,255,255,0.35); transform: translateY(-1px); }
 
-    /* Multi-promo: pager dots + auto-scroll */
-    .hero-promo-wrap { display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
-    .hpb-dots { display: flex; gap: 5px; padding-left: 2px; }
+    /* Swipe stripe — colored per promo, only shows when multiple */
+    .hpb-swipe {
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 7px 18px;
+      font-family: var(--font-body);
+      font-size: 0.6rem; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: rgba(255,255,255,0.92);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-top: none;
+    }
+    .hpb-swipe-arrow {
+      display: inline-block;
+      animation: swipeNudge 1.4s ease-in-out infinite;
+    }
+    @keyframes swipeNudge {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+
+    /* Swipe stripe accent colors */
+    .hpb-stripe-copper  { background: linear-gradient(90deg, rgba(184,115,51,0.85), rgba(212,137,90,0.85)); }
+    .hpb-stripe-blue    { background: linear-gradient(90deg, rgba(37,99,235,0.85), rgba(59,130,246,0.85)); }
+    .hpb-stripe-white   { background: rgba(255,255,255,0.18); backdrop-filter: blur(8px); color: rgba(255,255,255,0.85); }
+    .hpb-stripe-emerald { background: linear-gradient(90deg, rgba(5,150,105,0.85), rgba(16,185,129,0.85)); }
+    .hpb-stripe-purple  { background: linear-gradient(90deg, rgba(124,58,237,0.85), rgba(167,139,250,0.85)); }
+    .hpb-stripe-rose    { background: linear-gradient(90deg, rgba(225,29,72,0.85), rgba(251,113,133,0.85)); }
+
+    /* Pager dots */
+    .hpb-dots { display: flex; gap: 5px; padding: 6px 2px 0; }
     .hpb-dot {
       width: 5px; height: 5px; border-radius: 50%;
       background: rgba(255,255,255,0.3);
-      transition: background 0.3s, transform 0.3s; cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
     }
     .hpb-dot.active { background: var(--copper-shine); transform: scale(1.3); }
 
