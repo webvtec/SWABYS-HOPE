@@ -141,15 +141,17 @@
           ? `<div class="hpb-swipe ${stripes[idx % stripes.length]}">Swipe for more discounts <span class="hpb-swipe-arrow">→</span></div>`
           : '';
         return `<div class="hero-promo-banner">
-          <div class="hpb-body">
-            <span class="hpb-icon">🎉</span>
-            <div class="hpb-text">
-              <div class="hpb-title">${p.title} — ${discLabel}</div>
-              <div class="hpb-desc">${p.description}</div>
+          <div class="hpb-inner">
+            <div class="hpb-body">
+              <span class="hpb-icon">🎉</span>
+              <div class="hpb-text">
+                <div class="hpb-title">${p.title} — ${discLabel}</div>
+                <div class="hpb-desc">${p.description}</div>
+              </div>
+              ${btn}
             </div>
-            ${btn}
+            ${swipe}
           </div>
-          ${swipe}
         </div>`;
       };
 
@@ -1391,15 +1393,71 @@
 
     .hero-promo-wrap { display: flex; flex-direction: column; max-width: 500px; }
 
-    .hero-promo-banner {
+    /* Inner content clipped, outer glow bleeds out */
+    .hpb-inner {
       border-radius: var(--radius-md);
       overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Glowing border that travels around all 4 sides */
+    .hero-promo-banner {
+      border-radius: var(--radius-md);
+      overflow: visible;
+      position: relative;
       box-shadow:
-        0 0 0 1px rgba(184,115,51,0.4),
-        0 0 24px rgba(184,115,51,0.35),
-        0 0 60px rgba(184,115,51,0.15),
-        0 12px 40px rgba(0,0,0,0.5);
+        0 0 0 1px rgba(232,168,124,0.4),
+        0 16px 48px rgba(0,0,0,0.6);
       animation: promoBannerSlideIn 0.55s var(--ease-out) both;
+    }
+
+    /* Rotating conic glow that sweeps around the border */
+    .hero-promo-banner::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: calc(var(--radius-md) + 2px);
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 60deg,
+        rgba(255,200,120,0.9) 90deg,
+        rgba(232,168,124,1) 100deg,
+        rgba(255,220,140,1) 110deg,
+        rgba(232,168,124,0.9) 120deg,
+        transparent 150deg,
+        transparent 360deg
+      );
+      animation: hpbRotate 2s linear infinite;
+      z-index: -1;
+      filter: blur(3px);
+    }
+
+    /* Second layer — wider outer glow */
+    .hero-promo-banner::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: calc(var(--radius-md) + 8px);
+      background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 55deg,
+        rgba(184,115,51,0.5) 85deg,
+        rgba(232,168,124,0.8) 100deg,
+        rgba(184,115,51,0.5) 115deg,
+        transparent 145deg,
+        transparent 360deg
+      );
+      animation: hpbRotate 2s linear infinite;
+      z-index: -2;
+      filter: blur(12px);
+    }
+
+    @keyframes hpbRotate {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
     }
     @keyframes promoBannerSlideIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -1425,26 +1483,17 @@
         0 8px 32px rgba(0,0,0,0.5);
     }
 
-    /* Animated copper glow line at the very top */
+    /* Subtle inner shimmer layer */
     .hpb-body::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg,
-        transparent 0%,
-        rgba(184,115,51,0.4) 20%,
-        rgba(232,168,124,1) 50%,
-        rgba(184,115,51,0.4) 80%,
-        transparent 100%
+      inset: 0;
+      background: linear-gradient(135deg,
+        rgba(232,168,124,0.09) 0%,
+        transparent 50%,
+        rgba(184,115,51,0.05) 100%
       );
-      animation: hpbGlowSweep 2.8s ease-in-out infinite;
-      box-shadow: 0 0 12px rgba(232,168,124,0.9), 0 0 28px rgba(184,115,51,0.6), 0 0 48px rgba(184,115,51,0.3);
-    }
-    @keyframes hpbGlowSweep {
-      0%   { opacity: 0.6; transform: scaleX(0.7); }
-      50%  { opacity: 1;   transform: scaleX(1); }
-      100% { opacity: 0.6; transform: scaleX(0.7); }
+      pointer-events: none;
     }
 
     /* Subtle inner shimmer layer */
