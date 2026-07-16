@@ -2279,8 +2279,11 @@
       grid.innerHTML = rooms.map(room => {
         // Use room-specific amenities array, fall back to empty
         const roomAmenities = Array.isArray(room.amenities) ? room.amenities : [];
-        const amenitiesHtml = roomAmenities.length > 0
-          ? roomAmenities.map(key => {
+        // Sort by defined order in ALL_AMENITIES so they always appear consistently
+        const amenityKeys = Object.keys(ALL_AMENITIES);
+        const sortedAmenities = [...roomAmenities].sort((a, b) => amenityKeys.indexOf(a) - amenityKeys.indexOf(b));
+        const amenitiesHtml = sortedAmenities.length > 0
+          ? sortedAmenities.map(key => {
               const a = ALL_AMENITIES[key];
               return a ? `<div class="amenity">${a.icon}<span>${a.label}</span></div>` : '';
             }).join('')
