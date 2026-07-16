@@ -486,22 +486,29 @@
       content: '';
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      height: 2px;
+      height: 3px;
       background: linear-gradient(
         90deg,
         transparent 0%,
-        transparent 20%,
-        rgba(184,115,51,0.15) 30%,
-        rgba(232,168,124,1) 45%,
-        rgba(255,200,80,1) 50%,
-        rgba(232,168,124,1) 55%,
-        rgba(184,115,51,0.15) 70%,
-        transparent 80%,
+        transparent 15%,
+        rgba(184,115,51,0.1) 22%,
+        rgba(232,168,124,0.9) 35%,
+        rgba(255,220,120,1) 46%,
+        rgba(255,255,200,1) 50%,
+        rgba(255,220,120,1) 54%,
+        rgba(232,168,124,0.9) 65%,
+        rgba(184,115,51,0.1) 78%,
+        transparent 85%,
         transparent 100%
       );
       background-size: 200% 100%;
-      box-shadow: 0 0 6px rgba(232,168,124,0.8), 0 0 18px rgba(184,115,51,0.6), 0 0 36px rgba(184,115,51,0.3);
-      animation: subNavGlowRun 2.4s linear infinite;
+      box-shadow:
+        0 0 4px rgba(255,220,120,1),
+        0 0 12px rgba(232,168,124,1),
+        0 0 28px rgba(184,115,51,0.95),
+        0 0 55px rgba(184,115,51,0.6),
+        0 0 90px rgba(184,115,51,0.3);
+      animation: subNavGlowRun 3.2s linear infinite;
     }
 
     @keyframes subNavGlowRun {
@@ -542,16 +549,7 @@
       white-space: nowrap;
       height: 36px;
     }
-    .sub-nav-link::after {
-      content: '';
-      position: absolute; bottom: 0; left: 50%; right: 50%;
-      height: 2px;
-      background: var(--copper);
-      box-shadow: 0 0 8px rgba(184,115,51,0.6);
-      transition: left 0.35s var(--ease-out), right 0.35s var(--ease-out);
-    }
     .sub-nav-link:hover { color: var(--copper-shine); }
-    .sub-nav-link:hover::after, .sub-nav-link.active::after { left: 1rem; right: 1rem; }
     .sub-nav-link.active { color: var(--copper-shine); }
 
     .sub-nav-divider {
