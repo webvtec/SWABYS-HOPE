@@ -10,9 +10,15 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-storage.js';
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+
+    // ─── ADMIN UID — only this account can access the dashboard ───────────────
+    const ADMIN_UID = 'REPLACE_WITH_YOUR_FIREBASE_UID';
+    // To find your UID: sign in to Firebase Console → Authentication → Users → copy the User UID
+    // ──────────────────────────────────────────────────────────────────────────
+
     const firebaseConfig = {
       apiKey: "AIzaSyCxRadGAXnaBOfUHABUPIgG3_XUyH0a1vs",
       authDomain: "swabys-hope-hideaway.firebaseapp.com",
@@ -25,12 +31,69 @@
     const db = getFirestore(app);
     const storage = getStorage(app);
     const auth = getAuth(app);
-    window._fb = { db, storage, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, ref, uploadBytesResumable, getDownloadURL, deleteObject, signInWithEmailAndPassword, signOut };
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('dashboard').style.display = 'flex';
-      // Start on Bookings tab
-      switchTab('bookings');
-      loadAllData();
+    const googleProvider = new GoogleAuthProvider();
+
+    window._fb = { db, storage, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp, ref, uploadBytesResumable, getDownloadURL, deleteObject, signOut };
+
+    window._adminSignInGoogle = async () => {
+      const errEl = document.getElementById('loginError');
+      try {
+        errEl.style.display = 'none';
+        await signInWithPopup(auth, googleProvider);
+      } catch(e) {
+        errEl.textContent = e.message; errEl.style.display = 'block';
+      }
+    };
+
+    onAuthStateChanged(auth, user => {
+      const overlay        = document.getElementById('accessOverlay');
+      const loginForm      = document.getElementById('overlayLoginForm');
+      const checkingState  = document.getElementById('overlayCheckingState');
+      const accessStatus   = document.getElementById('accessStatus');
+      const accessDenied   = document.getElementById('accessDenied');
+      const dashboard      = document.getElementById('dashboard');
+
+      if (!user) {
+        // Not signed in — show login form inside overlay
+        if (loginForm)     loginForm.style.display     = '';
+        if (checkingState) checkingState.style.display = 'none';
+        if (accessDenied)  accessDenied.style.display  = 'none';
+        if (dashboard)     dashboard.style.display     = 'none';
+        return;
+      }
+
+      // Signed in — switch overlay to checking state
+      if (loginForm)     loginForm.style.display     = 'none';
+      if (checkingState) checkingState.style.display = 'block';
+
+      // Verify UID
+      if (ADMIN_UID !== 'REPLACE_WITH_YOUR_FIREBASE_UID' && user.uid !== ADMIN_UID) {
+        if (accessStatus) { accessStatus.textContent = 'Unauthorised — Redirecting…'; accessStatus.style.color = 'var(--danger)'; }
+        signOut(auth).catch(() => {});
+        setTimeout(() => {
+          if (accessDenied) { accessDenied.style.display = 'flex'; }
+          if (overlay) { overlay.style.display = 'none'; }
+        }, 1000);
+        return;
+      }
+
+      // Authorised — access granted
+      if (accessStatus) { accessStatus.textContent = 'Access Granted ✦'; accessStatus.style.color = 'var(--success)'; }
+      const nameEl = document.getElementById('adminUserName');
+      if (nameEl) { nameEl.textContent = user.displayName || user.email || 'Admin'; nameEl.style.display = 'block'; }
+
+      setTimeout(() => {
+        if (overlay) {
+          overlay.style.transition = 'opacity 0.45s';
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            overlay.style.display = 'none';
+            if (dashboard) dashboard.style.display = 'flex';
+            switchTab('bookings');
+            loadAllData();
+          }, 450);
+        }
+      }, 700);
     });
   </script>
 
@@ -560,8 +623,9 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
 }
 .status-pill::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
-.st-pending  { background: var(--warning-soft); color: var(--warning); }
+.st-pending   { background: var(--warning-soft); color: var(--warning); }
 .st-confirmed { background: var(--success-soft); color: var(--success); }
+.st-cancelled { background: rgba(224,80,80,0.08); color: var(--danger); }
 
 /* Mobile bookings card view */
 .booking-cards { display: none; }
@@ -827,6 +891,39 @@ a { color: inherit; text-decoration: none; }
 </head>
 <body>
 
+<!-- ACCESS OVERLAY — blocks ALL content until auth resolves -->
+<div id="accessOverlay" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#090B0F 0%,#0D1018 50%,#090B10 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;">
+  <!-- Starfield dots -->
+  <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 7% 3%,rgba(184,115,51,0.8) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 19% 6%,rgba(255,255,255,0.35) 0%,transparent 100%),radial-gradient(1px 1px at 33% 2%,rgba(184,115,51,0.6) 0%,transparent 100%),radial-gradient(2px 2px at 61% 3%,rgba(184,115,51,0.9) 0%,transparent 100%),radial-gradient(1px 1px at 74% 7%,rgba(255,255,255,0.3) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 88% 2%,rgba(184,115,51,0.7) 0%,transparent 100%);background-size:100% 100%;background-repeat:no-repeat;"></div>
+
+  <!-- Two states: login form (not signed in) | checking spinner (signed in, verifying) -->
+  <div id="overlayLoginForm" style="width:100%;max-width:360px;padding:1.5rem;position:relative;z-index:1;">
+    <div style="text-align:center;margin-bottom:2.5rem;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;letter-spacing:0.3em;text-transform:uppercase;color:#EDE8E0;margin-bottom:0.25rem;">Swaby's Hope</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;letter-spacing:0.2em;color:var(--copper-shine);text-transform:uppercase;">Admin Dashboard</div>
+      <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--copper-shine),transparent);margin:1rem auto 0;"></div>
+    </div>
+    <button onclick="window._adminSignInGoogle()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:0.9rem 1.25rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#EDE8E0;font-size:0.82rem;font-weight:600;letter-spacing:0.04em;cursor:pointer;transition:all 0.25s;font-family:'DM Sans',sans-serif;" onmouseover="this.style.background='rgba(255,255,255,0.11)';this.style.borderColor='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.14)'">
+      <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="loginError" style="display:none;margin-top:1rem;padding:0.625rem 0.875rem;background:var(--danger-soft);border:1px solid rgba(224,80,80,0.25);border-radius:5px;font-size:0.75rem;color:var(--danger);text-align:center;font-family:'DM Sans',sans-serif;"></div>
+  </div>
+
+  <!-- Checking state (shown while Firebase resolves auth) -->
+  <div id="overlayCheckingState" style="display:none;text-align:center;position:relative;z-index:1;">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1.125rem;font-weight:300;letter-spacing:0.25em;text-transform:uppercase;color:#EDE8E0;margin-bottom:1rem;">Verifying Access</div>
+    <div id="accessStatus" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--copper-shine);font-family:'DM Sans',sans-serif;font-weight:600;">Checking credentials…</div>
+  </div>
+</div>
+
+<!-- ACCESS DENIED (shown if UID doesn't match) -->
+<div id="accessDenied" style="display:none;position:fixed;inset:0;z-index:99998;background:#090B0F;align-items:center;justify-content:center;flex-direction:column;gap:1rem;text-align:center;padding:2rem;">
+  <div style="font-size:2.5rem;">🚫</div>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--danger);">Access Denied</div>
+  <div style="font-size:0.8rem;color:var(--text-dim);max-width:320px;font-family:'DM Sans',sans-serif;">This account is not authorised to access the admin dashboard. Redirecting…</div>
+</div>
+
 <!-- DRAWER SCRIM -->
 <div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
 
@@ -865,7 +962,8 @@ a { color: inherit; text-decoration: none; }
     <div class="pending-pill" id="pendingPill">
       <span id="pendingText">0 pending</span>
     </div>
-    <span class="topbar-page-label" id="topbarLabel">Feature Cards</span>
+    <span class="topbar-page-label" id="topbarLabel">Bookings</span>
+    <span id="adminUserName" style="font-size:0.7rem;color:var(--text-dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none;" class="topbar-page-label"></span>
     <button class="btn-bookings-topbar" onclick="switchTab('bookings')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -876,7 +974,7 @@ a { color: inherit; text-decoration: none; }
 </header>
 
 <!-- DASHBOARD -->
-<div id="dashboard">
+<div id="dashboard" style="display:none;">
   <main class="dash-main">
 
     <!-- FEATURES -->
@@ -989,7 +1087,7 @@ a { color: inherit; text-decoration: none; }
           <thead>
             <tr>
               <th>Guest</th><th>Email</th><th>Phone</th><th>Room</th>
-              <th>Check-in</th><th>Check-out</th><th>Nights</th><th>Total</th><th>Status</th>
+              <th>Check-in</th><th>Check-out</th><th>Nights</th><th>Total</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody id="bookingsTableBody"></tbody>
@@ -1132,7 +1230,10 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function handleLogout() { window.location.reload(); }
+async function handleLogout() {
+  try { await window._fb.signOut(window._fb.auth); } catch(e) {}
+  window.location.reload();
+}
 
 /* ── Modal ──────────────────────────────── */
 function openModal(title) {
@@ -1715,57 +1816,274 @@ async function loadBookings() {
 
     const pendingCount = items.filter(b => (b.status || 'pending') === 'pending').length;
     const pill = document.getElementById('pendingPill');
-    if (pill && pendingCount > 0) {
-      pill.style.display = 'inline-flex';
-      document.getElementById('pendingText').textContent = `${pendingCount} pending`;
+    if (pill) {
+      pill.style.display = pendingCount > 0 ? 'inline-flex' : 'none';
+      const pt = document.getElementById('pendingText');
+      if (pt) pt.textContent = `${pendingCount} pending`;
     }
 
     const emptyEl = document.getElementById('bookingsEmpty');
-    if (items.length === 0) { emptyEl.style.display = 'block'; return; }
+    if (items.length === 0) { emptyEl.style.display = 'block'; document.getElementById('bookingsTableBody').innerHTML = ''; document.getElementById('bookingCardsList').innerHTML = ''; return; }
     emptyEl.style.display = 'none';
 
-    // Desktop table rows (supports both new and legacy booking schemas)
+    const fmtDate = s => { if (!s) return '—'; const [y,m,d] = s.split('-'); return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); };
+
     document.getElementById('bookingsTableBody').innerHTML = items.map(b => {
       const st = b.status || 'pending';
       const email = b.email || b.guestEmail || '—';
       const roomLabel = b.roomName || b.roomId || '—';
-      const totalCell = (typeof b.total === 'number')
-        ? `$${b.total}${b.discountApplied > 0 ? ` <span style="color:var(--success);font-size:0.65rem;">(-$${b.discountApplied} ${b.promoTitle || 'promo'})</span>` : ''}`
-        : '—';
+      let totalStr = '—';
+      if (typeof b.total === 'number') {
+        totalStr = `$${b.total.toLocaleString()}`;
+        if (b.discountApplied > 0) totalStr += ` <span style="color:var(--success);font-size:0.6rem;">(-$${b.discountApplied})</span>`;
+      }
       return `<tr>
         <td>${b.guestName || '—'}</td>
-        <td>${email}</td>
+        <td style="font-size:0.75rem;">${email}</td>
         <td>${b.phone || '—'}</td>
         <td>${roomLabel}</td>
-        <td>${b.checkIn || '—'}</td>
-        <td>${b.checkOut || '—'}</td>
-        <td>${b.nights || '—'}</td>
-        <td>${totalCell}</td>
-        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : 'st-confirmed'}">${st}</span></td>
+        <td>${fmtDate(b.checkIn)}</td>
+        <td>${fmtDate(b.checkOut)}</td>
+        <td style="text-align:center;">${b.nights || '—'}</td>
+        <td>${totalStr}</td>
+        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-outline btn-sm" onclick="openEditBookingDates('${b.id}')" title="Edit dates">✏️ Dates</button>
+          ${st !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')" style="margin-left:4px;" title="Cancel booking">Cancel</button>` : ''}
+        </td>
       </tr>`;
     }).join('');
 
-    // Mobile cards
     document.getElementById('bookingCardsList').innerHTML = items.map(b => {
       const st = b.status || 'pending';
       const email = b.email || b.guestEmail || '—';
       const roomLabel = b.roomName || b.roomId || '—';
       return `<div class="booking-card">
         <div class="booking-card-name">${b.guestName || '—'}</div>
-        <div class="booking-card-row"><span>Email</span><span>${email}</span></div>
+        <div class="booking-card-row"><span>Email</span><span style="font-size:0.7rem;">${email}</span></div>
         <div class="booking-card-row"><span>Phone</span><span>${b.phone || '—'}</span></div>
         <div class="booking-card-row"><span>Room</span><span>${roomLabel}</span></div>
-        <div class="booking-card-row"><span>Check-in</span><span>${b.checkIn || '—'}</span></div>
-        <div class="booking-card-row"><span>Check-out</span><span>${b.checkOut || '—'}</span></div>
-        ${typeof b.total === 'number' ? `<div class="booking-card-row"><span>Total</span><span style="color:var(--copper-shine);font-weight:700;">$${b.total}</span></div>` : ''}
-        ${b.discountApplied > 0 ? `<div class="booking-card-row"><span>Discount</span><span style="color:var(--success);">-$${b.discountApplied} (${b.promoTitle || 'promo'})</span></div>` : ''}
+        <div class="booking-card-row"><span>Check-in</span><span>${fmtDate(b.checkIn)}</span></div>
+        <div class="booking-card-row"><span>Check-out</span><span>${fmtDate(b.checkOut)}</span></div>
+        <div class="booking-card-row"><span>Nights</span><span>${b.nights || '—'}</span></div>
+        ${typeof b.total === 'number' ? `<div class="booking-card-row"><span>Total</span><span style="color:var(--copper-shine);font-weight:700;">$${b.total.toLocaleString()}${b.discountApplied > 0 ? ` <span style="color:var(--success);font-size:0.65rem;">(-$${b.discountApplied})</span>` : ''}</span></div>` : ''}
         <div class="booking-card-row" style="margin-top:0.5rem;">
           <span>Status</span>
-          <span class="status-pill ${st === 'pending' ? 'st-pending' : 'st-confirmed'}">${st}</span>
+          <span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+          <button class="btn btn-outline btn-sm" onclick="openEditBookingDates('${b.id}')" style="flex:1;justify-content:center;">✏️ Edit Dates</button>
+          ${st !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')" style="flex:1;justify-content:center;">Cancel</button>` : ''}
         </div>
       </div>`;
     }).join('');
   } catch(e) { console.warn('Bookings error:', e); }
+}
+
+async function cancelBooking(bookingId) {
+  if (!confirm('Cancel this booking? The guest will need to be notified separately.')) return;
+  const { db, doc, updateDoc } = window._fb;
+  try {
+    await updateDoc(doc(db, 'bookings', bookingId), { status: 'cancelled' });
+    showToast('Booking cancelled.');
+    await loadBookings();
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
+/* ── Edit Booking Dates (same calendar logic as guest site) ── */
+let _editBookingId = null;
+let _editCalMonth = null, _editCalYear = null;
+let _editPickState = 'checkin';
+let _editRoomName = '';
+let _editPricePerNight = 0;
+let _editBookedRanges = [];
+
+async function openEditBookingDates(bookingId) {
+  _editBookingId = bookingId;
+  _editPickState = 'checkin';
+
+  // Load the booking
+  const { db, doc, collection, getDocs, query, where } = window._fb;
+  const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+  const snap = await getDoc(doc(db, 'bookings', bookingId));
+  if (!snap.exists()) { showToast('Booking not found.'); return; }
+  const b = snap.data();
+  _editRoomName = b.roomName || b.roomId || '';
+  _editPricePerNight = b.pricePerNight || 0;
+
+  // Load other bookings for same room to block out
+  try {
+    const roomSnap = await getDocs(query(collection(db, 'bookings'), where('roomName', '==', _editRoomName), where('status', 'in', ['confirmed','pending'])));
+    _editBookedRanges = [];
+    roomSnap.forEach(d => {
+      if (d.id !== bookingId) _editBookedRanges.push({ checkIn: d.data().checkIn, checkOut: d.data().checkOut });
+    });
+  } catch(e) { _editBookedRanges = []; }
+
+  const now = new Date();
+  _editCalMonth = now.getMonth(); _editCalYear = now.getFullYear();
+
+  openModal('Edit Booking Dates — ' + (b.guestName || ''));
+  document.getElementById('modalBody').innerHTML = `
+    <div id="editCalendar" style="background:#1A2035;border:1px solid var(--border-copper);border-radius:8px;padding:1rem;margin-bottom:0.75rem;"></div>
+    <div id="editDateStrip" style="display:none;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:6px;padding:0.75rem 1rem;margin-bottom:0.75rem;">
+      <div id="editDateStripText" style="font-size:0.82rem;color:#60A5FA;font-weight:600;"></div>
+      <div id="editDateStripSub" style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;"></div>
+    </div>
+    <input type="hidden" id="editCheckIn" value="${b.checkIn || ''}" />
+    <input type="hidden" id="editCheckOut" value="${b.checkOut || ''}" />
+    <div id="editPriceSummary" style="display:none;background:rgba(184,115,51,0.06);border:1px solid var(--border-copper);border-radius:6px;padding:0.875rem 1rem;margin-bottom:0.75rem;font-size:0.8rem;"></div>
+    <p id="editError" style="color:var(--danger);font-size:0.75rem;display:none;"></p>`;
+
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-copper" id="editSaveBtn" onclick="saveEditedDates()">Save Changes</button>`;
+
+  // Pre-populate with existing dates and render
+  renderEditCalendar();
+  updateEditDateStrip();
+  updateEditPriceSummary();
+}
+
+function editCalNav(delta) {
+  _editCalMonth += delta;
+  if (_editCalMonth > 11) { _editCalMonth = 0; _editCalYear++; }
+  if (_editCalMonth < 0)  { _editCalMonth = 11; _editCalYear--; }
+  renderEditCalendar();
+}
+
+function editCalSelectDate(dateStr) {
+  const ci = document.getElementById('editCheckIn').value;
+  if (_editPickState === 'checkin' || !ci) {
+    document.getElementById('editCheckIn').value = dateStr;
+    document.getElementById('editCheckOut').value = '';
+    _editPickState = 'checkout';
+  } else {
+    if (dateStr <= ci) {
+      document.getElementById('editCheckIn').value = dateStr;
+      document.getElementById('editCheckOut').value = '';
+      _editPickState = 'checkout';
+    } else {
+      const blocked = _editBookedRanges.some(r => ci < r.checkOut && dateStr > r.checkIn);
+      if (blocked) {
+        document.getElementById('editCheckIn').value = dateStr;
+        document.getElementById('editCheckOut').value = '';
+        _editPickState = 'checkout';
+      } else {
+        document.getElementById('editCheckOut').value = dateStr;
+        _editPickState = 'checkin';
+      }
+    }
+  }
+  renderEditCalendar();
+  updateEditDateStrip();
+  updateEditPriceSummary();
+}
+
+function renderEditCalendar() {
+  const cal = document.getElementById('editCalendar');
+  if (!cal) return;
+  const now = new Date();
+  const year = _editCalYear, month = _editCalMonth;
+  const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const ciVal = document.getElementById('editCheckIn')?.value || '';
+  const coVal = document.getElementById('editCheckOut')?.value || '';
+  const todayStr = now.toISOString().split('T')[0];
+  const atCurrent = (year === now.getFullYear() && month === now.getMonth());
+
+  function isBooked(ds) { return _editBookedRanges.some(r => ds >= r.checkIn && ds < r.checkOut); }
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.625rem;">
+    <button onclick="editCalNav(-1)" ${atCurrent?'disabled style="opacity:0.25;cursor:default;width:28px;height:28px;border-radius:5px;border:1px solid var(--border-copper);background:rgba(255,255,255,0.04);font-size:1rem;color:var(--text-dim);"':'style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border-copper);background:rgba(255,255,255,0.04);cursor:pointer;color:var(--copper-shine);font-size:1rem;"'}>&#8249;</button>
+    <div style="font-size:0.8rem;font-weight:700;color:var(--text);letter-spacing:0.03em;">${monthName}</div>
+    <button onclick="editCalNav(1)" style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border-copper);background:rgba(255,255,255,0.04);cursor:pointer;color:var(--copper-shine);font-size:1rem;">&#8250;</button>
+  </div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">`;
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => { html += `<div style="text-align:center;font-size:0.6rem;font-weight:700;color:var(--text-dim);padding:4px 0;text-transform:uppercase;letter-spacing:0.06em;">${d}</div>`; });
+  for (let i = 0; i < firstDay; i++) html += '<div></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isPast = ds < todayStr;
+    const booked = isBooked(ds);
+    const isCi = ds === ciVal, isCo = ds === coVal;
+    const inRange = ciVal && coVal && ds > ciVal && ds < coVal;
+    if (isPast || booked) {
+      html += `<div style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;color:var(--text-dim);text-decoration:line-through;cursor:not-allowed;user-select:none;" title="${booked?'Booked':''}">${d}</div>`;
+    } else if (isCi || isCo) {
+      html += `<div onclick="editCalSelectDate('${ds}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:#1D4ED8;color:#fff;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
+    } else if (inRange) {
+      html += `<div onclick="editCalSelectDate('${ds}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.2);color:#60A5FA;font-weight:600;cursor:pointer;user-select:none;">${d}</div>`;
+    } else {
+      html += `<div onclick="editCalSelectDate('${ds}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.08);color:#60A5FA;font-weight:600;border:1px solid rgba(37,99,235,0.2);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(37,99,235,0.2)'" onmouseout="this.style.background='rgba(37,99,235,0.08)'">${d}</div>`;
+    }
+  }
+  const instruction = !ciVal ? 'Tap a date to set check-in' : (!coVal ? 'Now tap check-out date' : 'Tap any date to change');
+  html += `</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+    <div style="display:flex;gap:1rem;font-size:0.65rem;color:var(--text-dim);">
+      <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:2px;"></span>Available</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:rgba(255,255,255,0.05);border-radius:2px;"></span>Unavailable</span>
+      ${ciVal?`<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:#1D4ED8;border-radius:2px;"></span>Selected</span>`:''}
+    </div>
+    <span style="font-size:0.65rem;color:var(--copper-shine);font-style:italic;">${instruction}</span>
+  </div>`;
+  cal.innerHTML = html;
+}
+
+function updateEditDateStrip() {
+  const ci = document.getElementById('editCheckIn')?.value || '';
+  const co = document.getElementById('editCheckOut')?.value || '';
+  const strip = document.getElementById('editDateStrip');
+  const txt   = document.getElementById('editDateStripText');
+  const sub   = document.getElementById('editDateStripSub');
+  if (!strip) return;
+  const fmt = s => { const [y,m,d] = s.split('-'); return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); };
+  if (!ci && !co) { strip.style.display = 'none'; return; }
+  strip.style.display = 'block';
+  if (ci && !co) {
+    txt.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)}`;
+    sub.textContent = 'Now tap a check-out date';
+  } else if (ci && co) {
+    const nights = Math.round((new Date(co)-new Date(ci))/86400000);
+    txt.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)} &nbsp;→&nbsp; <span style="opacity:0.6;font-weight:500;">Check-Out:</span> ${fmt(co)}`;
+    sub.textContent = `${nights} night${nights!==1?'s':''} · Tap any date to change`;
+  }
+}
+
+function updateEditPriceSummary() {
+  const ci = document.getElementById('editCheckIn')?.value || '';
+  const co = document.getElementById('editCheckOut')?.value || '';
+  const el = document.getElementById('editPriceSummary');
+  if (!el || !ci || !co || co <= ci) { if(el) el.style.display='none'; return; }
+  const nights = Math.round((new Date(co)-new Date(ci))/86400000);
+  if (nights <= 0) { el.style.display='none'; return; }
+  if (!_editPricePerNight) { el.style.display='none'; return; }
+  const base = _editPricePerNight * nights;
+  el.innerHTML = `<div style="display:flex;justify-content:space-between;color:var(--text-2);margin-bottom:4px;"><span>${nights} night${nights!==1?'s':''} × $${_editPricePerNight}</span><span>$${base.toLocaleString()}</span></div><div style="display:flex;justify-content:space-between;color:var(--text);font-weight:700;border-top:1px solid var(--border-copper);padding-top:6px;margin-top:4px;"><span>New Total</span><span style="color:var(--copper-shine);">$${base.toLocaleString()}</span></div>`;
+  el.style.display='block';
+}
+
+async function saveEditedDates() {
+  const ci = document.getElementById('editCheckIn')?.value || '';
+  const co = document.getElementById('editCheckOut')?.value || '';
+  const errEl = document.getElementById('editError');
+  errEl.style.display = 'none';
+  if (!ci || !co) { errEl.textContent = 'Please select both check-in and check-out dates.'; errEl.style.display='block'; return; }
+  if (co <= ci) { errEl.textContent = 'Check-out must be after check-in.'; errEl.style.display='block'; return; }
+  const nights = Math.round((new Date(co)-new Date(ci))/86400000);
+  const total  = _editPricePerNight ? _editPricePerNight * nights : null;
+  const btn = document.getElementById('editSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const { db, doc, updateDoc } = window._fb;
+    const updates = { checkIn: ci, checkOut: co, nights };
+    if (total !== null) { updates.total = total; updates.baseTotal = total; updates.discountApplied = 0; }
+    await updateDoc(doc(db, 'bookings', _editBookingId), updates);
+    closeModal(); showToast('Dates updated!'); await loadBookings();
+  } catch(e) {
+    errEl.textContent = 'Failed: ' + e.message; errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Save Changes';
+  }
 }
 
 /* ── Promotions ─────────────────────────── */
@@ -2022,21 +2340,32 @@ window.switchTab = function(tab) {
   if (tab === 'promotions') { loadPromotionsAdmin(); }
 };
 
-/* ── Manual Booking (Admin Add) ─────────── */
-async function openAddBookingModal() {
-  openModal('Add Booking');
+/* ── Add Booking (Admin) — calendar + discount + auto-calc ── */
+let _abCalMonth = null, _abCalYear = null;
+let _abPickState = 'checkin';
+let _abRooms = [];      // { name, price, id }
+let _abBookedRanges = [];
 
-  // Load room names for the dropdown
+async function openAddBookingModal() {
+  _abPickState = 'checkin';
+  _abBookedRanges = [];
+  const now = new Date();
+  _abCalMonth = now.getMonth(); _abCalYear = now.getFullYear();
+
+  // Load rooms
+  _abRooms = [];
   let roomOptions = '<option value="">Select a room…</option>';
   try {
     const { db, collection, getDocs, query, orderBy } = window._fb;
     const snap = await getDocs(query(collection(db, 'rooms'), orderBy('order')));
     snap.forEach(d => {
       const r = d.data();
-      roomOptions += `<option value="${r.name || d.id}">${r.name || d.id}</option>`;
+      _abRooms.push({ id: d.id, name: r.name || d.id, price: r.price || 0 });
+      roomOptions += `<option value="${r.name || d.id}" data-price="${r.price||0}">${r.name || d.id}${r.price ? ' — $' + r.price + '/night' : ''}</option>`;
     });
-  } catch(e) { roomOptions += '<option value="">Could not load rooms</option>'; }
+  } catch(e) {}
 
+  openModal('Add Booking');
   document.getElementById('modalBody').innerHTML = `
     <div class="form-row">
       <div class="form-group">
@@ -2054,30 +2383,34 @@ async function openAddBookingModal() {
     </div>
     <div class="form-group">
       <label class="form-label">Room <span style="color:var(--copper);">*</span></label>
-      <select class="form-input" id="abRoom" style="appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23D4895A' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px;">
+      <select class="form-input" id="abRoom" onchange="onAbRoomChange()" style="appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23D4895A' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px;">
         ${roomOptions}
       </select>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Check-In <span style="color:var(--copper);">*</span></label>
-        <input type="date" class="form-input" id="abCheckIn" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Check-Out <span style="color:var(--copper);">*</span></label>
-        <input type="date" class="form-input" id="abCheckOut" />
-      </div>
+    <!-- Calendar -->
+    <div class="form-group">
+      <label class="form-label">Dates <span style="color:var(--copper);">*</span></label>
+      <div id="abCalendar" style="background:#1A2035;border:1px solid var(--border-copper);border-radius:8px;padding:1rem;margin-top:0.375rem;"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Nights</label>
-        <input type="number" class="form-input" id="abNights" placeholder="Auto-calculated" min="1" readonly style="opacity:0.6;cursor:default;" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Total ($)</label>
-        <input type="number" class="form-input" id="abTotal" placeholder="e.g. 370" min="0" />
-      </div>
+    <!-- Date strip -->
+    <div id="abDateStrip" style="display:none;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:6px;padding:0.75rem 1rem;margin-bottom:0.75rem;">
+      <div id="abDateStripText" style="font-size:0.82rem;color:#60A5FA;font-weight:600;"></div>
+      <div id="abDateStripSub" style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;"></div>
     </div>
+    <input type="hidden" id="abCheckIn" />
+    <input type="hidden" id="abCheckOut" />
+    <!-- Discount -->
+    <div class="form-group" id="abDiscountWrap" style="display:none;">
+      <label class="form-label">Discount <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem;">(optional)</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem;">
+        <div id="abDiscPct" onclick="setAbDiscountType('percent')" style="padding:0.5rem 0.75rem;border-radius:4px;border:1px solid var(--border-copper);font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--copper-shine);text-align:center;cursor:pointer;background:var(--copper-soft);">% Percentage</div>
+        <div id="abDiscFixed" onclick="setAbDiscountType('fixed')" style="padding:0.5rem 0.75rem;border-radius:4px;border:1px solid var(--border-copper);font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);text-align:center;cursor:pointer;">$ Fixed Amount</div>
+      </div>
+      <input type="hidden" id="abDiscountType" value="percent" />
+      <input type="number" class="form-input" id="abDiscountValue" placeholder="e.g. 15" min="0" oninput="updateAbPriceSummary()" />
+    </div>
+    <!-- Price summary (auto-calc, read-only) -->
+    <div id="abPriceSummary" style="display:none;background:rgba(184,115,51,0.06);border:1px solid var(--border-copper);border-radius:6px;padding:0.875rem 1rem;margin-bottom:0.75rem;font-size:0.8rem;"></div>
     <div class="form-group">
       <label class="form-label">Status</label>
       <select class="form-input" id="abStatus" style="appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23D4895A' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px;">
@@ -2087,26 +2420,189 @@ async function openAddBookingModal() {
     </div>
     <div class="form-group">
       <label class="form-label">Special Requests <span style="font-weight:400;color:var(--text-dim);font-size:0.7rem;">(optional)</span></label>
-      <textarea class="form-textarea" id="abRequests" placeholder="Any notes or special requests from the guest…" style="min-height:72px;"></textarea>
+      <textarea class="form-textarea" id="abRequests" placeholder="Any notes or special requests…" style="min-height:64px;"></textarea>
     </div>
-    <p id="abError" style="color:var(--danger);font-size:0.75rem;margin-top:-0.5rem;display:none;"></p>`;
+    <p id="abError" style="color:var(--danger);font-size:0.75rem;margin-top:-0.25rem;display:none;"></p>`;
 
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
     <button class="btn btn-copper" id="abSaveBtn" onclick="saveManualBooking()">Save Booking</button>`;
 
-  // Auto-calculate nights when dates change
-  ['abCheckIn', 'abCheckOut'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', () => {
-      const ci = document.getElementById('abCheckIn').value;
-      const co = document.getElementById('abCheckOut').value;
-      if (ci && co) {
-        const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
-        const nightsEl = document.getElementById('abNights');
-        if (nightsEl) nightsEl.value = nights > 0 ? nights : '';
+  renderAbCalendar();
+}
+
+function getAbRoomPrice() {
+  const sel = document.getElementById('abRoom');
+  if (!sel || !sel.value) return 0;
+  const opt = sel.options[sel.selectedIndex];
+  return parseFloat(opt?.dataset?.price || 0) || 0;
+}
+
+async function onAbRoomChange() {
+  // Load booked ranges for selected room
+  const roomName = document.getElementById('abRoom')?.value || '';
+  _abBookedRanges = [];
+  if (!roomName) { renderAbCalendar(); updateAbPriceSummary(); return; }
+  try {
+    const { db, collection, getDocs, query, where } = window._fb;
+    const snap = await getDocs(query(collection(db, 'bookings'), where('roomName','==',roomName), where('status','in',['confirmed','pending'])));
+    snap.forEach(d => { const b = d.data(); _abBookedRanges.push({ checkIn: b.checkIn, checkOut: b.checkOut }); });
+  } catch(e) {}
+  // Show discount section now that a room is chosen
+  const dw = document.getElementById('abDiscountWrap');
+  if (dw) dw.style.display = '';
+  // Reset dates
+  document.getElementById('abCheckIn').value = '';
+  document.getElementById('abCheckOut').value = '';
+  _abPickState = 'checkin';
+  renderAbCalendar();
+  updateAbDateStrip();
+  updateAbPriceSummary();
+}
+
+function setAbDiscountType(type) {
+  document.getElementById('abDiscountType').value = type;
+  const pct   = document.getElementById('abDiscPct');
+  const fixed = document.getElementById('abDiscFixed');
+  const inp   = document.getElementById('abDiscountValue');
+  if (type === 'percent') {
+    pct.style.background='var(--copper-soft)'; pct.style.color='var(--copper-shine)'; pct.style.borderColor='var(--copper)';
+    fixed.style.background=''; fixed.style.color='var(--text-dim)'; fixed.style.borderColor='var(--border-copper)';
+    inp.placeholder='e.g. 15 (%)'; inp.max=100;
+  } else {
+    fixed.style.background='var(--copper-soft)'; fixed.style.color='var(--copper-shine)'; fixed.style.borderColor='var(--copper)';
+    pct.style.background=''; pct.style.color='var(--text-dim)'; pct.style.borderColor='var(--border-copper)';
+    inp.placeholder='e.g. 50 ($)'; inp.removeAttribute('max');
+  }
+  updateAbPriceSummary();
+}
+
+function abCalNav(delta) {
+  _abCalMonth += delta;
+  if (_abCalMonth > 11) { _abCalMonth = 0; _abCalYear++; }
+  if (_abCalMonth < 0)  { _abCalMonth = 11; _abCalYear--; }
+  renderAbCalendar();
+}
+
+function abCalSelectDate(dateStr) {
+  const ci = document.getElementById('abCheckIn').value;
+  if (_abPickState === 'checkin' || !ci) {
+    document.getElementById('abCheckIn').value = dateStr;
+    document.getElementById('abCheckOut').value = '';
+    _abPickState = 'checkout';
+  } else {
+    if (dateStr <= ci) {
+      document.getElementById('abCheckIn').value = dateStr;
+      document.getElementById('abCheckOut').value = '';
+      _abPickState = 'checkout';
+    } else {
+      const blocked = _abBookedRanges.some(r => ci < r.checkOut && dateStr > r.checkIn);
+      if (blocked) {
+        document.getElementById('abCheckIn').value = dateStr;
+        document.getElementById('abCheckOut').value = '';
+        _abPickState = 'checkout';
+      } else {
+        document.getElementById('abCheckOut').value = dateStr;
+        _abPickState = 'checkin';
       }
-    });
-  });
+    }
+  }
+  renderAbCalendar();
+  updateAbDateStrip();
+  updateAbPriceSummary();
+}
+
+function renderAbCalendar() {
+  const cal = document.getElementById('abCalendar');
+  if (!cal) return;
+  const now = new Date();
+  const year = _abCalYear, month = _abCalMonth;
+  const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const ciVal = document.getElementById('abCheckIn')?.value || '';
+  const coVal = document.getElementById('abCheckOut')?.value || '';
+  const todayStr = now.toISOString().split('T')[0];
+  const atCurrent = (year === now.getFullYear() && month === now.getMonth());
+
+  function isBooked(ds) { return _abBookedRanges.some(r => ds >= r.checkIn && ds < r.checkOut); }
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.625rem;">
+    <button onclick="abCalNav(-1)" ${atCurrent?'disabled style="opacity:0.25;cursor:default;width:28px;height:28px;border-radius:5px;border:1px solid var(--border-copper);background:rgba(255,255,255,0.04);font-size:1rem;color:var(--text-dim);"':'style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border-copper);background:rgba(255,255,255,0.04);cursor:pointer;color:var(--copper-shine);font-size:1rem;"'}>&#8249;</button>
+    <div style="font-size:0.8rem;font-weight:700;color:var(--text);letter-spacing:0.03em;">${monthName}</div>
+    <button onclick="abCalNav(1)" style="width:28px;height:28px;border-radius:5px;border:1px solid var(--border-copper);background:rgba(255,255,255,0.04);cursor:pointer;color:var(--copper-shine);font-size:1rem;">&#8250;</button>
+  </div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">`;
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => { html += `<div style="text-align:center;font-size:0.6rem;font-weight:700;color:var(--text-dim);padding:4px 0;text-transform:uppercase;letter-spacing:0.06em;">${d}</div>`; });
+  for (let i = 0; i < firstDay; i++) html += '<div></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isPast = ds < todayStr;
+    const booked = isBooked(ds);
+    const isCi = ds === ciVal, isCo = ds === coVal;
+    const inRange = ciVal && coVal && ds > ciVal && ds < coVal;
+    if (isPast || booked) {
+      html += `<div style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;color:var(--text-dim);text-decoration:line-through;cursor:not-allowed;user-select:none;" title="${booked?'Booked':''}">${d}</div>`;
+    } else if (isCi || isCo) {
+      html += `<div onclick="abCalSelectDate('${ds}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:#1D4ED8;color:#fff;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
+    } else if (inRange) {
+      html += `<div onclick="abCalSelectDate('${ds}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.2);color:#60A5FA;font-weight:600;cursor:pointer;user-select:none;">${d}</div>`;
+    } else {
+      html += `<div onclick="abCalSelectDate('${ds}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.08);color:#60A5FA;font-weight:600;border:1px solid rgba(37,99,235,0.2);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(37,99,235,0.2)'" onmouseout="this.style.background='rgba(37,99,235,0.08)'">${d}</div>`;
+    }
+  }
+  const instruction = !ciVal ? 'Tap a date to set check-in' : (!coVal ? 'Now tap check-out date' : 'Tap any date to change');
+  html += `</div><div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+    <div style="display:flex;gap:1rem;font-size:0.65rem;color:var(--text-dim);">
+      <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:2px;"></span>Available</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:rgba(255,255,255,0.05);border-radius:2px;"></span>Unavailable</span>
+      ${ciVal?`<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:#1D4ED8;border-radius:2px;"></span>Selected</span>`:''}
+    </div>
+    <span style="font-size:0.65rem;color:var(--copper-shine);font-style:italic;">${instruction}</span>
+  </div>`;
+  cal.innerHTML = html;
+}
+
+function updateAbDateStrip() {
+  const ci = document.getElementById('abCheckIn')?.value || '';
+  const co = document.getElementById('abCheckOut')?.value || '';
+  const strip = document.getElementById('abDateStrip');
+  const txt   = document.getElementById('abDateStripText');
+  const sub   = document.getElementById('abDateStripSub');
+  if (!strip) return;
+  const fmt = s => { const [y,m,d] = s.split('-'); return new Date(y,m-1,d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); };
+  if (!ci && !co) { strip.style.display = 'none'; return; }
+  strip.style.display = 'block';
+  if (ci && !co) {
+    txt.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)}`;
+    sub.textContent = 'Now tap a check-out date';
+  } else if (ci && co) {
+    const nights = Math.round((new Date(co)-new Date(ci))/86400000);
+    txt.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)} &nbsp;→&nbsp; <span style="opacity:0.6;font-weight:500;">Check-Out:</span> ${fmt(co)}`;
+    sub.textContent = `${nights} night${nights!==1?'s':''} · Tap any date to change`;
+  }
+}
+
+function updateAbPriceSummary() {
+  const ci = document.getElementById('abCheckIn')?.value || '';
+  const co = document.getElementById('abCheckOut')?.value || '';
+  const el = document.getElementById('abPriceSummary');
+  if (!el || !ci || !co || co <= ci) { if(el) el.style.display='none'; return; }
+  const nights = Math.round((new Date(co)-new Date(ci))/86400000);
+  if (nights <= 0) { el.style.display='none'; return; }
+  const price = getAbRoomPrice();
+  if (!price) { el.style.display='none'; return; }
+  const base = price * nights;
+  const discType  = document.getElementById('abDiscountType')?.value || 'percent';
+  const discVal   = parseFloat(document.getElementById('abDiscountValue')?.value) || 0;
+  let discAmt = 0;
+  if (discVal > 0) {
+    discAmt = discType === 'percent' ? Math.round(base * discVal / 100) : Math.min(discVal, base);
+  }
+  const total = base - discAmt;
+  let html = `<div style="display:flex;justify-content:space-between;color:var(--text-2);margin-bottom:4px;"><span>${nights} night${nights!==1?'s':''} × $${price}</span><span>$${base.toLocaleString()}</span></div>`;
+  if (discAmt > 0) html += `<div style="display:flex;justify-content:space-between;color:var(--success);margin-bottom:4px;"><span>Discount (${discType==='percent'?discVal+'%':'$'+discVal+' off'})</span><span>-$${discAmt.toLocaleString()}</span></div>`;
+  html += `<div style="display:flex;justify-content:space-between;color:var(--text);font-weight:700;border-top:1px solid var(--border-copper);padding-top:6px;margin-top:2px;"><span>Total</span><span style="color:var(--copper-shine);">$${total.toLocaleString()}</span></div>`;
+  el.innerHTML = html; el.style.display='block';
 }
 
 async function saveManualBooking() {
@@ -2116,24 +2612,29 @@ async function saveManualBooking() {
   const room    = (document.getElementById('abRoom')?.value || '').trim();
   const checkIn = document.getElementById('abCheckIn')?.value || '';
   const checkOut= document.getElementById('abCheckOut')?.value || '';
-  const total   = parseFloat(document.getElementById('abTotal')?.value) || null;
   const status  = document.getElementById('abStatus')?.value || 'confirmed';
   const requests= (document.getElementById('abRequests')?.value || '').trim();
-  const nights  = parseInt(document.getElementById('abNights')?.value) || null;
+  const discType  = document.getElementById('abDiscountType')?.value || 'percent';
+  const discVal   = parseFloat(document.getElementById('abDiscountValue')?.value) || 0;
+  const price     = getAbRoomPrice();
 
   const errEl = document.getElementById('abError');
   errEl.style.display = 'none';
 
-  if (!name || !phone || !email || !room || !checkIn || !checkOut) {
-    errEl.textContent = 'Please fill in all required fields (name, phone, email, room, dates).';
-    errEl.style.display = 'block';
-    return;
+  if (!name)    { errEl.textContent='Please enter the guest name.'; errEl.style.display='block'; return; }
+  if (!phone)   { errEl.textContent='Please enter a phone number.'; errEl.style.display='block'; return; }
+  if (!email)   { errEl.textContent='Please enter an email address.'; errEl.style.display='block'; return; }
+  if (!room)    { errEl.textContent='Please select a room.'; errEl.style.display='block'; return; }
+  if (!checkIn || !checkOut) { errEl.textContent='Please select check-in and check-out dates on the calendar.'; errEl.style.display='block'; return; }
+  if (new Date(checkOut) <= new Date(checkIn)) { errEl.textContent='Check-out must be after check-in.'; errEl.style.display='block'; return; }
+
+  const nights = Math.round((new Date(checkOut)-new Date(checkIn))/86400000);
+  const base   = price * nights;
+  let discAmt  = 0;
+  if (discVal > 0 && price > 0) {
+    discAmt = discType === 'percent' ? Math.round(base * discVal / 100) : Math.min(discVal, base);
   }
-  if (new Date(checkOut) <= new Date(checkIn)) {
-    errEl.textContent = 'Check-out must be after check-in.';
-    errEl.style.display = 'block';
-    return;
-  }
+  const total = price > 0 ? base - discAmt : null;
 
   const btn = document.getElementById('abSaveBtn');
   btn.disabled = true; btn.textContent = 'Saving…';
@@ -2141,26 +2642,22 @@ async function saveManualBooking() {
   try {
     const { db, collection, addDoc, serverTimestamp } = window._fb;
     await addDoc(collection(db, 'bookings'), {
-      guestName: name,
-      phone,
-      email,
-      roomName: room,
-      checkIn,
-      checkOut,
-      nights,
-      total,
-      status,
+      guestName: name, phone, email, roomName: room,
+      checkIn, checkOut, nights,
+      pricePerNight: price || null,
+      baseTotal: price ? base : null,
+      discountType: discVal > 0 ? discType : null,
+      discountValue: discVal > 0 ? discVal : null,
+      discountApplied: discAmt || 0,
+      total, status,
       specialRequests: requests || null,
       addedByAdmin: true,
       createdAt: serverTimestamp()
     });
-    closeModal();
-    showToast('Booking added!');
-    await loadBookings();
+    closeModal(); showToast('Booking added!'); await loadBookings();
   } catch(e) {
-    errEl.textContent = 'Failed to save: ' + e.message;
-    errEl.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Save Booking';
+    errEl.textContent = 'Failed to save: ' + e.message; errEl.style.display='block';
+    btn.disabled=false; btn.textContent='Save Booking';
   }
 }
 </script>
