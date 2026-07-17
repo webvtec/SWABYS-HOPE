@@ -732,6 +732,32 @@ a { color: inherit; text-decoration: none; }
 .toggle-switch input:checked + .toggle-slider { background: var(--copper-soft); border-color: var(--copper); }
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); background: var(--copper-shine); }
 
+/* ═══ DRAG-REORDER LIST ════════════════════════════ */
+.drag-list { display: flex; flex-direction: column; gap: 0.625rem; }
+.drag-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.75rem 1rem;
+  cursor: grab; user-select: none;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.drag-item:hover { border-color: var(--border-copper); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+.drag-item.dragging { opacity: 0.4; cursor: grabbing; }
+.drag-item.drag-over { border-color: var(--copper); box-shadow: 0 0 0 2px rgba(184,115,51,0.25); }
+.drag-handle {
+  color: var(--text-dim); flex-shrink: 0; cursor: grab;
+  display: flex; flex-direction: column; gap: 3px; padding: 2px;
+}
+.drag-handle span { display: block; width: 18px; height: 2px; background: currentColor; border-radius: 1px; }
+.drag-item-img {
+  width: 56px; height: 44px; border-radius: 5px;
+  object-fit: cover; flex-shrink: 0; background: #070910;
+}
+.drag-item-body { flex: 1; min-width: 0; }
+.drag-item-title { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.drag-item-meta  { font-size: 0.72rem; color: var(--text-dim); }
+.drag-item-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+
 /* ═══ MULTI-IMAGE GALLERY ══════════════════════════ */
 .multi-img-list {
   display: flex; flex-direction: column; gap: 0.625rem;
@@ -874,7 +900,11 @@ a { color: inherit; text-decoration: none; }
         </div>
         <button class="btn btn-copper" onclick="openRoomModal()">Add Room</button>
       </div>
-      <div class="items-grid" id="roomsList"></div>
+      <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:1rem;display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+        Drag the handle to reorder rooms — order saves automatically
+      </div>
+      <div class="drag-list" id="roomsList"></div>
     </div>
 
     <!-- EVENTS -->
@@ -957,8 +987,8 @@ a { color: inherit; text-decoration: none; }
         <table class="bookings-table">
           <thead>
             <tr>
-              <th>Guest</th><th>Email</th><th>Room</th>
-              <th>Check-in</th><th>Check-out</th><th>Guests</th><th>Status</th>
+              <th>Guest</th><th>Email</th><th>Phone</th><th>Room</th>
+              <th>Check-in</th><th>Check-out</th><th>Nights</th><th>Total</th><th>Status</th>
             </tr>
           </thead>
           <tbody id="bookingsTableBody"></tbody>
@@ -1366,18 +1396,84 @@ async function loadRooms() {
   const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
   const el = document.getElementById('roomsList');
   if (items.length === 0) { el.innerHTML = '<div class="empty-state">No rooms yet</div>'; return; }
-  el.innerHTML = items.map(r => `
-    <div class="item-card">
-      <div class="item-card-img">${r.imageUrl ? `<img src="${r.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
-      <div class="item-card-body">
-        <div class="item-card-title">${r.name}</div>
-        <div class="item-card-meta">$${r.price}/night &middot; ${r.badge || ''} &middot; ${r.quantity || 1} available${Array.isArray(r.amenities) && r.amenities.length ? '<br><span style="display:inline-flex;gap:6px;margin-top:4px;flex-wrap:wrap;">' + r.amenities.map(k => { const found = ROOM_AMENITIES.find(a=>a.key===k); return found ? `<span style="color:var(--copper-shine);" title="${found.label}">${found.icon}</span>` : ''; }).join('') + '</span>' : ''}</div>
+
+  el.innerHTML = items.map(r => {
+    const amenityIcons = Array.isArray(r.amenities) && r.amenities.length
+      ? r.amenities.map(k => { const found = ROOM_AMENITIES.find(a=>a.key===k); return found ? `<span style="color:var(--copper-shine);" title="${found.label}">${found.icon}</span>` : ''; }).join('')
+      : '';
+    const imgs = Array.isArray(r.images) && r.images.length ? r.images : (r.imageUrl ? [r.imageUrl] : []);
+    const thumb = imgs[0] || '';
+    return `
+    <div class="drag-item" data-id="${r.id}" draggable="true"
+         ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
+         ondragleave="onDragLeave(event)" ondrop="onDrop(event)" ondragend="onDragEnd(event)">
+      <div class="drag-handle">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
-      <div class="item-card-actions">
+      ${thumb ? `<img class="drag-item-img" src="${thumb}" />` : '<div class="drag-item-img" style="background:rgba(255,255,255,0.05);border-radius:5px;"></div>'}
+      <div class="drag-item-body">
+        <div class="drag-item-title">${r.name}</div>
+        <div class="drag-item-meta">$${r.price}/night${r.badge ? ' · ' + r.badge : ''}${amenityIcons ? '<br><span style="display:inline-flex;gap:5px;margin-top:3px;flex-wrap:wrap;">' + amenityIcons + '</span>' : ''}</div>
+      </div>
+      <div class="drag-item-actions">
         <button class="btn btn-outline btn-sm" onclick="openRoomModal('${r.id}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteItem('rooms','${r.id}')">Delete</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+
+  initRoomDrag();
+}
+
+/* Drag-and-drop logic */
+let _dragSrc = null;
+
+function initRoomDrag() {
+  // nothing extra needed — events are inline
+}
+
+function onDragStart(e) {
+  _dragSrc = e.currentTarget;
+  _dragSrc.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _dragSrc.dataset.id);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if (target !== _dragSrc) target.classList.add('drag-over');
+}
+
+function onDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function onDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  target.classList.remove('drag-over');
+  if (!_dragSrc || _dragSrc === target) return;
+  const list = document.getElementById('roomsList');
+  const items = [...list.querySelectorAll('.drag-item')];
+  const srcIdx = items.indexOf(_dragSrc);
+  const tgtIdx = items.indexOf(target);
+  if (srcIdx < tgtIdx) target.after(_dragSrc);
+  else target.before(_dragSrc);
+  saveRoomOrder();
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.drag-item').forEach(i => i.classList.remove('drag-over'));
+  _dragSrc = null;
+}
+
+async function saveRoomOrder() {
+  const list = document.getElementById('roomsList');
+  const ids = [...list.querySelectorAll('.drag-item')].map(el => el.dataset.id);
+  const { db, doc, updateDoc } = window._fb;
+  await Promise.all(ids.map((id, idx) => updateDoc(doc(db, 'rooms', id), { order: idx })));
+  showToast('Room order saved');
 }
 
 const ROOM_AMENITIES = [
@@ -1413,32 +1509,72 @@ function getSelectedAmenities() {
   return Array.from(document.querySelectorAll('input[data-amenity]:checked')).map(i => i.dataset.amenity);
 }
 
+// Multi-image state for room modal
+let _roomImages = [];
+
 function openRoomModal(editId) {
+  _roomImages = [];
   openModal(editId ? 'Edit Room' : 'Add Room');
   document.getElementById('modalBody').innerHTML = `
     <div class="form-group"><label class="form-label">Room Name</label><input class="form-input" id="mName" placeholder="e.g. Spur Tree Suite" /></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Price per Night ($)</label><input type="number" class="form-input" id="mPrice" placeholder="185" min="0" /></div>
-      <div class="form-group"><label class="form-label">Quantity Available</label><input type="number" class="form-input" id="mQty" value="1" min="1" /></div>
-    </div>
-    <div class="form-row">
       <div class="form-group"><label class="form-label">Badge Label</label><input class="form-input" id="mBadge" placeholder="Signature, Popular…" /></div>
-      <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
     </div>
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the room"></textarea></div>
     <div class="form-group">
       <label class="form-label">Amenities & Inclusions</label>
       <div id="mAmenitiesWrap">${amenityCheckboxesHtml([])}</div>
     </div>
-    <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
+    <div class="form-group">
+      <label class="form-label">Photos <span style="font-weight:400;color:var(--text-dim)">(add multiple — users will swipe through them)</span></label>
+      <div class="img-upload-zone" onclick="this.querySelector('input').click()" style="margin-bottom:0.5rem;">
+        <input type="file" accept="image/*" multiple id="mRoomImgPicker" onchange="roomImgAdd(this)" />
+        <div class="label"><strong>Click to add photos</strong> — select one or multiple at once</div>
+      </div>
+      <div class="multi-img-list" id="roomImgList"></div>
+    </div>`;
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
     <button class="btn btn-copper" onclick="saveRoom('${editId||''}')">Save</button>`;
   if (editId) {
-    loadEditData('rooms', editId, ['mName:name','mPrice:price','mQty:quantity','mBadge:badge','mOrder:order','mDesc:description'], 'mImg');
-    // Load existing amenities
+    loadEditData('rooms', editId, ['mName:name','mPrice:price','mBadge:badge','mDesc:description']);
     loadRoomAmenities(editId);
+    loadRoomImages(editId);
   }
+}
+
+async function loadRoomImages(editId) {
+  const { db } = window._fb;
+  const { getDoc, doc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+  const snap = await getDoc(doc(db, 'rooms', editId));
+  if (!snap.exists()) return;
+  const data = snap.data();
+  const imgs = Array.isArray(data.images) && data.images.length > 0 ? data.images : (data.imageUrl ? [data.imageUrl] : []);
+  imgs.forEach(url => { _roomImages.push({ url, name: url.split('/').pop().split('?')[0].slice(0,28) }); });
+  renderRoomImgList();
+}
+
+function roomImgAdd(input) {
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => { _roomImages.push({ url: e.target.result, file, name: file.name }); renderRoomImgList(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function roomImgRemove(idx) { _roomImages.splice(idx, 1); renderRoomImgList(); }
+
+function renderRoomImgList() {
+  const list = document.getElementById('roomImgList');
+  if (!list) return;
+  list.innerHTML = _roomImages.map((img, i) => `
+    <div class="multi-img-item">
+      <img class="multi-img-thumb" src="${img.url}" />
+      <span class="multi-img-name">${img.file ? img.file.name : img.name}</span>
+      <button class="multi-img-remove" onclick="roomImgRemove(${i})">&#215;</button>
+    </div>`).join('');
 }
 
 async function loadRoomAmenities(editId) {
@@ -1454,13 +1590,33 @@ async function loadRoomAmenities(editId) {
 async function saveRoom(editId) {
   const data = {
     name: gv('mName'), price: parseInt(gv('mPrice')) || 0,
-    quantity: parseInt(gv('mQty')) || 1, badge: gv('mBadge'),
-    description: gv('mDesc'), order: parseInt(gv('mOrder')) || 0,
+    badge: gv('mBadge'),
+    description: gv('mDesc'),
     amenities: getSelectedAmenities()
   };
   if (!data.name || !data.price) { alert('Name and price are required.'); return; }
-  await saveItem('rooms', editId, data, 'mImg', `rooms/${Date.now()}`);
-  closeModal(); await loadRooms(); showToast('Room saved');
+  const btn = document.querySelector('#modalFooter .btn-copper');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const { storage, ref, uploadBytesResumable, getDownloadURL, db, collection, addDoc, doc, updateDoc } = window._fb;
+    const finalUrls = [];
+    for (const img of _roomImages) {
+      if (img.file) {
+        const storageRef = ref(storage, `rooms/${Date.now()}_${img.file.name}`);
+        const url = await new Promise((resolve, reject) => {
+          const task = uploadBytesResumable(storageRef, img.file);
+          task.on('state_changed', null, reject, async () => resolve(await getDownloadURL(task.snapshot.ref)));
+        });
+        finalUrls.push(url);
+      } else { finalUrls.push(img.url); }
+    }
+    data.images = finalUrls;
+    data.imageUrl = finalUrls[0] || '';
+    if (editId) { await updateDoc(doc(db, 'rooms', editId), data); }
+    else { await addDoc(collection(db, 'rooms'), data); }
+    closeModal(); await loadRooms(); showToast('Room saved');
+  } catch(e) { console.error(e); showToast('Save failed. Try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Save'; }
 }
 
 /* ── Events ─────────────────────────────── */
@@ -1567,16 +1723,23 @@ async function loadBookings() {
     if (items.length === 0) { emptyEl.style.display = 'block'; return; }
     emptyEl.style.display = 'none';
 
-    // Desktop table rows
+    // Desktop table rows (supports both new and legacy booking schemas)
     document.getElementById('bookingsTableBody').innerHTML = items.map(b => {
       const st = b.status || 'pending';
+      const email = b.email || b.guestEmail || '—';
+      const roomLabel = b.roomName || b.roomId || '—';
+      const totalCell = (typeof b.total === 'number')
+        ? `$${b.total}${b.discountApplied > 0 ? ` <span style="color:var(--success);font-size:0.65rem;">(-$${b.discountApplied} ${b.promoTitle || 'promo'})</span>` : ''}`
+        : '—';
       return `<tr>
         <td>${b.guestName || '—'}</td>
-        <td>${b.guestEmail || '—'}</td>
-        <td>${b.roomId || '—'}</td>
+        <td>${email}</td>
+        <td>${b.phone || '—'}</td>
+        <td>${roomLabel}</td>
         <td>${b.checkIn || '—'}</td>
         <td>${b.checkOut || '—'}</td>
-        <td>${b.numberOfGuests || '—'}</td>
+        <td>${b.nights || '—'}</td>
+        <td>${totalCell}</td>
         <td><span class="status-pill ${st === 'pending' ? 'st-pending' : 'st-confirmed'}">${st}</span></td>
       </tr>`;
     }).join('');
@@ -1584,13 +1747,17 @@ async function loadBookings() {
     // Mobile cards
     document.getElementById('bookingCardsList').innerHTML = items.map(b => {
       const st = b.status || 'pending';
+      const email = b.email || b.guestEmail || '—';
+      const roomLabel = b.roomName || b.roomId || '—';
       return `<div class="booking-card">
         <div class="booking-card-name">${b.guestName || '—'}</div>
-        <div class="booking-card-row"><span>Email</span><span>${b.guestEmail || '—'}</span></div>
-        <div class="booking-card-row"><span>Room</span><span>${b.roomId || '—'}</span></div>
+        <div class="booking-card-row"><span>Email</span><span>${email}</span></div>
+        <div class="booking-card-row"><span>Phone</span><span>${b.phone || '—'}</span></div>
+        <div class="booking-card-row"><span>Room</span><span>${roomLabel}</span></div>
         <div class="booking-card-row"><span>Check-in</span><span>${b.checkIn || '—'}</span></div>
         <div class="booking-card-row"><span>Check-out</span><span>${b.checkOut || '—'}</span></div>
-        <div class="booking-card-row"><span>Guests</span><span>${b.numberOfGuests || '—'}</span></div>
+        ${typeof b.total === 'number' ? `<div class="booking-card-row"><span>Total</span><span style="color:var(--copper-shine);font-weight:700;">$${b.total}</span></div>` : ''}
+        ${b.discountApplied > 0 ? `<div class="booking-card-row"><span>Discount</span><span style="color:var(--success);">-$${b.discountApplied} (${b.promoTitle || 'promo'})</span></div>` : ''}
         <div class="booking-card-row" style="margin-top:0.5rem;">
           <span>Status</span>
           <span class="status-pill ${st === 'pending' ? 'st-pending' : 'st-confirmed'}">${st}</span>

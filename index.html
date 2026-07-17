@@ -127,8 +127,13 @@
 
       if (!promos || promos.length === 0) {
         slot.innerHTML = '';
+        // Clear stored promo
+        window._activePromo = null;
         return;
       }
+      // Store list for claim-on-click; discount only applies if guest presses the banner
+      window._promosList = promos;
+      window._claimedPromo = null;
 
       const stripes = ['hpb-stripe-copper','hpb-stripe-blue','hpb-stripe-white','hpb-stripe-emerald','hpb-stripe-purple','hpb-stripe-rose'];
 
@@ -137,7 +142,7 @@
           ? p.discountValue + '% OFF'
           : '$' + Number(p.discountValue).toLocaleString() + ' OFF';
         const btn = p.showBookBtn
-          ? `<button class="hpb-btn" onclick="navigateTo('rooms')">Book Now</button>`
+          ? `<button class="hpb-btn" onclick="claimPromo(${idx})">Book Now</button>`
           : '';
         const swipe = total > 1
           ? `<div class="hpb-swipe ${stripes[idx % stripes.length]}">Swipe for more discounts <span class="hpb-swipe-arrow">→</span></div>`
@@ -1824,7 +1829,73 @@
       padding-bottom: 1.25rem; border-bottom: 1px solid rgba(184,115,51,0.15);
     }
 
-    /* ═══ END REVIEWS ═══ */
+    /* ═══════════════════════════════════════════
+       ROOM PHOTO CAROUSEL
+       ═══════════════════════════════════════════ */
+    .room-carousel { position: relative; aspect-ratio: 16/10; overflow: hidden; background: #111; }
+    .room-carousel-track { display: flex; height: 100%; transition: transform 0.45s var(--ease-out); }
+    .room-carousel-slide { min-width: 100%; height: 100%; flex-shrink: 0; }
+    .room-carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .room-carousel-btn {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.25);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 3; transition: background 0.2s;
+      font-size: 14px; line-height: 1;
+    }
+    .room-carousel-btn:hover { background: rgba(184,115,51,0.75); border-color: var(--copper); }
+    .room-carousel-btn.prev { left: 8px; }
+    .room-carousel-btn.next { right: 8px; }
+    .room-carousel-count {
+      position: absolute; bottom: 8px; right: 10px;
+      background: rgba(0,0,0,0.55); color: #fff;
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.06em;
+      padding: 2px 8px; border-radius: 20px;
+    }
+
+    /* ═══════════════════════════════════════════
+       BOOKING MODAL
+       ═══════════════════════════════════════════ */
+    .booking-modal-scrim {
+      position: fixed; inset: 0; z-index: 3000;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .booking-modal-scrim.open { display: flex; }
+    .booking-modal {
+      background: #fff; border-radius: var(--radius-xl);
+      padding: 2rem; width: 100%; max-width: 560px;
+      max-height: 92vh; overflow-y: auto; position: relative;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(184,115,51,0.15);
+      animation: eventModalIn 0.35s var(--ease-out);
+    }
+    .booking-modal-close {
+      position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid rgba(184,115,51,0.25); display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--text-muted); cursor: pointer; background: none; transition: all 0.2s;
+    }
+    .booking-modal-close:hover { border-color: var(--copper); color: var(--copper); background: rgba(184,115,51,0.06); }
+    .booking-modal-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--text-primary); margin-bottom: 0.25rem; }
+    .booking-modal-room { font-size: 0.75rem; color: var(--copper); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(184,115,51,0.15); }
+
+    .booking-price-summary {
+      background: linear-gradient(135deg, rgba(184,115,51,0.06), rgba(184,115,51,0.02));
+      border: 1px solid rgba(184,115,51,0.2); border-radius: var(--radius-md);
+      padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+    }
+    .bps-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.375rem; }
+    .bps-row.total { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); border-top: 1px solid rgba(184,115,51,0.15); padding-top: 0.5rem; margin-top: 0.25rem; }
+    .bps-row.discount { color: #059669; }
+    .bps-row span:last-child { font-weight: 600; }
+
+    .booking-unavail-msg {
+      background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.2);
+      border-radius: var(--radius-md); padding: 0.75rem 1rem;
+      font-size: 0.8rem; color: #DC2626; margin-bottom: 1rem; display: none;
+    }
+
+    /* ═══ END BOOKING ═══ */
   </style>
 </head>
 <body>
@@ -2073,7 +2144,38 @@
 
   </div><!-- /page-reviews -->
 
-  <!-- REVIEW SUBMIT MODAL -->
+  <!-- BOOKING MODAL -->
+  <div class="booking-modal-scrim" id="bookingModalScrim" onclick="if(event.target===this)closeBookingModal()">
+    <div class="booking-modal">
+      <button class="booking-modal-close" onclick="closeBookingModal()">&#215;</button>
+      <h3 class="booking-modal-title" id="bmTitle">Reserve Your Stay</h3>
+      <div class="booking-modal-room" id="bmRoom"></div>
+      <div id="bmSuccess" style="display:none;"></div>
+      <div id="bmWrap">
+        <!-- Calendar -->
+        <div id="bmCalendar" style="background:var(--lux-cream);border:1px solid rgba(184,115,51,0.15);border-radius:var(--radius-md);padding:1rem;margin-bottom:1.25rem;"></div>
+        <div class="booking-unavail-msg" id="bmUnavail">⚠️ Those dates are already booked. Please choose different dates.</div>
+        <!-- Dates -->
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Check-In <span class="required">*</span></label><input type="date" class="form-input" id="bmCheckIn" onchange="updateBookingPrice()" /></div>
+          <div class="form-group"><label class="form-label">Check-Out <span class="required">*</span></label><input type="date" class="form-input" id="bmCheckOut" onchange="updateBookingPrice()" /></div>
+        </div>
+        <!-- Price summary -->
+        <div class="booking-price-summary" id="bmPriceSummary" style="display:none;"></div>
+        <!-- Guest info -->
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Full Name <span class="required">*</span></label><input class="form-input" id="bmName" placeholder="Your full name" /></div>
+          <div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="bmEmail" placeholder="you@email.com" /></div>
+        </div>
+        <div class="form-group"><label class="form-label">Phone <span class="required">*</span></label><input type="tel" class="form-input" id="bmPhone" placeholder="+1 (876) ..." /></div>
+        <div class="form-group"><label class="form-label">Special Requests</label><textarea class="form-textarea" id="bmRequests" placeholder="Any special requests or notes?" style="min-height:70px;"></textarea></div>
+        <button class="btn-primary form-submit" id="bmSubmitBtn" onclick="submitBooking()" style="width:100%;justify-content:center;margin-top:0.5rem;">
+          Confirm Booking
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
   <div class="review-modal-scrim" id="reviewModalScrim" onclick="if(event.target===this)closeReviewModal()">
     <div class="review-modal">
       <button class="review-modal-close" onclick="closeReviewModal()">&#215;</button>
@@ -2082,7 +2184,6 @@
       <div id="reviewFormWrap">
         <div class="form-row">
           <div class="form-group"><label class="form-label">Your Name <span class="required">*</span></label><input class="form-input" id="rvName" placeholder="e.g. Sarah M." /></div>
-          <div class="form-group"><label class="form-label">Room / Stay Type</label><input class="form-input" id="rvRoom" placeholder="e.g. Spur Tree Suite" /></div>
         </div>
         <div class="form-group">
           <label class="form-label">Your Rating <span class="required">*</span></label>
@@ -2270,39 +2371,48 @@
       if (!grid) return;
       const rooms = window._roomsData || [];
       if (rooms.length === 0) {
-        grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text-muted);font-style:italic;">No rooms added yet. Add them from the admin dashboard.</div>';
+        grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text-muted);font-style:italic;">No rooms added yet.</div>';
         return;
       }
-      const now = new Date();
-      let currentMonth = now.getMonth(), currentYear = now.getFullYear();
 
       grid.innerHTML = rooms.map(room => {
-        // Use room-specific amenities array, fall back to empty
         const roomAmenities = Array.isArray(room.amenities) ? room.amenities : [];
-        // Sort by defined order in ALL_AMENITIES so they always appear consistently
         const amenityKeys = Object.keys(ALL_AMENITIES);
         const sortedAmenities = [...roomAmenities].sort((a, b) => amenityKeys.indexOf(a) - amenityKeys.indexOf(b));
         const amenitiesHtml = sortedAmenities.length > 0
-          ? sortedAmenities.map(key => {
-              const a = ALL_AMENITIES[key];
-              return a ? `<div class="amenity">${a.icon}<span>${a.label}</span></div>` : '';
-            }).join('')
-          : '';
-        const calId = `cal-${room.id}`, calTitleId = `cal-title-${room.id}`;
-        const quantityLabel = room.quantity > 1 ? `<span style="font-size:var(--text-xs);color:var(--text-muted);font-weight:400;margin-left:8px;">(${room.quantity} available)</span>` : '';
+          ? sortedAmenities.map(key => { const a = ALL_AMENITIES[key]; return a ? `<div class="amenity">${a.icon}<span>${a.label}</span></div>` : ''; }).join('') : '';
+
+        // Multi-photo carousel
+        const imgs = Array.isArray(room.images) && room.images.length > 0 ? room.images : (room.imageUrl ? [room.imageUrl] : []);
+        let imageHtml;
+        if (imgs.length <= 1) {
+          imageHtml = `<div class="room-carousel">
+            <div class="room-carousel-track" id="rct-${room.id}">
+              <div class="room-carousel-slide"><img src="${imgs[0]||''}" alt="${room.name}" loading="lazy" /></div>
+            </div>
+            ${room.badge ? `<div class="room-card-badge">${room.badge}</div>` : ''}
+          </div>`;
+        } else {
+          const slides = imgs.map(u => `<div class="room-carousel-slide"><img src="${u}" alt="${room.name}" loading="lazy" /></div>`).join('');
+          imageHtml = `<div class="room-carousel" id="rc-${room.id}">
+            <div class="room-carousel-track" id="rct-${room.id}">${slides}</div>
+            <button class="room-carousel-btn prev" onclick="slideRoom('${room.id}',-1,${imgs.length})">&#8249;</button>
+            <button class="room-carousel-btn next" onclick="slideRoom('${room.id}',1,${imgs.length})">&#8250;</button>
+            <div class="room-carousel-count" id="rcc-${room.id}">1 / ${imgs.length}</div>
+            ${room.badge ? `<div class="room-card-badge">${room.badge}</div>` : ''}
+          </div>`;
+        }
+
         return `
           <div class="room-card">
-            <div class="room-card-image">
-              <img src="${room.imageUrl || ''}" alt="${room.name} at Swaby's Hope Hideaway" loading="lazy" />
-              <div class="room-card-badge">${room.badge || ''}</div>
-            </div>
+            ${imageHtml}
             <div class="room-card-body">
               <div class="room-card-header">
-                <h3 class="room-card-name">${room.name}${quantityLabel}</h3>
+                <h3 class="room-card-name">${room.name}</h3>
                 <div class="room-card-price"><span class="price">$${room.price}</span><span class="per-night"> / night</span></div>
               </div>
               <p class="room-card-desc">${room.description}</p>
-              <div class="room-amenities">${amenitiesHtml}</div>
+              ${amenitiesHtml ? `<div class="room-amenities">${amenitiesHtml}</div>` : ''}
               <div class="room-card-actions">
                 <button class="btn-primary" onclick="handleBookRoom('${room.id}')">Book Now <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
               </div>
@@ -2310,19 +2420,271 @@
           </div>`;
       }).join('');
 
-      window._calState = {};
-      rooms.forEach(r => { window._calState[r.id] = { month: currentMonth, year: currentYear }; });
+      // Track carousel positions
+      window._carouselIdx = {};
+      rooms.forEach(r => { window._carouselIdx[r.id] = 0; });
     }
 
-    function changeCalMonth(roomId, delta) {
-      const s = window._calState[roomId];
-      s.month += delta;
-      if (s.month > 11) { s.month = 0; s.year++; }
-      if (s.month < 0)  { s.month = 11; s.year--; }
-      const calEl = document.getElementById(`cal-${roomId}`);
-      const titleEl = document.getElementById(`cal-title-${roomId}`);
-      if (calEl) calEl.innerHTML = generateCalendar(s.year, s.month);
-      if (titleEl) titleEl.textContent = `${getMonthName(s.month)} ${s.year}`;
+    function slideRoom(roomId, dir, total) {
+      let idx = (window._carouselIdx[roomId] || 0) + dir;
+      if (idx < 0) idx = total - 1;
+      if (idx >= total) idx = 0;
+      window._carouselIdx[roomId] = idx;
+      const track = document.getElementById('rct-' + roomId);
+      if (track) track.style.transform = `translateX(-${idx * 100}%)`;
+      const count = document.getElementById('rcc-' + roomId);
+      if (count) count.textContent = `${idx + 1} / ${total}`;
+    }
+
+    /* ═══════════════════════════════════════════
+       BOOKING SYSTEM
+    ═══════════════════════════════════════════ */
+    let _bookingRoomId = null;
+    let _bookingDiscount = null; // { type, value, title } from active promo
+
+    /* Guest clicked a promo banner's Book Now — lock in that discount for their booking */
+    function claimPromo(idx) {
+      const promo = (window._promosList || [])[idx] || null;
+      window._claimedPromo = promo;
+      navigateTo('rooms');
+    }
+
+    async function handleBookRoom(roomId) {
+      _bookingRoomId = roomId;
+      const room = (window._roomsData || []).find(r => r.id === roomId);
+      if (!room) return;
+
+      // Discount applies ONLY if the guest pressed a promo banner, and that promo is still valid today
+      _bookingDiscount = null;
+      const cp = window._claimedPromo;
+      if (cp) {
+        const today = new Date().toISOString().split('T')[0];
+        const stillValid = cp.active !== false &&
+          (!cp.startDate || cp.startDate <= today) &&
+          (!cp.endDate || cp.endDate >= today);
+        if (stillValid) _bookingDiscount = cp;
+      }
+
+      // Open modal
+      document.getElementById('bookingModalScrim').classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      document.getElementById('bmTitle').textContent = 'Reserve Your Stay';
+      document.getElementById('bmRoom').textContent = room.name + ' · $' + room.price + '/night';
+      document.getElementById('bmWrap').style.display = '';
+      document.getElementById('bmSuccess').style.display = 'none';
+
+      // Reset + block past dates
+      const todayStr = new Date().toISOString().split('T')[0];
+      const ciEl = document.getElementById('bmCheckIn');
+      const coEl = document.getElementById('bmCheckOut');
+      ciEl.value = ''; coEl.value = '';
+      ciEl.min = todayStr; coEl.min = todayStr;
+      ciEl.onchange = () => { coEl.min = ciEl.value || todayStr; updateBookingPrice(); };
+      document.getElementById('bmName').value = '';
+      document.getElementById('bmEmail').value = '';
+      document.getElementById('bmPhone').value = '';
+      document.getElementById('bmRequests').value = '';
+      document.getElementById('bmUnavail').style.display = 'none';
+      updateBookingPrice();
+
+      // Load booked dates for this room
+      await loadBookedDatesForRoom(roomId);
+    }
+
+    function closeBookingModal() {
+      document.getElementById('bookingModalScrim').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Store booked ranges per room
+    window._bookedRanges = {};
+
+    async function loadBookedDatesForRoom(roomId) {
+      try {
+        const { db, collection, getDocs, query, where } = window._fb;
+        const snap = await getDocs(query(
+          collection(db, 'bookings'),
+          where('roomId', '==', roomId),
+          where('status', 'in', ['confirmed', 'pending'])
+        ));
+        const ranges = [];
+        snap.forEach(d => { const b = d.data(); ranges.push({ checkIn: b.checkIn, checkOut: b.checkOut }); });
+        window._bookedRanges[roomId] = ranges;
+        renderBookingCalendar(roomId);
+      } catch(e) { console.warn('Could not load booked dates:', e); }
+    }
+
+    let _bmCalMonth = null, _bmCalYear = null;
+
+    function bmCalNav(delta) {
+      _bmCalMonth += delta;
+      if (_bmCalMonth > 11) { _bmCalMonth = 0; _bmCalYear++; }
+      if (_bmCalMonth < 0)  { _bmCalMonth = 11; _bmCalYear--; }
+      renderBookingCalendar(_bookingRoomId, true);
+    }
+
+    function renderBookingCalendar(roomId, keepMonth) {
+      const cal = document.getElementById('bmCalendar');
+      if (!cal) return;
+      const now = new Date();
+      if (!keepMonth || _bmCalMonth === null) { _bmCalMonth = now.getMonth(); _bmCalYear = now.getFullYear(); }
+      const year = _bmCalYear, month = _bmCalMonth;
+      const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const ranges = window._bookedRanges[roomId] || [];
+
+      function isBooked(dateStr) {
+        return ranges.some(r => dateStr >= r.checkIn && dateStr < r.checkOut);
+      }
+
+      // Don't allow navigating before the current month
+      const atCurrentMonth = (year === now.getFullYear() && month === now.getMonth());
+
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <button onclick="bmCalNav(-1)" ${atCurrentMonth ? 'disabled style="opacity:0.3;cursor:default;width:26px;height:26px;border-radius:4px;border:1px solid rgba(184,115,51,0.2);background:#fff;"' : 'style="width:26px;height:26px;border-radius:4px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);"'}>&#8249;</button>
+        <div style="font-size:0.75rem;font-weight:600;color:var(--text-primary);">${monthName}</div>
+        <button onclick="bmCalNav(1)" style="width:26px;height:26px;border-radius:4px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);">&#8250;</button>
+      </div>`;
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">';
+      ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => { html += `<div style="text-align:center;font-size:0.6rem;font-weight:600;color:var(--text-muted);padding:3px;">${d}</div>`; });
+      for (let i = 0; i < firstDay; i++) html += '<div></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isPast = new Date(year, month, d) < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const booked = isBooked(dateStr);
+        let style = 'text-align:center;padding:5px 2px;font-size:0.7rem;border-radius:4px;cursor:default;';
+        if (booked) style += 'background:rgba(220,38,38,0.08);color:#DC2626;text-decoration:line-through;';
+        else if (isPast) style += 'color:#CBD5E1;';
+        else style += 'color:var(--text-primary);background:rgba(184,115,51,0.05);';
+        html += `<div style="${style}">${d}</div>`;
+      }
+      html += '</div>';
+      html += '<div style="display:flex;gap:1rem;margin-top:0.625rem;font-size:0.65rem;color:var(--text-muted);"><span><span style="display:inline-block;width:10px;height:10px;background:rgba(220,38,38,0.15);border-radius:2px;margin-right:3px;"></span>Booked</span><span><span style="display:inline-block;width:10px;height:10px;background:rgba(184,115,51,0.1);border-radius:2px;margin-right:3px;"></span>Available</span></div>';
+      cal.innerHTML = html;
+    }
+
+    function updateBookingPrice() {
+      const room = (window._roomsData || []).find(r => r.id === _bookingRoomId);
+      if (!room) return;
+      const checkIn = document.getElementById('bmCheckIn').value;
+      const checkOut = document.getElementById('bmCheckOut').value;
+      const summaryEl = document.getElementById('bmPriceSummary');
+      if (!checkIn || !checkOut || checkOut <= checkIn) { summaryEl.style.display = 'none'; return; }
+      const nights = Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000);
+      if (nights <= 0) { summaryEl.style.display = 'none'; return; }
+      const base = room.price * nights;
+      let discountAmt = 0;
+      let discountHtml = '';
+      if (_bookingDiscount) {
+        if (_bookingDiscount.discountType === 'percent') discountAmt = Math.round(base * _bookingDiscount.discountValue / 100);
+        else discountAmt = Math.min(_bookingDiscount.discountValue, base);
+        discountHtml = `<div class="bps-row discount"><span>🎉 ${_bookingDiscount.title} (${_bookingDiscount.discountType === 'percent' ? _bookingDiscount.discountValue + '%' : '$' + _bookingDiscount.discountValue} off)</span><span>-$${discountAmt}</span></div>`;
+      }
+      const total = base - discountAmt;
+      summaryEl.innerHTML = `
+        <div class="bps-row"><span>${nights} night${nights>1?'s':''} × $${room.price}</span><span>$${base}</span></div>
+        ${discountHtml}
+        <div class="bps-row total"><span>Total</span><span>$${total}</span></div>`;
+      summaryEl.style.display = 'block';
+      // Check availability
+      checkAvailability();
+    }
+
+    function checkAvailability() {
+      const checkIn = document.getElementById('bmCheckIn').value;
+      const checkOut = document.getElementById('bmCheckOut').value;
+      const unavailEl = document.getElementById('bmUnavail');
+      if (!checkIn || !checkOut) { unavailEl.style.display = 'none'; return; }
+      const ranges = window._bookedRanges[_bookingRoomId] || [];
+      const conflict = ranges.some(r => checkIn < r.checkOut && checkOut > r.checkIn);
+      unavailEl.style.display = conflict ? 'block' : 'none';
+    }
+
+    async function submitBooking() {
+      const checkIn = document.getElementById('bmCheckIn').value;
+      const checkOut = document.getElementById('bmCheckOut').value;
+      const name = document.getElementById('bmName').value.trim();
+      const email = document.getElementById('bmEmail').value.trim();
+      const phone = document.getElementById('bmPhone').value.trim();
+      const requests = document.getElementById('bmRequests').value.trim();
+
+      if (!checkIn || !checkOut || !name || !email || !phone) { alert('Please fill in all required fields.'); return; }
+      if (checkOut <= checkIn) { alert('Check-out must be after check-in.'); return; }
+      const todayCheck = new Date().toISOString().split('T')[0];
+      if (checkIn < todayCheck) { alert('Check-in date cannot be in the past.'); return; }
+
+      const btn = document.getElementById('bmSubmitBtn');
+      btn.disabled = true; btn.textContent = 'Checking availability…';
+
+      // FRESH overlap check straight from Firebase (prevents double-booking race)
+      try {
+        const { db, collection, getDocs, query, where } = window._fb;
+        const freshSnap = await getDocs(query(
+          collection(db, 'bookings'),
+          where('roomId', '==', _bookingRoomId),
+          where('status', 'in', ['confirmed', 'pending'])
+        ));
+        const freshRanges = [];
+        freshSnap.forEach(d => { const b = d.data(); freshRanges.push({ checkIn: b.checkIn, checkOut: b.checkOut }); });
+        window._bookedRanges[_bookingRoomId] = freshRanges;
+        if (freshRanges.some(r => checkIn < r.checkOut && checkOut > r.checkIn)) {
+          alert('Sorry, those dates were just booked by someone else. Please choose different dates.');
+          btn.disabled = false; btn.textContent = 'Confirm Booking';
+          renderBookingCalendar(_bookingRoomId);
+          checkAvailability();
+          return;
+        }
+      } catch(e) {
+        console.error(e); alert('Could not verify availability. Please try again.');
+        btn.disabled = false; btn.textContent = 'Confirm Booking';
+        return;
+      }
+
+      const room = (window._roomsData || []).find(r => r.id === _bookingRoomId);
+      const nights = Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000);
+      const base = room.price * nights;
+      let discountAmt = 0;
+      if (_bookingDiscount) {
+        if (_bookingDiscount.discountType === 'percent') discountAmt = Math.round(base * _bookingDiscount.discountValue / 100);
+        else discountAmt = Math.min(_bookingDiscount.discountValue, base);
+      }
+      const total = base - discountAmt;
+
+      btn.textContent = 'Confirming…';
+      try {
+        const { db, collection, addDoc, serverTimestamp } = window._fb;
+        await addDoc(collection(db, 'bookings'), {
+          roomId: _bookingRoomId, roomName: room.name,
+          checkIn, checkOut, nights,
+          guestName: name, email, phone, specialRequests: requests || null,
+          pricePerNight: room.price, baseTotal: base,
+          discountApplied: discountAmt,
+          promoTitle: _bookingDiscount?.title || null,
+          promoDiscountType: _bookingDiscount?.discountType || null,
+          promoDiscountValue: _bookingDiscount?.discountValue || null,
+          total, status: 'confirmed',
+          createdAt: serverTimestamp()
+        });
+        // Show success
+        document.getElementById('bmWrap').style.display = 'none';
+        document.getElementById('bmSuccess').style.display = 'block';
+        document.getElementById('bmSuccess').innerHTML = `
+          <div style="text-align:center;padding:1.5rem 0;">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B87333" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:500;margin-bottom:0.5rem;">Booking Confirmed!</h3>
+            <p style="color:var(--text-muted);line-height:1.7;margin-bottom:0.25rem;">Thank you, <strong>${name}</strong>.</p>
+            <p style="color:var(--text-muted);line-height:1.7;"><strong>${room.name}</strong> · ${checkIn} → ${checkOut} · <strong style="color:var(--copper);">$${total}</strong></p>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem;">A confirmation will be sent to <strong>${email}</strong>.</p>
+          </div>`;
+        setTimeout(() => closeBookingModal(), 5000);
+      } catch(e) {
+        console.error(e); alert('Booking failed. Please try again.');
+        btn.disabled = false; btn.textContent = 'Confirm Booking';
+      }
     }
 
 
@@ -2394,7 +2756,7 @@
 
     async function submitReview() {
       const name = (document.getElementById('rvName').value || '').trim();
-      const room = (document.getElementById('rvRoom').value || '').trim();
+      const room = null;
       const text = (document.getElementById('rvText').value || '').trim();
       if (!name) { alert('Please enter your name.'); return; }
       if (!_reviewStar) { alert('Please select a star rating.'); return; }
@@ -2510,62 +2872,6 @@
     }
 
 
-    /* ════════════════════════════════════════
-       BOOKING MODAL
-    ════════════════════════════════════════ */
-    async function handleBookRoom(roomId) {
-      const rooms = window._roomsData || [];
-      const room = rooms.find(r => r.id === roomId);
-      if (!room) return;
-      let overlay = document.getElementById('bookingOverlay');
-      if (overlay) overlay.remove();
-      overlay = document.createElement('div');
-      overlay.id = 'bookingOverlay';
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.4);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:pageIn .3s ease;';
-      overlay.innerHTML = `
-        <div style="background:#FFFFFF;border:1px solid rgba(184,115,51,0.15);border-radius:16px;max-width:480px;width:100%;padding:2rem;box-shadow:0 28px 72px rgba(0,0,0,0.15);position:relative;">
-          <button onclick="document.getElementById('bookingOverlay').remove()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;color:#6B7280;background:#F9FAFB;cursor:pointer;font-size:18px;">&times;</button>
-          <div style="margin-bottom:1.5rem;">
-            <div class="section-eyebrow">Reserve</div>
-            <h3 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:500;color:var(--text-primary);">${room.name}</h3>
-            <p style="color:var(--text-muted);font-size:var(--text-sm);margin-top:4px;">$${room.price} per night</p>
-          </div>
-          <div class="form-group"><label class="form-label">Full Name <span class="required">*</span></label><input type="text" class="form-input" id="bookName" placeholder="Your name" /></div>
-          <div class="form-group"><label class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="bookEmail" placeholder="you@email.com" /></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-            <div class="form-group"><label class="form-label">Check-in <span class="required">*</span></label><input type="date" class="form-input" id="bookCheckin" /></div>
-            <div class="form-group"><label class="form-label">Check-out <span class="required">*</span></label><input type="date" class="form-input" id="bookCheckout" /></div>
-          </div>
-          <div class="form-group"><label class="form-label">Number of Guests</label><select class="form-select" id="bookGuests"><option value="1">1 Guest</option><option value="2" selected>2 Guests</option><option value="3">3 Guests</option><option value="4">4 Guests</option></select></div>
-          <div class="form-group"><label class="form-label">Special Requests</label><textarea class="form-textarea" id="bookRequests" placeholder="Early check-in, extra pillows..." style="min-height:80px;"></textarea></div>
-          <button class="btn-hero-solid" id="bookSubmitBtn" onclick="submitBooking('${room.id}')" style="width:100%;justify-content:center;">
-            Confirm Reservation
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-        </div>`;
-      document.body.appendChild(overlay);
-      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    }
-
-    async function submitBooking(roomId) {
-      const name = document.getElementById('bookName').value.trim();
-      const email = document.getElementById('bookEmail').value.trim();
-      const checkin = document.getElementById('bookCheckin').value;
-      const checkout = document.getElementById('bookCheckout').value;
-      const guests = document.getElementById('bookGuests').value;
-      const requests = document.getElementById('bookRequests').value.trim();
-      if (!name || !email || !checkin || !checkout) { alert('Please fill in your name, email, check-in and check-out dates.'); return; }
-      const btn = document.getElementById('bookSubmitBtn');
-      btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31 31"/></svg> Submitting...</span>';
-      try {
-        const { db, collection, addDoc, serverTimestamp } = window._fb;
-        await addDoc(collection(db, 'bookings'), { roomId, guestName: name, guestEmail: email, checkIn: checkin, checkOut: checkout, numberOfGuests: parseInt(guests), specialRequests: requests, status: 'pending', userId: window._firebaseUser?.uid || null, createdAt: serverTimestamp() });
-        btn.closest('div[style*="background:#FFFFFF"]').innerHTML = `<div style="text-align:center;padding:2rem 0;"><div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B87333" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><h3 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:500;margin-bottom:0.5rem;color:var(--text-primary);">Reservation Received!</h3><p style="color:var(--text-muted);margin-bottom:1.5rem;line-height:1.7;">Thank you, ${name}. We'll confirm availability to <strong style="color:var(--text-primary);">${email}</strong> within 24 hours.</p><button class="btn-hero-solid" onclick="document.getElementById('bookingOverlay').remove()" style="margin:0 auto;">Done</button></div>`;
-      } catch(err) {
-        console.error(err); btn.disabled = false; btn.textContent = 'Confirm Reservation';
-        alert('Something went wrong. Please try again.');
-      }
-    }
 
     /* ════════════════════════════════════════
        EVENT INQUIRY FORM
