@@ -37,6 +37,8 @@
     window._currentUser = null;
 
     // Track auth state — update UI whenever user signs in/out
+    const ADMIN_UID = 'BxvlpyhRr3Wev3GezyQqmtRDDnD2';
+
     onAuthStateChanged(auth, async user => {
       window._currentUser = user;
       if (user) {
@@ -68,8 +70,6 @@
         if (typeof _showProfilePanel === 'function') _showProfilePanel();
       } catch(e) { if (errEl) { errEl.textContent = e.message; errEl.style.display='block'; } }
     };
-
-    const ADMIN_UID = 'BxvlpyhRr3Wev3GezyQqmtRDDnD2';
 
     window._adminSignIn = async () => {
       const errEl = document.getElementById('adminAccessErr');
@@ -3335,9 +3335,15 @@
       listEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem;">Loading…</div>';
       try {
         const { db, collection, getDocs, query, where, orderBy } = window._fb;
-        const snap = await getDocs(query(collection(db, 'bookings'), where('uid','==',user.uid), orderBy('createdAt','desc')));
+        const snap = await getDocs(query(collection(db, 'bookings'), where('uid','==',user.uid)));
         const bookings = [];
         snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
+        // Sort newest first client-side — avoids needing a Firestore composite index
+        bookings.sort((a, b) => {
+          const ta = a.createdAt?.seconds || 0;
+          const tb = b.createdAt?.seconds || 0;
+          return tb - ta;
+        });
         const recent = bookings.slice(0, 5);
         if (recent.length === 0) {
           listEl.innerHTML = '<div style="text-align:center;padding:2rem 0;color:var(--text-muted);font-style:italic;font-size:0.85rem;">No bookings yet. Your stays will appear here.</div>';
