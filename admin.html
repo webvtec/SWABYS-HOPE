@@ -12,7 +12,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-storage.js';
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
 
     // ─── ADMIN UID — only this account can access the dashboard ───────────────
     const ADMIN_UID = 'REPLACE_WITH_YOUR_FIREBASE_UID';
@@ -34,57 +34,34 @@
 
     window._fb = { db, storage, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp, ref, uploadBytesResumable, getDownloadURL, deleteObject, signOut };
 
-    window._adminSignIn = async () => {
-      const errEl   = document.getElementById('loginError');
-      const email   = document.getElementById('adminEmail')?.value.trim();
-      const pass    = document.getElementById('adminPass')?.value;
-      const btn     = document.getElementById('adminSignInBtn');
-      errEl.style.display = 'none';
-      if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
-      if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch(e) {
-        errEl.textContent = 'Incorrect email or password.';
-        errEl.style.display = 'block';
-        if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; }
-      }
-    };
+    // Guard so we don't re-run init on auth token refreshes
+    let _dashInitDone = false;
 
     onAuthStateChanged(auth, user => {
-      const overlay        = document.getElementById('accessOverlay');
-      const loginForm      = document.getElementById('overlayLoginForm');
-      const checkingState  = document.getElementById('overlayCheckingState');
-      const accessStatus   = document.getElementById('accessStatus');
-      const accessDenied   = document.getElementById('accessDenied');
-      const dashboard      = document.getElementById('dashboard');
+      const overlay      = document.getElementById('accessOverlay');
+      const accessStatus = document.getElementById('accessStatus');
+      const dashboard    = document.getElementById('dashboard');
 
       if (!user) {
-        // Not signed in — show login form inside overlay
-        if (loginForm)     loginForm.style.display     = '';
-        if (checkingState) checkingState.style.display = 'none';
-        if (accessDenied)  accessDenied.style.display  = 'none';
-        if (dashboard)     dashboard.style.display     = 'none';
+        // Not signed in — send them to index to log in
+        accessStatus.textContent = 'No session — Redirecting…';
+        accessStatus.style.color = 'var(--danger)';
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
         return;
       }
 
-      // Signed in — switch overlay to checking state
-      if (loginForm)     loginForm.style.display     = 'none';
-      if (checkingState) checkingState.style.display = 'block';
-
-      // Verify UID
+      // Verify UID — only the admin account gets in
       if (ADMIN_UID !== 'REPLACE_WITH_YOUR_FIREBASE_UID' && user.uid !== ADMIN_UID) {
-        if (accessStatus) { accessStatus.textContent = 'Unauthorised — Redirecting…'; accessStatus.style.color = 'var(--danger)'; }
+        accessStatus.textContent = 'Unauthorised — Redirecting…';
+        accessStatus.style.color = 'var(--danger)';
         signOut(auth).catch(() => {});
-        setTimeout(() => {
-          if (accessDenied) { accessDenied.style.display = 'flex'; }
-          if (overlay) { overlay.style.display = 'none'; }
-        }, 1000);
+        setTimeout(() => { window.location.href = 'index.html'; }, 1000);
         return;
       }
 
-      // Authorised — access granted
-      if (accessStatus) { accessStatus.textContent = 'Access Granted ✦'; accessStatus.style.color = 'var(--success)'; }
+      // Authorised — reveal dashboard
+      accessStatus.textContent = 'Access Granted ✦';
+      accessStatus.style.color = 'var(--success)';
       const nameEl = document.getElementById('adminUserName');
       if (nameEl) { nameEl.textContent = user.displayName || user.email || 'Admin'; nameEl.style.display = 'block'; }
 
@@ -95,11 +72,14 @@
           setTimeout(() => {
             overlay.style.display = 'none';
             if (dashboard) dashboard.style.display = 'flex';
-            switchTab('bookings');
-            loadAllData();
+            if (!_dashInitDone) {
+              _dashInitDone = true;
+              switchTab('bookings');
+              loadAllData();
+            }
           }, 450);
         }
-      }, 700);
+      }, 600);
     });
   </script>
 
@@ -897,49 +877,28 @@ a { color: inherit; text-decoration: none; }
 </head>
 <body>
 
-<!-- ACCESS OVERLAY — blocks ALL content until auth resolves -->
-<div id="accessOverlay" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#090B0F 0%,#0D1018 50%,#090B10 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;">
+<!-- ACCESS OVERLAY — shown while Firebase resolves auth; redirects to index.html if no session -->
+<div id="accessOverlay" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#090B0F 0%,#0D1018 50%,#090B10 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;">
   <!-- Starfield dots -->
   <div style="position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 7% 3%,rgba(184,115,51,0.8) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 19% 6%,rgba(255,255,255,0.35) 0%,transparent 100%),radial-gradient(1px 1px at 33% 2%,rgba(184,115,51,0.6) 0%,transparent 100%),radial-gradient(2px 2px at 61% 3%,rgba(184,115,51,0.9) 0%,transparent 100%),radial-gradient(1px 1px at 74% 7%,rgba(255,255,255,0.3) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 88% 2%,rgba(184,115,51,0.7) 0%,transparent 100%);background-size:100% 100%;background-repeat:no-repeat;"></div>
-
-  <!-- Two states: login form (not signed in) | checking spinner (signed in, verifying) -->
-  <div id="overlayLoginForm" style="width:100%;max-width:360px;padding:1.5rem;position:relative;z-index:1;">
-    <div style="text-align:center;margin-bottom:2.5rem;">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;letter-spacing:0.3em;text-transform:uppercase;color:#EDE8E0;margin-bottom:0.25rem;">Swaby's Hope</div>
-      <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8rem;letter-spacing:0.2em;color:var(--copper-shine);text-transform:uppercase;">Admin Dashboard</div>
-      <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--copper-shine),transparent);margin:1rem auto 0;"></div>
+  <div style="position:relative;z-index:1;text-align:center;">
+    <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.75rem;letter-spacing:0.3em;color:var(--copper-shine);text-transform:uppercase;margin-bottom:1.25rem;">Swaby's Hope Hideaway</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:2.5rem;letter-spacing:0.05em;color:#EDE8E0;margin-bottom:0.75rem;">Checking Access</div>
+    <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--copper-shine),transparent);margin:0 auto 1.5rem;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:1.5rem;">
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--copper-shine);animation:dotpulse 1.2s ease-in-out infinite;display:inline-block;"></span>
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--copper-shine);animation:dotpulse 1.2s ease-in-out 0.4s infinite;display:inline-block;"></span>
+      <span style="width:6px;height:6px;border-radius:50%;background:var(--copper-shine);animation:dotpulse 1.2s ease-in-out 0.8s infinite;display:inline-block;"></span>
     </div>
-    <div style="display:flex;flex-direction:column;gap:0.75rem;">
-      <input id="adminEmail" type="email" placeholder="Admin email" autocomplete="username"
-        style="width:100%;padding:0.85rem 1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#EDE8E0;font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='rgba(184,115,51,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.14)'"
-        onkeydown="if(event.key==='Enter')document.getElementById('adminPass').focus()" />
-      <input id="adminPass" type="password" placeholder="Password" autocomplete="current-password"
-        style="width:100%;padding:0.85rem 1rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#EDE8E0;font-size:0.82rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='rgba(184,115,51,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.14)'"
-        onkeydown="if(event.key==='Enter')window._adminSignIn()" />
-      <button id="adminSignInBtn" onclick="window._adminSignIn()"
-        style="width:100%;padding:0.9rem 1.25rem;background:linear-gradient(135deg,#D4895A,#B87333);border:none;border-radius:6px;color:#FAF8F5;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s;font-family:'DM Sans',sans-serif;"
-        onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
-        Sign In
-      </button>
-    </div>
-    <div id="loginError" style="display:none;margin-top:0.75rem;padding:0.625rem 0.875rem;background:var(--danger-soft);border:1px solid rgba(224,80,80,0.25);border-radius:5px;font-size:0.75rem;color:var(--danger);text-align:center;font-family:'DM Sans',sans-serif;"></div>
-  </div>
-
-  <!-- Checking state (shown while Firebase resolves auth) -->
-  <div id="overlayCheckingState" style="display:none;text-align:center;position:relative;z-index:1;">
-    <div style="font-family:'Cormorant Garamond',serif;font-size:1.125rem;font-weight:300;letter-spacing:0.25em;text-transform:uppercase;color:#EDE8E0;margin-bottom:1rem;">Verifying Access</div>
-    <div id="accessStatus" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--copper-shine);font-family:'DM Sans',sans-serif;font-weight:600;">Checking credentials…</div>
+    <div id="accessStatus" style="font-family:'DM Sans',sans-serif;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">Verifying identity…</div>
   </div>
 </div>
-
-<!-- ACCESS DENIED (shown if UID doesn't match) -->
-<div id="accessDenied" style="display:none;position:fixed;inset:0;z-index:99998;background:#090B0F;align-items:center;justify-content:center;flex-direction:column;gap:1rem;text-align:center;padding:2rem;">
-  <div style="font-size:2.5rem;">🚫</div>
-  <div style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--danger);">Access Denied</div>
-  <div style="font-size:0.8rem;color:var(--text-dim);max-width:320px;font-family:'DM Sans',sans-serif;">This account is not authorised to access the admin dashboard. Redirecting…</div>
-</div>
+<style>
+  @keyframes dotpulse {
+    0%,100%{opacity:0.2;transform:scale(0.8);}
+    50%{opacity:1;transform:scale(1.2);}
+  }
+</style>
 
 <!-- DRAWER SCRIM -->
 <div class="drawer-scrim" id="drawerScrim" onclick="closeDrawer()"></div>
