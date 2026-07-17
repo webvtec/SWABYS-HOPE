@@ -1032,19 +1032,8 @@
     .room-amenities { display: flex; flex-wrap: wrap; gap: var(--space-md); padding: var(--space-lg) 0; border-top: 1px solid rgba(184,115,51,0.12); border-bottom: 1px solid rgba(184,115,51,0.12); margin-bottom: var(--space-lg); }
     .amenity { display: flex; align-items: center; gap: 6px; font-size: var(--text-xs); color: var(--text-secondary); font-weight: 500; }
     .amenity svg { width: 18px; height: 18px; color: var(--copper); }
-    .room-calendar { background: var(--lux-cream); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-lg); border: 1px solid rgba(184,115,51,0.15); }
-    .room-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); }
-    .room-calendar-title { font-family: var(--font-display); font-size: var(--text-sm); font-weight: 600; color: var(--text-primary); }
-    .room-calendar-nav { display: flex; gap: var(--space-xs); }
-    .room-calendar-nav button { width: 28px; height: 28px; border-radius: var(--radius-sm); border: 1px solid rgba(184,115,51,0.2); display: flex; align-items: center; justify-content: center; color: var(--text-muted); background: #FFFFFF; transition: all 0.2s; }
-    .room-calendar-nav button:hover { border-color: var(--copper); color: var(--copper); }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-    .calendar-day-label { text-align: center; font-size: 10px; font-weight: 600; color: var(--text-muted); padding: 4px; text-transform: uppercase; }
-    .calendar-day { text-align: center; padding: 6px 2px; font-size: var(--text-xs); border-radius: var(--radius-sm); cursor: default; transition: all 0.2s; color: var(--text-primary); }
-    .calendar-day.available { background: rgba(37,99,235,0.10); color: #1D4ED8; font-weight: 600; border: 1px solid rgba(37,99,235,0.22); cursor: pointer; }
-    .calendar-day.available:hover { background: rgba(37,99,235,0.20); }
-    .calendar-day.booked { background: rgba(148,163,184,0.10); color: #94A3B8; text-decoration: line-through; cursor: not-allowed; border: 1px solid transparent; font-weight: 400; }
-    .calendar-day.booked:hover, .calendar-day.empty:hover { background: transparent; }
+
+
     .room-card-actions { display: flex; gap: var(--space-sm); margin-top: auto; padding-top: var(--space-md); }
     .room-card-actions .btn-primary { flex: 1; justify-content: center; padding: 14px 24px; }
 
@@ -2152,14 +2141,17 @@
       <div class="booking-modal-room" id="bmRoom"></div>
       <div id="bmSuccess" style="display:none;"></div>
       <div id="bmWrap">
-        <!-- Calendar -->
-        <div id="bmCalendar" style="background:var(--lux-cream);border:1px solid rgba(184,115,51,0.15);border-radius:var(--radius-md);padding:1rem;margin-bottom:1.25rem;"></div>
-        <div class="booking-unavail-msg" id="bmUnavail">⚠️ Those dates are already booked. Please choose different dates.</div>
-        <!-- Dates -->
-        <div class="form-row">
-          <div class="form-group"><label class="form-label">Check-In <span class="required">*</span></label><input type="date" class="form-input" id="bmCheckIn" onchange="updateBookingPrice()" /></div>
-          <div class="form-group"><label class="form-label">Check-Out <span class="required">*</span></label><input type="date" class="form-input" id="bmCheckOut" onchange="updateBookingPrice()" /></div>
+        <!-- Calendar — only date picker -->
+        <div id="bmCalendar" style="background:var(--lux-cream);border:1px solid rgba(184,115,51,0.15);border-radius:var(--radius-md);padding:1rem;margin-bottom:0.75rem;"></div>
+        <!-- Date selection summary strip -->
+        <div id="bmDateStrip" style="display:none;background:linear-gradient(135deg,rgba(37,99,235,0.07),rgba(37,99,235,0.03));border:1px solid rgba(37,99,235,0.18);border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;">
+          <div id="bmDateStripText" style="font-size:0.8rem;color:#1D4ED8;font-weight:600;"></div>
+          <div id="bmDateStripSub" style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;"></div>
         </div>
+        <div class="booking-unavail-msg" id="bmUnavail">⚠️ Those dates are already booked. Please choose different dates.</div>
+        <!-- Hidden date values (set by calendar clicks) -->
+        <input type="hidden" id="bmCheckIn" />
+        <input type="hidden" id="bmCheckOut" />
         <!-- Price summary -->
         <div class="booking-price-summary" id="bmPriceSummary" style="display:none;"></div>
         <!-- Guest info -->
@@ -2346,23 +2338,6 @@
       'laundry':     { label: 'Laundry Service',   icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="13" r="4"/><line x1="8" y1="7" x2="8.01" y2="7"/></svg>' },
     };
 
-    /* Calendar */
-    function generateCalendar(year, month) {
-      const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const today = new Date();
-      let html = dayLabels.map(d => `<div class="calendar-day-label">${d}</div>`).join('');
-      for (let i = 0; i < firstDay; i++) html += '<div class="calendar-day empty"></div>';
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const isBooked = !isPast && Math.random() < 0.15;
-        let cls = 'calendar-day' + (isPast || isBooked ? ' booked' : ' available');
-        html += `<div class="${cls}">${day}</div>`;
-      }
-      return html;
-    }
     function getMonthName(m) { return ['January','February','March','April','May','June','July','August','September','October','November','December'][m]; }
 
     /* Render Rooms from Firebase data */
@@ -2474,18 +2449,16 @@
       document.getElementById('bmWrap').style.display = '';
       document.getElementById('bmSuccess').style.display = 'none';
 
-      // Reset + block past dates
-      const todayStr = new Date().toISOString().split('T')[0];
-      const ciEl = document.getElementById('bmCheckIn');
-      const coEl = document.getElementById('bmCheckOut');
-      ciEl.value = ''; coEl.value = '';
-      ciEl.min = todayStr; coEl.min = todayStr;
-      ciEl.onchange = () => { coEl.min = ciEl.value || todayStr; updateBookingPrice(); };
+      // Reset calendar state
+      document.getElementById('bmCheckIn').value = '';
+      document.getElementById('bmCheckOut').value = '';
+      window._bmPickState = 'checkin';
       document.getElementById('bmName').value = '';
       document.getElementById('bmEmail').value = '';
       document.getElementById('bmPhone').value = '';
       document.getElementById('bmRequests').value = '';
       document.getElementById('bmUnavail').style.display = 'none';
+      document.getElementById('bmDateStrip').style.display = 'none';
       updateBookingPrice();
 
       // Load booked dates for this room
@@ -2524,6 +2497,74 @@
       renderBookingCalendar(_bookingRoomId, true);
     }
 
+    // Calendar pick state: 'checkin' | 'checkout'
+    window._bmPickState = 'checkin';
+
+    function bmCalSelectDate(dateStr) {
+      const ci = document.getElementById('bmCheckIn').value;
+      const state = window._bmPickState;
+
+      if (state === 'checkin' || !ci) {
+        // Setting check-in — clear checkout too
+        document.getElementById('bmCheckIn').value = dateStr;
+        document.getElementById('bmCheckOut').value = '';
+        window._bmPickState = 'checkout';
+      } else {
+        // Setting check-out
+        const ciVal = document.getElementById('bmCheckIn').value;
+        if (dateStr <= ciVal) {
+          // Clicked before or on check-in — restart as new check-in
+          document.getElementById('bmCheckIn').value = dateStr;
+          document.getElementById('bmCheckOut').value = '';
+          window._bmPickState = 'checkout';
+        } else {
+          // Check if any booked date falls in this range
+          const ranges = window._bookedRanges[_bookingRoomId] || [];
+          const blocked = ranges.some(r => ciVal < r.checkOut && dateStr > r.checkIn);
+          if (blocked) {
+            // Range crosses booked dates — restart
+            document.getElementById('bmCheckIn').value = dateStr;
+            document.getElementById('bmCheckOut').value = '';
+            window._bmPickState = 'checkout';
+          } else {
+            document.getElementById('bmCheckOut').value = dateStr;
+            window._bmPickState = 'checkin';
+          }
+        }
+      }
+      renderBookingCalendar(_bookingRoomId, true);
+      updateDateStrip();
+      updateBookingPrice();
+    }
+
+    function updateDateStrip() {
+      const ci = document.getElementById('bmCheckIn').value;
+      const co = document.getElementById('bmCheckOut').value;
+      const strip = document.getElementById('bmDateStrip');
+      const stripText = document.getElementById('bmDateStripText');
+      const stripSub = document.getElementById('bmDateStripSub');
+      if (!strip) return;
+
+      const fmt = s => {
+        const [y,m,d] = s.split('-');
+        return new Date(y, m-1, d).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+      };
+
+      if (!ci && !co) {
+        strip.style.display = 'none';
+        return;
+      }
+      strip.style.display = 'block';
+      if (ci && !co) {
+        stripText.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)}`;
+        stripSub.textContent = 'Now tap a check-out date on the calendar';
+      } else if (ci && co) {
+        const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
+        stripText.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)} &nbsp;→&nbsp; <span style="opacity:0.6;font-weight:500;">Check-Out:</span> ${fmt(co)}`;
+        stripSub.textContent = `${nights} night${nights !== 1 ? 's' : ''} · Tap any date to change`;
+      }
+    }
+
     function renderBookingCalendar(roomId, keepMonth) {
       const cal = document.getElementById('bmCalendar');
       if (!cal) return;
@@ -2534,40 +2575,62 @@
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const ranges = window._bookedRanges[roomId] || [];
+      const ciVal = document.getElementById('bmCheckIn')?.value || '';
+      const coVal = document.getElementById('bmCheckOut')?.value || '';
 
       function isBooked(dateStr) {
         return ranges.some(r => dateStr >= r.checkIn && dateStr < r.checkOut);
       }
 
-      // Don't allow navigating before the current month
       const atCurrentMonth = (year === now.getFullYear() && month === now.getMonth());
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-        <button onclick="bmCalNav(-1)" ${atCurrentMonth ? 'disabled style="opacity:0.3;cursor:default;width:26px;height:26px;border-radius:4px;border:1px solid rgba(184,115,51,0.2);background:#fff;"' : 'style="width:26px;height:26px;border-radius:4px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);"'}>&#8249;</button>
-        <div style="font-size:0.75rem;font-weight:600;color:var(--text-primary);">${monthName}</div>
-        <button onclick="bmCalNav(1)" style="width:26px;height:26px;border-radius:4px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);">&#8250;</button>
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.625rem;">
+        <button onclick="bmCalNav(-1)" ${atCurrentMonth ? 'disabled style="opacity:0.25;cursor:default;width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.15);background:#fff;font-size:1rem;"' : 'style="width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);font-size:1rem;"'}>&#8249;</button>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);letter-spacing:0.03em;">${monthName}</div>
+        <button onclick="bmCalNav(1)" style="width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);font-size:1rem;">&#8250;</button>
       </div>`;
-      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;">';
-      ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => { html += `<div style="text-align:center;font-size:0.6rem;font-weight:600;color:var(--text-muted);padding:3px;">${d}</div>`; });
+
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+      ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+        html += `<div style="text-align:center;font-size:0.6rem;font-weight:700;color:#94A3B8;padding:4px 0;text-transform:uppercase;letter-spacing:0.06em;">${d}</div>`;
+      });
       for (let i = 0; i < firstDay; i++) html += '<div></div>';
+
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const isPast = new Date(year, month, d) < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const isPast = dateStr < todayStr;
         const booked = isBooked(dateStr);
-        let style = 'text-align:center;padding:5px 2px;font-size:0.7rem;border-radius:4px;cursor:default;position:relative;overflow:hidden;';
-        if (booked) {
-          style += 'background:rgba(148,163,184,0.12);color:#94A3B8;text-decoration:line-through;';
-          html += `<div style="${style}" title="Not available">${d}</div>`;
-        } else if (isPast) {
-          style += 'color:#CBD5E1;text-decoration:line-through;';
-          html += `<div style="${style}">${d}</div>`;
+        const isCheckIn  = dateStr === ciVal;
+        const isCheckOut = dateStr === coVal;
+        const inRange    = ciVal && coVal && dateStr > ciVal && dateStr < coVal;
+
+        if (isPast || booked) {
+          // Grayed out, strikethrough, not clickable
+          html += `<div style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;color:#CBD5E1;text-decoration:line-through;cursor:not-allowed;user-select:none;" title="${booked ? 'Not available' : ''}">${d}</div>`;
+        } else if (isCheckIn || isCheckOut) {
+          // Selected endpoint — dark blue filled
+          html += `<div onclick="bmCalSelectDate('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:#1D4ED8;color:#fff;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
+        } else if (inRange) {
+          // In range — light blue fill, no border
+          html += `<div onclick="bmCalSelectDate('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.13);color:#1D4ED8;font-weight:600;cursor:pointer;user-select:none;">${d}</div>`;
         } else {
-          style += 'background:rgba(37,99,235,0.10);color:#1D4ED8;font-weight:600;border:1px solid rgba(37,99,235,0.22);';
-          html += `<div style="${style}">${d}</div>`;
+          // Available
+          html += `<div onclick="bmCalSelectDate('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.08);color:#1D4ED8;font-weight:600;border:1px solid rgba(37,99,235,0.18);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(37,99,235,0.18)'" onmouseout="this.style.background='rgba(37,99,235,0.08)'">${d}</div>`;
         }
       }
       html += '</div>';
-      html += '<div style="display:flex;gap:1.25rem;margin-top:0.75rem;font-size:0.65rem;color:var(--text-muted);"><span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:12px;height:12px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.25);border-radius:3px;"></span>Available</span><span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:12px;height:12px;background:rgba(148,163,184,0.15);border-radius:3px;text-decoration:line-through;font-size:9px;line-height:12px;text-align:center;color:#94A3B8;"></span>Unavailable</span></div>';
+      // Legend + instruction
+      const pickState = window._bmPickState;
+      const instruction = !ciVal ? 'Tap a date to set check-in' : (!coVal ? 'Now tap a date to set check-out' : 'Tap any date to change');
+      html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+        <div style="display:flex;gap:1rem;font-size:0.65rem;color:var(--text-muted);">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:12px;height:12px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.25);border-radius:3px;"></span>Available</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:12px;height:12px;background:rgba(203,213,225,0.35);border-radius:3px;"></span>Unavailable</span>
+          ${ciVal ? `<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:12px;height:12px;background:#1D4ED8;border-radius:3px;"></span>Selected</span>` : ''}
+        </div>
+        <span style="font-size:0.65rem;color:var(--copper);font-style:italic;">${instruction}</span>
+      </div>`;
       cal.innerHTML = html;
     }
 
@@ -2608,6 +2671,21 @@
       unavailEl.style.display = conflict ? 'block' : 'none';
     }
 
+    function showBmError(msg) {
+      let errEl = document.getElementById('bmErrorMsg');
+      if (!errEl) {
+        errEl = document.createElement('div');
+        errEl.id = 'bmErrorMsg';
+        errEl.style.cssText = 'background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.25);border-radius:6px;padding:0.625rem 0.875rem;font-size:0.78rem;color:#DC2626;margin-bottom:0.75rem;display:flex;align-items:center;gap:6px;';
+        const submitBtn = document.getElementById('bmSubmitBtn');
+        submitBtn.parentNode.insertBefore(errEl, submitBtn);
+      }
+      errEl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${msg}`;
+      errEl.style.display = 'flex';
+      errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => { if (errEl) errEl.style.display = 'none'; }, 5000);
+    }
+
     async function submitBooking() {
       const checkIn = document.getElementById('bmCheckIn').value;
       const checkOut = document.getElementById('bmCheckOut').value;
@@ -2616,10 +2694,13 @@
       const phone = document.getElementById('bmPhone').value.trim();
       const requests = document.getElementById('bmRequests').value.trim();
 
-      if (!checkIn || !checkOut || !name || !email || !phone) { alert('Please fill in all required fields.'); return; }
-      if (checkOut <= checkIn) { alert('Check-out must be after check-in.'); return; }
       const todayCheck = new Date().toISOString().split('T')[0];
-      if (checkIn < todayCheck) { alert('Check-in date cannot be in the past.'); return; }
+      if (!checkIn || !checkOut) { showBmError('Please select your check-in and check-out dates on the calendar above.'); return; }
+      if (checkOut <= checkIn) { showBmError('Check-out must be after check-in. Please re-select your dates.'); return; }
+      if (checkIn < todayCheck) { showBmError('Check-in date cannot be in the past.'); return; }
+      if (!name) { showBmError('Please enter your full name.'); return; }
+      if (!phone) { showBmError('Please enter your phone number.'); return; }
+      if (!email) { showBmError('Please enter your email address.'); return; }
 
       const btn = document.getElementById('bmSubmitBtn');
       btn.disabled = true; btn.textContent = 'Checking availability…';
