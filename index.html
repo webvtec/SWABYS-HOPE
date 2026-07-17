@@ -2089,7 +2089,7 @@
       <div class="hero-bg">
         <picture>
           <source media="(min-width: 601px)" srcset="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_4%20u.png?alt=media&token=7a3fc9ab-13b2-441a-ad6d-879718bbf03d" />
-          <img src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_4%20n.png?alt=media&token=4908096e-473e-4687-ab79-6ab76a2fa49f" alt="Swaby's Hope Hideaway — Spur Tree, Mandeville, Jamaica" />
+          <img src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_4%20n.png?alt=media&token=00dcea7d-6c8d-44ee-805d-3d164edb7810" alt="Swaby's Hope Hideaway — Spur Tree, Mandeville, Jamaica" />
         </picture>
       </div>
       <div class="hero-content">
@@ -2294,20 +2294,6 @@
           onkeydown="if(event.key==='Enter')authSubmit()" />
         <button id="authSubmitBtn" onclick="authSubmit()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(184,115,51,0.3);">Sign In</button>
         <div id="authModalError" style="display:none;margin-top:0.75rem;padding:0.625rem 0.875rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.75rem;color:#DC2626;text-align:center;"></div>
-
-        <!-- Admin access — hidden by default, revealed only when admin UID is signed in -->
-        <div id="adminAccessSection" style="display:none;">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin:1rem 0 0.875rem;">
-            <div style="flex:1;height:1px;background:#E8E4DE;"></div>
-            <span style="font-size:0.6rem;color:var(--text-muted);letter-spacing:0.14em;text-transform:uppercase;font-family:var(--font-body);">staff</span>
-            <div style="flex:1;height:1px;background:#E8E4DE;"></div>
-          </div>
-          <button onclick="window._adminSignIn()" id="adminAccessBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.625rem;padding:0.75rem 1.25rem;background:#fff;border:1.5px solid #E2E8F0;border-radius:8px;color:#374151;font-family:var(--font-body);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.07);" onmouseover="this.style.borderColor='#B87333';this.style.boxShadow='0 0 0 3px rgba(184,115,51,0.1)'" onmouseout="this.style.borderColor='#E2E8F0';this.style.boxShadow='0 1px 4px rgba(0,0,0,0.07)'">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            Admin
-          </button>
-          <div id="adminAccessErr" style="display:none;margin-top:0.625rem;padding:0.5rem 0.75rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.72rem;color:#DC2626;text-align:center;font-family:var(--font-body);"></div>
-        </div>
       </div>
 
       <!-- ── PROFILE PANEL (shown when logged in) ── -->
@@ -2358,6 +2344,16 @@
           </div>
           <div id="profileSaveMsg" style="display:none;font-size:0.75rem;margin-bottom:0.75rem;padding:0.5rem 0.75rem;border-radius:6px;"></div>
           <button onclick="saveUserProfile()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(184,115,51,0.28);margin-bottom:0.75rem;">Save Profile</button>
+
+          <!-- Admin access — hidden by default, only shown to admin UID -->
+          <div id="adminAccessSection" style="display:none;margin-bottom:0.75rem;">
+            <button onclick="window._adminSignIn()" id="adminAccessBtn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.625rem;padding:0.75rem 1.25rem;background:linear-gradient(135deg,rgba(9,11,15,0.96),rgba(13,16,24,0.96));border:1px solid rgba(184,115,51,0.35);border-radius:8px;color:var(--copper-shine);font-family:var(--font-body);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--copper)';this.style.boxShadow='0 0 0 3px rgba(184,115,51,0.12)'" onmouseout="this.style.borderColor='rgba(184,115,51,0.35)';this.style.boxShadow='none'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              Admin Dashboard
+            </button>
+            <div id="adminAccessErr" style="display:none;margin-top:0.5rem;padding:0.5rem 0.75rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.72rem;color:#DC2626;text-align:center;font-family:var(--font-body);"></div>
+          </div>
+
           <button onclick="handleGuestSignOut()" style="width:100%;padding:0.75rem;background:none;color:var(--text-muted);border:1px solid #E8E4DE;border-radius:8px;font-family:var(--font-body);font-size:0.75rem;font-weight:600;letter-spacing:0.06em;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.borderColor='#DC2626';this.style.color='#DC2626'" onmouseout="this.style.borderColor='#E8E4DE';this.style.color='var(--text-muted)'">Sign Out</button>
         </div>
 
