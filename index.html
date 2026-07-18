@@ -2435,26 +2435,41 @@
   </div>
 
   <!-- EVENT INQUIRY MODAL -->
-  <div class="event-modal-scrim" id="eventInquiryScrim" onclick="if(event.target===this)closeEventInquiryModal()">
-    <div class="event-modal">
-      <button class="event-modal-close" onclick="closeEventInquiryModal()">&#215;</button>
-      <h3 class="event-modal-title">Event Inquiry</h3>
-      <p class="event-modal-sub">Fill out the details below and we'll respond within 24 hours.</p>
-      <div id="eventInquiryFormWrap">
+  <div class="booking-modal-scrim" id="eventInquiryScrim" onclick="if(event.target===this)closeEventInquiryModal()">
+    <div class="booking-modal">
+      <button class="booking-modal-close" onclick="closeEventInquiryModal()">&#215;</button>
+      <h3 class="booking-modal-title">Event Inquiry</h3>
+      <div class="booking-modal-room" style="color:var(--copper);font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;margin-bottom:0.75rem;">Fill out the details below and we'll respond within 24 hours.</div>
+      <div id="eiSuccess" style="display:none;"></div>
+      <div id="eiWrap">
+        <!-- Auth status bar -->
+        <div id="eiAuthBar" style="margin-bottom:0.875rem;display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.625rem 0.875rem;background:rgba(184,115,51,0.05);border:1px solid rgba(184,115,51,0.15);border-radius:6px;min-height:36px;"></div>
+
+        <!-- Calendar for preferred date -->
+        <div style="margin-bottom:0.625rem;">
+          <label class="form-label" style="display:block;margin-bottom:0.375rem;">Preferred Event Date</label>
+          <div id="eiCalendar" style="background:var(--lux-cream);border:1px solid rgba(184,115,51,0.15);border-radius:var(--radius-md);padding:1rem;"></div>
+        </div>
+
+        <!-- Date selection strip -->
+        <div id="eiDateStrip" style="display:none;background:linear-gradient(135deg,rgba(184,115,51,0.07),rgba(184,115,51,0.03));border:1px solid rgba(184,115,51,0.2);border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;">
+          <div id="eiDateStripText" style="font-size:0.8rem;color:var(--copper);font-weight:600;"></div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px;">Tap a different date to change your selection</div>
+        </div>
+        <input type="hidden" id="formDate" />
+
+        <!-- Form fields -->
         <div class="form-row">
           <div class="form-group"><label class="form-label">Full Name <span class="required">*</span></label><input type="text" class="form-input" placeholder="Your full name" id="formName" /></div>
-          <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" class="form-input" placeholder="you@email.com" id="formEmail" /></div>
-        </div>
-        <div class="form-row">
           <div class="form-group"><label class="form-label">Phone Number <span class="required">*</span></label><input type="tel" class="form-input" placeholder="+1 (876) ..." id="formPhone" /></div>
-          <div class="form-group"><label class="form-label">Event Type <span class="required">*</span></label><select class="form-select" id="formEventType"><option value="" disabled selected>Select event type</option><option value="wedding">Wedding</option><option value="corporate">Corporate Conference</option><option value="birthday">Birthday Celebration</option><option value="reunion">Family Reunion</option><option value="retreat">Retreat / Workshop</option><option value="other">Other</option></select></div>
         </div>
+        <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" class="form-input" placeholder="you@email.com" id="formEmail" /></div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Estimated Guest Count <span class="required">*</span></label><input type="number" class="form-input" placeholder="e.g. 120" id="formGuests" min="1" max="300" /></div>
-          <div class="form-group"><label class="form-label">Preferred Date</label><input type="date" class="form-input" id="formDate" /></div>
+          <div class="form-group"><label class="form-label">Event Type <span class="required">*</span></label><select class="form-select" id="formEventType"><option value="" disabled selected>Select event type</option><option value="wedding">Wedding</option><option value="corporate">Corporate Conference</option><option value="birthday">Birthday Celebration</option><option value="reunion">Family Reunion</option><option value="retreat">Retreat / Workshop</option><option value="other">Other</option></select></div>
+          <div class="form-group"><label class="form-label">Estimated Guest Count <span class="required">*</span></label><input type="number" class="form-input" placeholder="e.g. 120" id="formGuests" min="1" max="500" /></div>
         </div>
-        <div class="form-group"><label class="form-label">Special Requests or Details</label><textarea class="form-textarea" placeholder="Tell us about your vision..." id="formRequests" style="min-height:90px;"></textarea></div>
-        <button class="btn-primary form-submit" onclick="handleFormSubmit()">
+        <div class="form-group"><label class="form-label">Special Requests or Details</label><textarea class="form-textarea" placeholder="Tell us about your vision for the event..." id="formRequests" style="min-height:80px;"></textarea></div>
+        <button class="btn-primary form-submit" id="eiSubmitBtn" onclick="handleFormSubmit()" style="width:100%;justify-content:center;margin-top:0.5rem;">
           Submit Inquiry
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </button>
@@ -3126,10 +3141,10 @@
       if (!grid) return;
       grid.innerHTML = '<div class="reviews-empty">Loading reviews…</div>';
       try {
-        const { db, collection, getDocs, query, orderBy, where } = window._fb;
-        const snap = await getDocs(query(collection(db, 'reviews'), where('approved','==',true), orderBy('createdAt','desc')));
+        const { db, collection, getDocs, query, orderBy } = window._fb;
+        const snap = await getDocs(query(collection(db, 'reviews'), orderBy('createdAt','desc')));
         const reviews = [];
-        snap.forEach(d => reviews.push({ id: d.id, ...d.data() }));
+        snap.forEach(d => { const rd = d.data(); if (rd.approved !== false) reviews.push({ id: d.id, ...rd }); });
         // Update summary bar
         updateReviewSummary(reviews);
         if (reviews.length === 0) {
@@ -3496,14 +3511,110 @@
 
     function scrollToBooking() { navigateTo('rooms'); }
 
+    /* ── Event Inquiry Calendar state ── */
+    let _eiCalMonth = null, _eiCalYear = null;
+
     function openEventInquiryModal() {
       document.getElementById('eventInquiryScrim').classList.add('open');
       document.body.style.overflow = 'hidden';
+      // Reset
+      document.getElementById('eiSuccess').style.display = 'none';
+      document.getElementById('eiWrap').style.display = 'block';
+      document.getElementById('formDate').value = '';
+      document.getElementById('eiDateStrip').style.display = 'none';
+      ['formName','formPhone','formEmail','formGuests','formRequests'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      const et = document.getElementById('formEventType'); if (et) et.selectedIndex = 0;
+      const now = new Date(); _eiCalMonth = now.getMonth(); _eiCalYear = now.getFullYear();
+      renderEiCalendar();
+      updateEiAuthBar();
+      // Pre-fill from profile if signed in
+      const user = window._currentUser; const profile = window._userProfile || {};
+      if (user) {
+        const n = document.getElementById('formName'); if (n && !n.value) n.value = profile.displayName || user.displayName || '';
+        const e = document.getElementById('formEmail'); if (e && !e.value) e.value = user.email || '';
+        const p = document.getElementById('formPhone'); if (p && !p.value) p.value = profile.phone || '';
+      }
     }
     function closeEventInquiryModal() {
       document.getElementById('eventInquiryScrim').classList.remove('open');
       document.body.style.overflow = '';
     }
+
+    function updateEiAuthBar() {
+      const bar = document.getElementById('eiAuthBar');
+      if (!bar) return;
+      const user = window._currentUser;
+      if (user) {
+        bar.innerHTML = `<span style="font-size:0.75rem;color:var(--text-muted);">Signed in as <strong style="color:var(--copper);">${user.displayName||user.email}</strong></span>
+          <button onclick="window._signOut()" style="font-size:0.7rem;color:var(--text-muted);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;">Sign out</button>`;
+      } else {
+        bar.innerHTML = `<span style="font-size:0.75rem;color:var(--text-muted);">You're submitting as a guest.</span>
+          <button onclick="openAuthModal()" style="font-size:0.7rem;color:var(--copper);background:none;border:none;cursor:pointer;font-weight:600;padding:0;text-decoration:underline;">Sign in</button>`;
+      }
+    }
+
+    function renderEiCalendar() {
+      const cal = document.getElementById('eiCalendar');
+      if (!cal) return;
+      const now = new Date();
+      const year = _eiCalYear, month = _eiCalMonth;
+      const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const selVal = document.getElementById('formDate')?.value || '';
+      const atCurrentMonth = (year === now.getFullYear() && month === now.getMonth());
+
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.625rem;">
+        <button onclick="eiCalNav(-1)" ${atCurrentMonth ? 'disabled style="opacity:0.25;cursor:default;width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.15);background:#fff;font-size:1rem;"' : 'style="width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);font-size:1rem;"'}>&#8249;</button>
+        <div style="font-size:0.8rem;font-weight:700;color:var(--text-primary);letter-spacing:0.03em;">${monthName}</div>
+        <button onclick="eiCalNav(1)" style="width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);font-size:1rem;">&#8250;</button>
+      </div>`;
+      html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+      ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+        html += `<div style="text-align:center;font-size:0.6rem;font-weight:700;color:#94A3B8;padding:4px 0;text-transform:uppercase;letter-spacing:0.06em;">${d}</div>`;
+      });
+      for (let i = 0; i < firstDay; i++) html += '<div></div>';
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const isPast = dateStr < todayStr;
+        const isSel = dateStr === selVal;
+        if (isPast) {
+          html += `<div style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;color:#CBD5E1;text-decoration:line-through;cursor:not-allowed;user-select:none;">${d}</div>`;
+        } else if (isSel) {
+          html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:var(--copper);color:#fff;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
+        } else {
+          html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(184,115,51,0.08);color:var(--copper-mid);font-weight:600;border:1px solid rgba(184,115,51,0.18);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(184,115,51,0.2)'" onmouseout="this.style.background='rgba(184,115,51,0.08)'">${d}</div>`;
+        }
+      }
+      html += '</div>';
+      const instruction = selVal ? 'Tap a different date to change' : 'Tap a date to select your preferred event date';
+      html += `<div style="margin-top:0.75rem;font-size:0.65rem;color:var(--copper);font-style:italic;text-align:right;">${instruction}</div>`;
+      cal.innerHTML = html;
+    }
+
+    function eiCalNav(dir) {
+      _eiCalMonth += dir;
+      if (_eiCalMonth > 11) { _eiCalMonth = 0; _eiCalYear++; }
+      if (_eiCalMonth < 0) { _eiCalMonth = 11; _eiCalYear--; }
+      renderEiCalendar();
+    }
+
+    function eiCalSelect(dateStr) {
+      document.getElementById('formDate').value = dateStr;
+      const strip = document.getElementById('eiDateStrip');
+      const stripText = document.getElementById('eiDateStripText');
+      if (strip && stripText) {
+        const [y,m,d] = dateStr.split('-');
+        const label = new Date(y, m-1, d).toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+        stripText.textContent = `Preferred Date: ${label}`;
+        strip.style.display = 'block';
+      }
+      renderEiCalendar();
+    }
+
     // Close on Escape key
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') closeEventInquiryModal();
@@ -3531,16 +3642,60 @@
       const date = document.getElementById('formDate').value;
       const phone = document.getElementById('formPhone').value.trim();
       const requests = document.getElementById('formRequests').value.trim();
-      if (!name || !email || !phone || !eventType || !guests) { alert('Please fill in all required fields.'); return; }
-      const btn = document.querySelector('#eventInquiryFormWrap .form-submit');
+      if (!name || !email || !phone || !eventType || !guests) {
+        // Highlight missing fields gently
+        const required = [
+          { id:'formName', val: name }, { id:'formPhone', val: phone },
+          { id:'formEmail', val: email }, { id:'formEventType', val: eventType },
+          { id:'formGuests', val: guests }
+        ];
+        required.forEach(({ id, val }) => {
+          const el = document.getElementById(id);
+          if (el) el.style.borderColor = val ? '#E8E4DE' : '#DC2626';
+        });
+        // Show inline error
+        let errEl = document.getElementById('eiErrorMsg');
+        if (!errEl) {
+          errEl = document.createElement('div');
+          errEl.id = 'eiErrorMsg';
+          errEl.style.cssText = 'background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.25);border-radius:6px;padding:0.625rem 0.875rem;font-size:0.78rem;color:#DC2626;margin-bottom:0.75rem;';
+          const btn = document.getElementById('eiSubmitBtn');
+          btn.parentNode.insertBefore(errEl, btn);
+        }
+        errEl.textContent = 'Please fill in all required fields marked with *.';
+        errEl.style.display = 'block';
+        setTimeout(() => { if (errEl) errEl.style.display = 'none'; }, 4000);
+        return;
+      }
+      const btn = document.getElementById('eiSubmitBtn');
       btn.disabled = true; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31 31"/></svg> Submitting...</span>';
       try {
         const { db, collection, addDoc, serverTimestamp } = window._fb;
-        await addDoc(collection(db, 'event_inquiries'), { name, email, eventType, estimatedGuests: parseInt(guests), preferredDate: date || null, phone: phone || null, specialRequests: requests || null, status: 'new', createdAt: serverTimestamp() });
-        document.getElementById('eventInquiryFormWrap').innerHTML = `<div style="text-align:center;padding:2rem 0;"><div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B87333" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div><h3 style="font-family:var(--font-display);font-size:var(--text-2xl);font-weight:500;margin-bottom:0.5rem;color:var(--text-primary);">Inquiry Sent!</h3><p style="color:var(--text-muted);line-height:1.7;">Thank you, ${name}. Our events team will be in touch at <strong style="color:var(--text-primary);">${email}</strong> within 24 hours.</p></div>`;
-        setTimeout(() => closeEventInquiryModal(), 3000);
+        const user = window._currentUser;
+        await addDoc(collection(db, 'event_inquiries'), {
+          name, email, eventType, estimatedGuests: parseInt(guests),
+          preferredDate: date || null, phone, specialRequests: requests || null,
+          uid: user?.uid || null, authEmail: user?.email || null,
+          status: 'new', createdAt: serverTimestamp()
+        });
+        document.getElementById('eiWrap').style.display = 'none';
+        const successEl = document.getElementById('eiSuccess');
+        successEl.style.display = 'block';
+        successEl.innerHTML = `
+          <div style="text-align:center;padding:1.5rem 0;">
+            <div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B87333" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:500;margin-bottom:0.5rem;">Inquiry Sent!</h3>
+            <p style="color:var(--text-muted);line-height:1.7;margin-bottom:0.25rem;">Thank you, <strong>${name}</strong>.</p>
+            <p style="color:var(--text-muted);line-height:1.7;">Our events team will be in touch at <strong style="color:var(--copper);">${email}</strong> within 24 hours.</p>
+            ${date ? `<p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.5rem;">Preferred date: <strong>${new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</strong></p>` : ''}
+          </div>`;
+        setTimeout(() => closeEventInquiryModal(), 4000);
       } catch(err) {
-        console.error(err); btn.disabled = false; btn.innerHTML = 'Submit Inquiry <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+        console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = 'Submit Inquiry <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
         alert('Something went wrong. Please try again or email us directly.');
       }
     }
