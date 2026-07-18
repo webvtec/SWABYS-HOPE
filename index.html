@@ -2465,8 +2465,12 @@
         </div>
         <div class="form-group"><label class="form-label">Email Address <span class="required">*</span></label><input type="email" class="form-input" placeholder="you@email.com" id="formEmail" /></div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Event Type <span class="required">*</span></label><select class="form-select" id="formEventType"><option value="" disabled selected>Select event type</option><option value="wedding">Wedding</option><option value="corporate">Corporate Conference</option><option value="birthday">Birthday Celebration</option><option value="reunion">Family Reunion</option><option value="retreat">Retreat / Workshop</option><option value="other">Other</option></select></div>
+          <div class="form-group"><label class="form-label">Event Type <span class="required">*</span></label><select class="form-select" id="formEventType" onchange="toggleOtherEventType(this.value)"><option value="" disabled selected>Select event type</option><option value="wedding">Wedding</option><option value="corporate">Corporate Conference</option><option value="birthday">Birthday Celebration</option><option value="reunion">Family Reunion</option><option value="retreat">Retreat / Workshop</option><option value="other">Other</option></select></div>
           <div class="form-group"><label class="form-label">Estimated Guest Count <span class="required">*</span></label><input type="number" class="form-input" placeholder="e.g. 120" id="formGuests" min="1" max="500" /></div>
+        </div>
+        <div class="form-group" id="otherEventTypeWrap" style="display:none;">
+          <label class="form-label">Please describe your event <span class="required">*</span></label>
+          <input type="text" class="form-input" placeholder="e.g. Graduation party, baby shower, anniversary..." id="formOtherEventType" />
         </div>
         <div class="form-group"><label class="form-label">Special Requests or Details</label><textarea class="form-textarea" placeholder="Tell us about your vision for the event..." id="formRequests" style="min-height:80px;"></textarea></div>
         <button class="btn-primary form-submit" id="eiSubmitBtn" onclick="handleFormSubmit()" style="width:100%;justify-content:center;margin-top:0.5rem;">
@@ -3526,6 +3530,8 @@
         const el = document.getElementById(id); if (el) el.value = '';
       });
       const et = document.getElementById('formEventType'); if (et) et.selectedIndex = 0;
+      const otherWrap = document.getElementById('otherEventTypeWrap'); if (otherWrap) otherWrap.style.display = 'none';
+      const otherInput = document.getElementById('formOtherEventType'); if (otherInput) otherInput.value = '';
       const now = new Date(); _eiCalMonth = now.getMonth(); _eiCalYear = now.getFullYear();
       renderEiCalendar();
       updateEiAuthBar();
@@ -3586,12 +3592,12 @@
         } else if (isSel) {
           html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:var(--copper);color:#fff;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
         } else {
-          html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(184,115,51,0.08);color:var(--copper-mid);font-weight:600;border:1px solid rgba(184,115,51,0.18);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(184,115,51,0.2)'" onmouseout="this.style.background='rgba(184,115,51,0.08)'">${d}</div>`;
+          html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.08);color:#1D4ED8;font-weight:600;border:1px solid rgba(37,99,235,0.18);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(37,99,235,0.18)'" onmouseout="this.style.background='rgba(37,99,235,0.08)'">${d}</div>`;
         }
       }
       html += '</div>';
       const instruction = selVal ? 'Tap a different date to change' : 'Tap a date to select your preferred event date';
-      html += `<div style="margin-top:0.75rem;font-size:0.65rem;color:var(--copper);font-style:italic;text-align:right;">${instruction}</div>`;
+      html += `<div style="margin-top:0.75rem;font-size:0.65rem;color:#1D4ED8;font-style:italic;text-align:right;">${instruction}</div>`;
       cal.innerHTML = html;
     }
 
@@ -3613,6 +3619,12 @@
         strip.style.display = 'block';
       }
       renderEiCalendar();
+    }
+
+    function toggleOtherEventType(val) {
+      const wrap = document.getElementById('otherEventTypeWrap');
+      if (wrap) wrap.style.display = val === 'other' ? 'block' : 'none';
+      if (val !== 'other') { const el = document.getElementById('formOtherEventType'); if (el) el.value = ''; }
     }
 
     // Close on Escape key
@@ -3638,22 +3650,25 @@
       const name = document.getElementById('formName').value.trim();
       const email = document.getElementById('formEmail').value.trim();
       const eventType = document.getElementById('formEventType').value;
+      const otherEventType = (document.getElementById('formOtherEventType')?.value || '').trim();
       const guests = document.getElementById('formGuests').value;
       const date = document.getElementById('formDate').value;
       const phone = document.getElementById('formPhone').value.trim();
       const requests = document.getElementById('formRequests').value.trim();
-      if (!name || !email || !phone || !eventType || !guests) {
-        // Highlight missing fields gently
+
+      // Validate — "other" requires the description field too
+      const otherMissing = eventType === 'other' && !otherEventType;
+      if (!name || !email || !phone || !eventType || !guests || otherMissing) {
         const required = [
           { id:'formName', val: name }, { id:'formPhone', val: phone },
           { id:'formEmail', val: email }, { id:'formEventType', val: eventType },
           { id:'formGuests', val: guests }
         ];
+        if (otherMissing) required.push({ id:'formOtherEventType', val: '' });
         required.forEach(({ id, val }) => {
           const el = document.getElementById(id);
           if (el) el.style.borderColor = val ? '#E8E4DE' : '#DC2626';
         });
-        // Show inline error
         let errEl = document.getElementById('eiErrorMsg');
         if (!errEl) {
           errEl = document.createElement('div');
@@ -3662,7 +3677,7 @@
           const btn = document.getElementById('eiSubmitBtn');
           btn.parentNode.insertBefore(errEl, btn);
         }
-        errEl.textContent = 'Please fill in all required fields marked with *.';
+        errEl.textContent = otherMissing ? 'Please describe your event type.' : 'Please fill in all required fields marked with *.';
         errEl.style.display = 'block';
         setTimeout(() => { if (errEl) errEl.style.display = 'none'; }, 4000);
         return;
@@ -3672,15 +3687,21 @@
       try {
         const { db, collection, addDoc, serverTimestamp } = window._fb;
         const user = window._currentUser;
+        // Inquiry is saved as 'new' — admin must manually confirm to block the date
         await addDoc(collection(db, 'event_inquiries'), {
-          name, email, eventType, estimatedGuests: parseInt(guests),
-          preferredDate: date || null, phone, specialRequests: requests || null,
+          name, email, phone,
+          eventType,
+          otherEventType: eventType === 'other' ? otherEventType : null,
+          estimatedGuests: parseInt(guests),
+          preferredDate: date || null,
+          specialRequests: requests || null,
           uid: user?.uid || null, authEmail: user?.email || null,
           status: 'new', createdAt: serverTimestamp()
         });
         document.getElementById('eiWrap').style.display = 'none';
         const successEl = document.getElementById('eiSuccess');
         successEl.style.display = 'block';
+        const displayType = eventType === 'other' ? otherEventType : eventType.charAt(0).toUpperCase() + eventType.slice(1).replace(/-/g,' ');
         successEl.innerHTML = `
           <div style="text-align:center;padding:1.5rem 0;">
             <div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
