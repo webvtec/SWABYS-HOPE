@@ -1105,9 +1105,9 @@
     .intro-body {
       color: #000000;
       font-family: var(--font-accent);
-      font-size: clamp(var(--text-lg), 2vw, var(--text-xl));
+      font-size: clamp(var(--text-xl), 2.4vw, var(--text-2xl));
       line-height: 1.9; margin-bottom: var(--space-2xl);
-      font-style: italic; font-weight: 300;
+      font-style: italic; font-weight: 600;
     }
     .intro-stats { display: flex; gap: var(--space-2xl); padding-top: var(--space-2xl); border-top: 1px solid rgba(184,115,51,0.15); }
     .intro-stat-number { font-family: var(--font-display); font-size: var(--text-4xl); font-weight: 500; color: var(--copper); line-height: 1; margin-bottom: var(--space-xs); }
@@ -1157,11 +1157,11 @@
     }
     .footer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2xl); margin-bottom: var(--space-xl); padding-bottom: var(--space-xl); border-bottom: 1px solid rgba(184,115,51,0.08); }
     .footer-brand-desc { font-size: var(--text-sm); line-height: 1.7; color: var(--grey-silver); max-width: 320px; }
-    .footer-col-title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 500; color: var(--lux-white); margin-bottom: var(--space-lg); }
+    .footer-col-title { font-family: var(--font-display); font-size: var(--text-base); font-weight: 700; color: var(--lux-white); margin-bottom: var(--space-lg); }
     .footer-links { list-style: none; display: flex; flex-direction: column; gap: var(--space-sm); }
-    .footer-links a { font-size: var(--text-sm); color: var(--grey-silver); transition: color 0.3s; }
+    .footer-links a { font-size: var(--text-sm); font-weight: 600; color: var(--grey-silver); transition: color 0.3s; }
     .footer-links a:hover { color: var(--copper-shine); }
-    .footer-bottom { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-xs); color: #475569; }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; font-size: var(--text-xs); font-weight: 600; color: #475569; }
     .footer-social { display: flex; gap: var(--space-lg); align-items: center; }
     .footer-social a { display: flex; align-items: center; justify-content: center; transition: all 0.3s; background: none; border: none; padding: 0; }
     .footer-social a:hover { transform: translateY(-3px); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
@@ -4223,34 +4223,38 @@
           /* crisp-but-soft border between the two paints = "unmixed, neat" */
           float band = smoothstep(-0.22, 0.26, m);
           vec3 copperPaint = vec3(0.88, 0.46, 0.16);
-          diffuseColor.rgb = mix(diffuseColor.rgb, copperPaint, band);
-          /* third paint: pearl-white ribbons poured over the black + copper */
-          float m2 = snoise(vec3(q.x*0.85 - 7.3 + w2*0.55, q.y*0.85 + 4.1 - w1*0.45, uTime*0.025));
-          float whiteBand = smoothstep(0.18, 0.48, m2);
-          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.93, 0.94, 0.96), whiteBand);
-          /* faint bright seam where the paints meet, like a wet pour line */
-          float seam = 1.0 - smoothstep(0.0, 0.10, abs(m - 0.02));
-          diffuseColor.rgb += seam * vec3(0.12, 0.07, 0.03);
+          vec3 solidBlack  = vec3(0.03, 0.03, 0.035);
+          /* base liquid is solid black; copper paint pours through untouched */
+          diffuseColor.rgb = mix(solidBlack, copperPaint, band);
         }`);
       sh.fragmentShader = sh.fragmentShader.replace('#include <roughnessmap_fragment>',
         `#include <roughnessmap_fragment>
         {
           vec3 q2 = vObjPos * 0.10;
           float w1r = snoise(vec3(q2.x*1.6, q2.y*1.6, uTime*0.05));
-          float mr  = snoise(vec3(q2.x + w1r*0.85, q2.y + w1r*0.85, uTime*0.03));
-          /* copper paint reads slightly satin next to the mirror silver */
-          roughnessFactor = mix(roughnessFactor, 0.16, smoothstep(-0.22, 0.26, mr)*0.6);
-          /* white paint is full-gloss mirror */
           float w2r = snoise(vec3(q2.x*0.7 + 5.2, q2.y*0.7 - 3.1, uTime*0.035));
-          float m2r = snoise(vec3(q2.x*0.85 - 7.3 + w2r*0.55, q2.y*0.85 + 4.1 - w1r*0.45, uTime*0.025));
-          roughnessFactor = mix(roughnessFactor, 0.04, smoothstep(0.18, 0.48, m2r));
+          float mr  = snoise(vec3(q2.x + w1r*0.85 + w2r*0.4, q2.y + w1r*0.85 - w2r*0.4, uTime*0.03));
+          float bandR = smoothstep(-0.22, 0.26, mr);
+          /* both the black base and the copper paint stay glossy/metallic */
+          roughnessFactor = mix(0.10, 0.16, bandR);
+        }`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <metalnessmap_fragment>',
+        `#include <metalnessmap_fragment>
+        {
+          vec3 q3 = vObjPos * 0.10;
+          float w1m = snoise(vec3(q3.x*1.6, q3.y*1.6, uTime*0.05));
+          float w2m = snoise(vec3(q3.x*0.7 + 5.2, q3.y*0.7 - 3.1, uTime*0.035));
+          float mm  = snoise(vec3(q3.x + w1m*0.85 + w2m*0.4, q3.y + w1m*0.85 - w2m*0.4, uTime*0.03));
+          float bandM = smoothstep(-0.22, 0.26, mm);
+          /* both the black base and the copper paint stay fully metallic */
+          metalnessFactor = mix(1.0, 1.0, bandM);
         }`);
     };
     return new THREE.Mesh(geo, mat);
   }
 
   // Liquid black chrome ocean — the NOIR floor
-  const wave1 = chromeWave(38, 18, lowEnd ? 110 : 200, 2.0, 0.13, 0.1, 0.04, 0x17191E);
+  const wave1 = chromeWave(38, 18, lowEnd ? 110 : 200, 2.0, 0.13, 0.1, 0.10, 0x08080A);
   wave1.rotation.x = -Math.PI/2.4;
   wave1.position.set(0, -2.6, -2);
   scene.add(wave1);
