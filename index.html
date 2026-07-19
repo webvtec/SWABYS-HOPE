@@ -295,12 +295,20 @@
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted);font-style:italic;">No features added yet. Add them from the admin dashboard.</div>';
         return;
       }
+
+      function getImgs(f, isMob) {
+        const mob  = Array.isArray(f.mobileImages)  && f.mobileImages.length  ? f.mobileImages  : null;
+        const desk = Array.isArray(f.desktopImages) && f.desktopImages.length ? f.desktopImages : null;
+        const legacy = Array.isArray(f.images) && f.images.length ? f.images : (f.imageUrl ? [f.imageUrl] : []);
+        // Use the slot for this device if it has photos.
+        // Only fall back to the other slot (or legacy) if this slot is completely empty.
+        if (isMob)  return mob  || desk || legacy;
+        else        return desk || mob  || legacy;
+      }
+
       const isMobile = window.matchMedia('(max-width: 768px)').matches;
       grid.innerHTML = features.map((f, fi) => {
-        const mobImgs  = Array.isArray(f.mobileImages)  && f.mobileImages.length  ? f.mobileImages  : null;
-        const deskImgs = Array.isArray(f.desktopImages) && f.desktopImages.length ? f.desktopImages : null;
-        const legacy   = Array.isArray(f.images) && f.images.length ? f.images : (f.imageUrl ? [f.imageUrl] : []);
-        const imgs = (isMobile ? (mobImgs || deskImgs || legacy) : (deskImgs || mobImgs || legacy)) || [];
+        const imgs = getImgs(f, isMobile) || [];
         let imgHtml;
         if (imgs.length <= 1) {
           imgHtml = `<img src="${imgs[0] || ''}" alt="${f.title}" class="feature-slide-img active" />`;
@@ -316,14 +324,12 @@
           </div>
         </div>`;
       }).join('');
+
       grid.classList.add('in-view');
       if (window._bindMobileCards) window._bindMobileCards();
       features.forEach((f, fi) => {
         const isMob = window.matchMedia('(max-width: 768px)').matches;
-        const mobImgs  = Array.isArray(f.mobileImages)  && f.mobileImages.length  ? f.mobileImages  : null;
-        const deskImgs = Array.isArray(f.desktopImages) && f.desktopImages.length ? f.desktopImages : null;
-        const legacy   = Array.isArray(f.images) && f.images.length ? f.images : [];
-        const imgs = (isMob ? (mobImgs || deskImgs || legacy) : (deskImgs || mobImgs || legacy)) || [];
+        const imgs = getImgs(f, isMob) || [];
         if (imgs.length > 1) startFeatureSlide(fi, imgs.length);
       });
     }
