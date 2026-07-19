@@ -3277,6 +3277,11 @@
       document.documentElement.style.scrollBehavior = 'auto';
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       setTimeout(() => { document.documentElement.style.scrollBehavior = ''; }, 60);
+      // The 3D ring/orb scene (and its photo background) lives on the home page only
+      const silkBg = document.getElementById('silk-bg');
+      const silkBgPhoto = document.getElementById('silk-bg-photo');
+      if (silkBg) silkBg.style.display = (page === 'home') ? '' : 'none';
+      if (silkBgPhoto) silkBgPhoto.style.display = (page === 'home') ? '' : 'none';
       // Footer lives on the home page only
       const footer = document.getElementById('siteFooter');
       if (footer) footer.style.display = (page === 'home') ? '' : 'none';
