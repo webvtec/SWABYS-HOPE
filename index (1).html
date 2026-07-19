@@ -2261,7 +2261,7 @@
         <h1 class="hero-tagline reveal">Use Our <em>Hideaway</em><br/>for Your Getaway</h1>
         <div class="hero-actions reveal" style="transition-delay:0.15s;">
           <button class="btn-hero-solid" onclick="navigateTo('rooms')">
-            Explore Accommodation
+            View Accommodation
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
           </button>
         </div>
@@ -4204,7 +4204,7 @@
   const siteFooterEl = document.getElementById('siteFooter');
   const storyRunway  = document.getElementById('storyRunway');
   document.body.classList.add('story-gated');
-  if (storyRunway) storyRunway.style.height = (isMobile ? 165 : 150) + 'vh';
+  if (storyRunway) storyRunway.style.height = (isMobile ? 120 : 110) + 'vh';
 
   /* ══════════ THE DOOR (the old ring, reborn) ══════════ */
   const doorGroup = new THREE.Group();
@@ -4284,7 +4284,7 @@
   keyGroup.add(keyBody);
   scene.add(keyGroup);
 
-  const seg = isMobile ? 24 : 48;
+  const seg = lowEnd ? 16 : 48;
   const pieces = [];
   function addPiece(mesh, fx, fy, fz, rx, ry, rz){
     mesh.position.set(fx, fy, fz);
@@ -4330,6 +4330,9 @@
   let visible = true;
   document.addEventListener('visibilitychange',()=>{ visible = !document.hidden; });
 
+  /* Low-end: render every other frame to keep scrolling butter-smooth */
+  let frameCount = 0;
+
   const clamp01 = v => Math.min(1, Math.max(0, v));
   const smooth  = v => v*v*(3-2*v);
   const _lockW  = new THREE.Vector3();
@@ -4337,6 +4340,8 @@
   function loop(){
     requestAnimationFrame(loop);
     if (!visible) return;
+    frameCount++;
+    if (lowEnd && (frameCount & 1)) return;  // skip every other frame on low-end
     t += reduce ? 0.0016 : 0.008;
     mx += (tmx-mx)*0.045; my += (tmy-my)*0.045;
 
@@ -4349,10 +4354,10 @@
     const y = window.scrollY;
 
     /* Stage targets (scroll-scrubbed, then smoothed so they glide) */
-    const aT = clamp01((y - U*0.10) / (U*0.60));   // key pieces fly together
-    const iT = clamp01((y - U*0.72) / (U*0.48));   // key travels to the lock
-    const uT = clamp01((y - U*1.18) / (U*0.28));   // key turns
-    const oT = clamp01((y - U*1.42) / (U*0.52));   // door swings open
+    const aT = clamp01((y - U*0.05) / (U*0.38));   // key pieces fly together
+    const iT = clamp01((y - U*0.40) / (U*0.30));   // key travels to the lock
+    const uT = clamp01((y - U*0.68) / (U*0.18));   // key turns
+    const oT = clamp01((y - U*0.82) / (U*0.30));   // door swings open
     const gl = reduce ? 0.2 : 0.085;
     aS += (aT-aS)*gl; iS += (iT-iS)*gl; uS += (uT-uS)*gl; oS += (oT-oS)*gl;
     const aE = smooth(aS), iE = smooth(iS), uE = smooth(uS), oE = smooth(oS);
@@ -4435,7 +4440,7 @@
        underneath is no longer dimmed by the canvas overlay */
     const sceneFade = clamp01(1 - (oS - 0.65) / 0.35);
     canvas.style.opacity = reveal * sceneFade;
-    if (photoBg) photoBg.style.opacity = reveal * oE * sceneFade;
+    if (photoBg) photoBg.style.opacity = reveal * oE;
 
     if (reveal <= 0.01) return;
     renderer.render(scene, camera);
