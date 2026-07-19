@@ -4431,6 +4431,12 @@
       else if (doorShut) siteFooterEl.classList.remove('story-open');
     }
 
+    /* Fade out the 3D scene once the door is wide open so the content
+       underneath is no longer dimmed by the canvas overlay */
+    const sceneFade = clamp01(1 - (oS - 0.65) / 0.35);
+    canvas.style.opacity = reveal * sceneFade;
+    if (photoBg) photoBg.style.opacity = reveal * oE * sceneFade;
+
     if (reveal <= 0.01) return;
     renderer.render(scene, camera);
   }
