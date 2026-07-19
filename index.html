@@ -660,6 +660,39 @@
       border-bottom-color: rgba(184,115,51,0.12);
     }
 
+    /* Desktop: same running glow line the mobile sub-nav has, but under the main nav bar itself */
+    @media (min-width: 769px) {
+      .nav::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          transparent 0%,
+          transparent 15%,
+          rgba(184,115,51,0.1) 22%,
+          rgba(232,168,124,0.9) 35%,
+          rgba(255,220,120,1) 46%,
+          rgba(255,255,200,1) 50%,
+          rgba(255,220,120,1) 54%,
+          rgba(232,168,124,0.9) 65%,
+          rgba(184,115,51,0.1) 78%,
+          transparent 85%,
+          transparent 100%
+        );
+        background-size: 200% 100%;
+        box-shadow:
+          0 0 4px rgba(255,220,120,1),
+          0 0 12px rgba(232,168,124,1),
+          0 0 28px rgba(184,115,51,0.95),
+          0 0 55px rgba(184,115,51,0.6),
+          0 0 90px rgba(184,115,51,0.3);
+        animation: subNavGlowRun 3.2s linear infinite;
+        pointer-events: none;
+      }
+    }
+
     .nav-inner {
       width: 100%;
       max-width: var(--max-width);
@@ -1103,11 +1136,11 @@
     .intro-text .section-eyebrow { justify-content: center; }
     .intro-text .section-title { font-size: clamp(var(--text-3xl), 3.5vw, var(--text-5xl)); margin-bottom: var(--space-lg); color: var(--text-primary); font-weight: 400; }
     .intro-body {
-      color: #000000;
+      color: #FFFFFF;
       font-family: var(--font-accent);
       font-size: clamp(var(--text-xl), 2.4vw, var(--text-2xl));
       line-height: 1.9; margin-bottom: var(--space-2xl);
-      font-style: italic; font-weight: 600;
+      font-style: italic; font-weight: 400;
     }
     .intro-stats { display: flex; gap: var(--space-2xl); padding-top: var(--space-2xl); border-top: 1px solid rgba(184,115,51,0.15); }
     .intro-stat-number { font-family: var(--font-display); font-size: var(--text-4xl); font-weight: 500; color: var(--copper); line-height: 1; margin-bottom: var(--space-xs); }
@@ -1136,10 +1169,10 @@
        FOOTER
        ═══════════════════════════════════════════ */
     .footer {
-      /* transparent glass — the 3D chrome scene stays visible behind */
-      background: linear-gradient(180deg, rgba(10,8,6,0.10) 0%, rgba(10,8,6,0.38) 45%, rgba(10,8,6,0.55) 100%);
-      backdrop-filter: blur(5px) saturate(1.1);
-      -webkit-backdrop-filter: blur(5px) saturate(1.1);
+      /* premium matte fade: soft warm white easing into rich black, semi-transparent so the 3D scene still shows through */
+      background: linear-gradient(180deg, rgba(250,248,245,0.16) 0%, rgba(45,41,37,0.48) 42%, rgba(8,7,6,0.8) 100%);
+      backdrop-filter: blur(10px) saturate(1.1);
+      -webkit-backdrop-filter: blur(10px) saturate(1.1);
       padding: var(--space-2xl) 0 var(--space-lg);
       color: var(--grey-silver);
       position: relative;
@@ -2094,7 +2127,7 @@
     .page .accent-banner-text h3, .page .escape-text h3 { color: #F5F0EA !important; }
     .page .section-subtitle, .page .events-showcase-header .section-subtitle,
     .page .room-card-desc, .page .event-card-desc, .page .inquiry-info-text,
-    .page .intro-body { color: #C9BCAD !important; }
+    .page .intro-body { color: #FFFFFF !important; }
     .page .intro-stat-label, .page .capacity-stat-label, .page .event-card-meta,
     .page .room-card-price .per-night, .page .inquiry-form-subtitle,
     .page .amenity, .page .inquiry-contact-label { color: #9C8F80 !important; }
@@ -4220,12 +4253,12 @@
           float w1 = snoise(vec3(q.x*1.6, q.y*1.6, uTime*0.05));
           float w2 = snoise(vec3(q.x*0.7 + 5.2, q.y*0.7 - 3.1, uTime*0.035));
           float m  = snoise(vec3(q.x + w1*0.85 + w2*0.4, q.y + w1*0.85 - w2*0.4, uTime*0.03));
-          /* crisp-but-soft border between the two paints = "unmixed, neat" */
-          float band = smoothstep(-0.22, 0.26, m);
-          vec3 copperPaint = vec3(0.88, 0.46, 0.16);
-          vec3 solidBlack  = vec3(0.03, 0.03, 0.035);
-          /* base liquid is solid black; copper paint pours through untouched */
-          diffuseColor.rgb = mix(solidBlack, copperPaint, band);
+          /* crisp-but-soft border between the two paints — narrower band = more black */
+          float band = smoothstep(0.08, 0.58, m);
+          vec3 goldPaint  = vec3(0.831, 0.710, 0.486);
+          vec3 solidBlack = vec3(0.03, 0.03, 0.035);
+          /* base liquid is solid black; gold paint pours through untouched */
+          diffuseColor.rgb = mix(solidBlack, goldPaint, band);
         }`);
       sh.fragmentShader = sh.fragmentShader.replace('#include <roughnessmap_fragment>',
         `#include <roughnessmap_fragment>
@@ -4234,8 +4267,8 @@
           float w1r = snoise(vec3(q2.x*1.6, q2.y*1.6, uTime*0.05));
           float w2r = snoise(vec3(q2.x*0.7 + 5.2, q2.y*0.7 - 3.1, uTime*0.035));
           float mr  = snoise(vec3(q2.x + w1r*0.85 + w2r*0.4, q2.y + w1r*0.85 - w2r*0.4, uTime*0.03));
-          float bandR = smoothstep(-0.22, 0.26, mr);
-          /* both the black base and the copper paint stay glossy/metallic */
+          float bandR = smoothstep(0.08, 0.58, mr);
+          /* both the black base and the gold paint stay glossy/metallic */
           roughnessFactor = mix(0.10, 0.16, bandR);
         }`);
       sh.fragmentShader = sh.fragmentShader.replace('#include <metalnessmap_fragment>',
@@ -4245,8 +4278,8 @@
           float w1m = snoise(vec3(q3.x*1.6, q3.y*1.6, uTime*0.05));
           float w2m = snoise(vec3(q3.x*0.7 + 5.2, q3.y*0.7 - 3.1, uTime*0.035));
           float mm  = snoise(vec3(q3.x + w1m*0.85 + w2m*0.4, q3.y + w1m*0.85 - w2m*0.4, uTime*0.03));
-          float bandM = smoothstep(-0.22, 0.26, mm);
-          /* both the black base and the copper paint stay fully metallic */
+          float bandM = smoothstep(0.08, 0.58, mm);
+          /* both the black base and the gold paint stay fully metallic */
           metalnessFactor = mix(1.0, 1.0, bandM);
         }`);
     };
@@ -4261,58 +4294,24 @@
 
   /* wave2 removed — it rendered as a floating grey slab mid-screen on desktop */
 
-  // THE CHROME STAR — a stellated polyhedron: sharp pyramid spikes on every
-  // face, flat-shaded facets like cut metal (matches the reference star shape).
-  // Only 60 triangles — far lighter than the old 29k-vertex noise blob.
-  function makeStellatedStar(radius, spikeLen){
-    let src = new THREE.IcosahedronGeometry(radius, 0);
-    if (src.index) src = src.toNonIndexed(); // only convert if actually indexed (kills the console warning)
-    const pos = src.attributes.position;
-    const verts = [];
-    const cols = [];
-    // paint palette: mostly bright chrome, with copper-orange and liquid-black
-    // accent spikes so the star ties into the black+copper scene
-    const CHROME = [0.96, 0.97, 1.0], COPPER = [0.85, 0.42, 0.13], BLACK = [0.05, 0.05, 0.07];
-    let face = 0;
-    for (let i = 0; i < pos.count; i += 3){
-      const a = new THREE.Vector3().fromBufferAttribute(pos, i);
-      const b = new THREE.Vector3().fromBufferAttribute(pos, i+1);
-      const c = new THREE.Vector3().fromBufferAttribute(pos, i+2);
-      const apex = new THREE.Vector3().add(a).add(b).add(c).multiplyScalar(1/3)
-        .normalize().multiplyScalar(radius * spikeLen);
-      verts.push(a,b,apex,  b,c,apex,  c,a,apex);
-      const tint = (face % 5 === 1) ? COPPER : (face % 7 === 3) ? BLACK : CHROME;
-      for (let k = 0; k < 9; k++) cols.push(tint[0], tint[1], tint[2]);
-      face++;
-    }
-    const arr = new Float32Array(verts.length * 3);
-    verts.forEach((v,i)=>{ arr[i*3]=v.x; arr[i*3+1]=v.y; arr[i*3+2]=v.z; });
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(arr, 3));
-    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(cols), 3));
-    g.computeVertexNormals(); // non-indexed → crisp flat facet normals
-    return g;
-  }
-  const blobMat = new THREE.MeshStandardMaterial({
-    color:0xffffff, vertexColors:true, metalness:1, roughness:0.0, envMapIntensity:3.2, flatShading:true,
-    emissive:0x14161a /* faint lift so dark-facing facets still shimmer instead of going black */
-  });
-  // A little liquid: the star gently flexes like molten metal. flatShading
-  // recomputes facet normals in the fragment shader, so the facets stay crisp
-  // while the whole form breathes. Only 180 vertices — costs nothing.
-  blobMat.onBeforeCompile = (sh)=>{
-    sh.uniforms.uTime = uTime;
-    sh.vertexShader = `uniform float uTime; ${noiseGLSL}\n` + sh.vertexShader;
-    sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>',
-      `float lw = snoise(position*1.1 + vec3(uTime*0.35))*0.09
-               + snoise(position*0.5 - vec3(uTime*0.2))*0.06;
-       vec3 transformed = position * (1.0 + lw);`);
-  };
-  const blob = new THREE.Mesh(makeStellatedStar(1.15, 1.75), blobMat);
-  blob.position.set(3.3, 0.4, -1);
-  scene.add(blob);
+  // Gold companion orb
+  const orb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, lowEnd ? 48 : 96, lowEnd ? 48 : 96),
+    new THREE.MeshStandardMaterial({ color:0xC17A3A, metalness:1, roughness:0.04, envMapIntensity:2.4 })
+  );
+  orb.position.set(3.3, 0.4, 0.5);
+  scene.add(orb);
 
-  // Copper glow halo — soft additive light bloom behind the star to bring it out
+  // Copper ring — now in the star's old spot on the right
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(1.5, 0.12, 64, 200),
+    new THREE.MeshStandardMaterial({ color:0xC47E3B, metalness:1, roughness:0.05, envMapIntensity:2.3 })
+  );
+  ring.position.set(3.3, 0.4, -1);
+  ring.rotation.set(1.0, 0.4, 0);
+  scene.add(ring);
+
+  // Copper glow halo — soft additive light bloom behind the ring to bring it out
   function makeGlowTexture(){
     const c = document.createElement('canvas'); c.width = c.height = 128;
     const x = c.getContext('2d');
@@ -4323,31 +4322,14 @@
     x.fillStyle = gr; x.fillRect(0,0,128,128);
     return new THREE.CanvasTexture(c);
   }
-  const starGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+  const ringGlow = new THREE.Sprite(new THREE.SpriteMaterial({
     map: makeGlowTexture(), color:0xE08A3C, transparent:true, opacity:0.5,
     blending:THREE.AdditiveBlending, depthWrite:false
   }));
-  starGlow.scale.set(7.5, 7.5, 1);
-  starGlow.position.copy(blob.position);
-  starGlow.position.z -= 0.6;
-  scene.add(starGlow);
-
-  // Gold companion orb
-  const orb = new THREE.Mesh(
-    new THREE.SphereGeometry(0.4, lowEnd ? 48 : 96, lowEnd ? 48 : 96),
-    new THREE.MeshStandardMaterial({ color:0xD4B57C, metalness:1, roughness:0.04, envMapIntensity:2.4 })
-  );
-  orb.position.set(1.3, -1.3, 0.5);
-  scene.add(orb);
-
-  // Copper ring drifting far left
-  const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(1.5, 0.12, 64, 200),
-    new THREE.MeshStandardMaterial({ color:0xC47E3B, metalness:1, roughness:0.05, envMapIntensity:2.3 })
-  );
-  ring.position.set(-4.8, 1.2, -5);
-  ring.rotation.set(1.0, 0.4, 0);
-  scene.add(ring);
+  ringGlow.scale.set(7.5, 7.5, 1);
+  ringGlow.position.copy(ring.position);
+  ringGlow.position.z -= 0.6;
+  scene.add(ringGlow);
 
   // Gold dust
   const dg = new THREE.BufferGeometry();
@@ -4357,7 +4339,7 @@
   const dust = new THREE.Points(dg, new THREE.PointsMaterial({ color:0xC9A96E, size:0.022, transparent:true, opacity:0.5 }));
   scene.add(dust);
 
-  let t=0, mx=0, my=0, tmx=0, tmy=0;
+  let t=0, mx=0, my=0, tmx=0, tmy=0, smoothScroll=0;
   window.addEventListener('mousemove',(e)=>{
     tmx=(e.clientX/window.innerWidth-0.5)*2;
     tmy=(e.clientY/window.innerHeight-0.5)*2;
@@ -4374,22 +4356,24 @@
     t += reduce ? 0.0012 : 0.008;
     uTime.value = t;
     mx += (tmx-mx)*0.045; my += (tmy-my)*0.045;
+    // smoothed scroll value so the ring's scroll-driven spin never feels jumpy
+    smoothScroll += (scroll - smoothScroll) * 0.06;
 
-    blob.rotation.y = t*0.14 + mx*0.3;
-    blob.rotation.x = my*0.15 + t*0.05;
-    blob.position.y = 0.4 + Math.sin(t*0.5)*0.12;
-    // the deeper you scroll, the further back the star drifts (fog softens it with distance)
-    blob.position.z = -1 - scroll*5.5;
-    starGlow.position.x = blob.position.x;
-    starGlow.position.y = blob.position.y;
-    starGlow.position.z = blob.position.z - 0.6;
-    starGlow.material.opacity = (0.42 + Math.sin(t*0.9)*0.1) * (1.0 - scroll*0.35);
+    // the ball drifts gently on the spot where the ring lives, so it always
+    // reads as threaded through the ring's hole
+    orb.position.x = 3.3 + Math.cos(t*0.45)*0.3;
+    orb.position.y = 0.4 + Math.sin(t*0.8+2)*0.2;
 
-    orb.position.y = -1.3 + Math.sin(t*0.8+2)*0.2;
-    orb.position.x = 1.3 + Math.cos(t*0.45)*0.3;
-
-    ring.rotation.z = t*0.14;
-    ring.position.y = 1.2 + Math.sin(t*0.4)*0.25;
+    // ring smoothly tracks the ball (lerp = no snapping) and stays put while
+    // spinning faster the more you scroll
+    ring.position.x += (orb.position.x - ring.position.x) * 0.05;
+    ring.position.y += (orb.position.y - ring.position.y) * 0.05;
+    ring.position.z += (orb.position.z - ring.position.z) * 0.05;
+    ring.rotation.z = t*0.14 + smoothScroll*5.5;
+    ring.rotation.x = 1.0 + smoothScroll*6.0;
+    ringGlow.position.copy(ring.position);
+    ringGlow.position.z -= 0.6;
+    ringGlow.material.opacity = 0.42 + Math.sin(t*0.9)*0.1;
 
     dust.rotation.y = t*0.014;
 
