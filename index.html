@@ -479,7 +479,7 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    html { background: #FAF8F5; }
+    html { background: #FFFFFF; }
     body {
       font-family: var(--font-body);
       font-size: var(--text-2xl);
@@ -512,17 +512,14 @@
        Pure CSS, GPU-cheap (transform-only), frozen for reduced-motion. */
     #silk-bg-photo {
       position: fixed; inset: 0; width: 100%; height: 100vh; z-index: -2; pointer-events: none;
-      background:
-        radial-gradient(120% 90% at 85% -10%, rgba(212,137,90,0.14) 0%, transparent 55%),
-        radial-gradient(110% 90% at 0% 100%, rgba(184,115,51,0.10) 0%, transparent 52%),
-        linear-gradient(180deg, #FBF8F3 0%, #F6EFE6 55%, #F2E9DD 100%);
+      background: #FFFFFF;
       overflow: hidden;
     }
     /* drifting champagne light-field */
     #silk-bg-photo::before {
       content:''; position:absolute; width: 72vmax; height: 72vmax;
       left: -18vmax; top: -24vmax; border-radius: 50%;
-      background: radial-gradient(circle, rgba(226,192,106,0.20) 0%, rgba(212,137,90,0.10) 42%, transparent 68%);
+      background: transparent;
       filter: blur(60px);
       animation: bgDriftA 64s ease-in-out infinite alternate;
       will-change: transform;
@@ -531,7 +528,7 @@
     #silk-bg-photo::after {
       content:''; position:absolute; width: 64vmax; height: 64vmax;
       right: -22vmax; bottom: -26vmax; border-radius: 50%;
-      background: radial-gradient(circle, rgba(125,143,163,0.13) 0%, rgba(180,196,188,0.08) 45%, transparent 70%);
+      background: transparent;
       filter: blur(70px);
       animation: bgDriftB 78s ease-in-out infinite alternate;
       will-change: transform;
@@ -1373,7 +1370,7 @@
        ═══════════════════════════════════════════ */
     .page { display: none; }
     #page-home {
-      background: #2A180C;
+      background: #FFFFFF;
     }
     .page.active { display: block; animation: pageIn 0.5s var(--ease-out); }
     @keyframes pageIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
@@ -2182,9 +2179,9 @@
     /* ═══ END BOOKING ═══ */
   </style>
 
-  <style id="noir-dark-theme">
+  <style id="noir-dark-theme" media="not all">
     /* ═══ NOIR CONVERSION — dark liquid luxury ═══ */
-    html { background: #0A0908 !important; }
+    html { background: #FFFFFF !important; }
 
     /* Sections: dark glass over the chrome scene */
     .page .features, .page .intro, .page .accent-banner,
@@ -2259,6 +2256,41 @@
 
     /* Badges on images stay legible */
     .page .room-card-badge { background: rgba(10,9,8,0.75) !important; color: var(--copper-shine) !important; border-color: rgba(232,168,124,0.5) !important; }
+  </style>
+  <style id="solid-white-theme">
+    /* ═══ SOLID WHITE PAGES — backgrounds forced white, text kept readable ═══ */
+
+    /* Backdrop + page container */
+    html, body { background: #FFFFFF !important; }
+    #silk-bg-photo { background: #FFFFFF !important; }
+    #page-home, .page { background: #FFFFFF !important; }
+
+    /* All content sections → solid white (drop dark tints + blur) */
+    .features, .intro, .accent-banner,
+    .rooms-section, .events-showcase, .inquiry-section,
+    .capacity-banner, .footer {
+      background: #FFFFFF !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Text that previously sat white-on-dark → dark so it stays readable on white.
+       (Card titles/descriptions that sit over images are intentionally left alone.) */
+    .features-header .section-title,
+    .intro-text .section-title,
+    .accent-banner-text, .accent-banner-text h3,
+    .escape-text h3,
+    .footer-col-title { color: var(--text-primary) !important; }
+
+    .intro-body,
+    .accent-banner-text p,
+    .footer-brand-desc, .footer-links a { color: var(--text-secondary) !important; }
+
+    #escapeSub { color: var(--text-secondary) !important; }
+
+    /* Footer social icons were white-on-dark → make white strokes dark on white */
+    .footer-social svg[stroke="white"],
+    .footer-social [stroke="white"] { stroke: var(--text-primary) !important; }
   </style>
 </head>
 <body>
