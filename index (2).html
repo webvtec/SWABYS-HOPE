@@ -2026,6 +2026,88 @@
 
     /* ═══ END BOOKING ═══ */
   </style>
+
+  <style id="noir-dark-theme">
+    /* ═══ NOIR CONVERSION — dark liquid luxury ═══ */
+    html { background: #0A0908 !important; }
+
+    /* Sections: dark glass over the chrome scene */
+    .page .features, .page .intro, .page .accent-banner,
+    .page .rooms-section, .page .events-showcase, .page .inquiry-section {
+      background: rgba(12,10,9,0.48) !important;
+      backdrop-filter: blur(18px) saturate(1.15) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+    }
+    .page .capacity-banner { background: rgba(20,16,12,0.5) !important; backdrop-filter: blur(16px) !important; -webkit-backdrop-filter: blur(16px) !important; border-color: rgba(232,168,124,0.2) !important; }
+
+    /* Cards: obsidian glass with copper edge light */
+    .page .room-card, .page .event-card, .page .feature-card,
+    .page .capacity-stat, .page .inquiry-form-card {
+      background: rgba(255,255,255,0.045) !important;
+      backdrop-filter: blur(16px) saturate(1.2) !important;
+      -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+      border: 1px solid rgba(232,168,124,0.22) !important;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+    }
+    .page .room-card:hover, .page .event-card:hover {
+      border-color: rgba(232,168,124,0.55) !important;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 32px rgba(184,115,51,0.22), inset 0 1px 0 rgba(255,255,255,0.1) !important;
+    }
+
+    /* Typography flips — scoped to page content only */
+    .page .section-title, .page .features-header .section-title,
+    .page .events-showcase-header .section-title, .page .inquiry-info .section-title,
+    .page .room-card-name, .page .event-card-title, .page .inquiry-form-title,
+    .page .accent-banner-text h3, .page .escape-text h3 { color: #F5F0EA !important; }
+    .page .section-subtitle, .page .events-showcase-header .section-subtitle,
+    .page .room-card-desc, .page .event-card-desc, .page .inquiry-info-text,
+    .page .intro-body { color: #C9BCAD !important; }
+    .page .intro-stat-label, .page .capacity-stat-label, .page .event-card-meta,
+    .page .room-card-price .per-night, .page .inquiry-form-subtitle,
+    .page .amenity, .page .inquiry-contact-label { color: #9C8F80 !important; }
+    .page .inquiry-contact-value, .page .form-label { color: #EDE4D8 !important; }
+    .page .amenity svg, .page .event-card-meta svg { color: var(--copper-shine) !important; }
+
+    /* Forms: dark glass fields */
+    .page .form-input, .page .form-select, .page .form-textarea {
+      background: rgba(255,255,255,0.06) !important;
+      border: 1px solid rgba(232,168,124,0.25) !important;
+      color: #F5F0EA !important;
+      color-scheme: dark;
+    }
+    .page .form-input::placeholder, .page .form-textarea::placeholder { color: #8A7D6E !important; }
+    .page .form-input:focus, .page .form-select:focus, .page .form-textarea:focus {
+      border-color: var(--copper-shine) !important;
+      box-shadow: 0 0 16px rgba(184,115,51,0.3) !important;
+      background: rgba(255,255,255,0.09) !important;
+    }
+    .page .form-select option { background: #1A1410; color: #F5F0EA; }
+
+    /* Structural lines glow instead of divide */
+    .page .intro-stats, .page .room-amenities { border-color: rgba(232,168,124,0.18) !important; }
+    .page .accent-banner { border-top-color: rgba(232,168,124,0.25) !important; border-bottom-color: rgba(232,168,124,0.25) !important; }
+    .page .capacity-stat-icon, .page .inquiry-contact-icon { background: rgba(184,115,51,0.12) !important; border-color: rgba(232,168,124,0.3) !important; }
+
+    /* Nav + sticky CTA join the dark */
+    .nav.scrolled {
+      background: rgba(10,9,8,0.65) !important;
+      backdrop-filter: blur(26px) saturate(1.4) !important;
+      -webkit-backdrop-filter: blur(26px) saturate(1.4) !important;
+      border-bottom-color: rgba(232,168,124,0.2) !important;
+      box-shadow: 0 1px 24px rgba(0,0,0,0.5) !important;
+    }
+    .nav.scrolled .nav-brand, .nav.scrolled .nav-link { color: #F5F0EA !important; }
+    .sticky-cta { background: rgba(10,9,8,0.8) !important; border-top-color: rgba(232,168,124,0.25) !important; }
+
+    /* Marquee melts into the scene */
+    .marquee-band { background: rgba(8,7,6,0.45) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+    /* Section title underline + eyebrows pop on dark */
+    .page .section-eyebrow { color: var(--copper-shine) !important; }
+
+    /* Badges on images stay legible */
+    .page .room-card-badge { background: rgba(10,9,8,0.75) !important; color: var(--copper-shine) !important; border-color: rgba(232,168,124,0.5) !important; }
+  </style>
 </head>
 <body>
 <canvas id="silk-bg"></canvas>
@@ -3995,35 +4077,35 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xFAF8F5, 9, 26);
-  const camera = new THREE.PerspectiveCamera(48, window.innerWidth/window.innerHeight, 0.1, 100);
-  camera.position.set(0, 1.2, 7.5);
+  scene.fog = new THREE.Fog(0x0A0908, 8, 30);
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.set(0, 0.5, 7);
 
-  // Warm studio environment — gives the silk its copper sheen
+  // Dark studio env — light streaks give the chrome its liquid look
   function makeEnv(){
     const s=512, c=document.createElement('canvas'); c.width=s; c.height=s;
     const x=c.getContext('2d');
     const g=x.createLinearGradient(0,0,0,s);
-    g.addColorStop(0,'#fffdf8'); g.addColorStop(0.5,'#efe6da'); g.addColorStop(1,'#cbb9a4');
+    g.addColorStop(0,'#34302c'); g.addColorStop(0.42,'#100e0c'); g.addColorStop(1,'#040303');
     x.fillStyle=g; x.fillRect(0,0,s,s);
     function band(px,w,color){ const b=x.createLinearGradient(px,0,px+w,0);
       b.addColorStop(0,'rgba(0,0,0,0)'); b.addColorStop(.5,color); b.addColorStop(1,'rgba(0,0,0,0)');
       x.fillStyle=b; x.fillRect(px,0,w,s); }
-    band(40,110,'rgba(255,255,255,0.95)');
-    band(220,60,'rgba(232,168,124,0.55)');
-    band(330,120,'rgba(255,250,242,0.85)');
-    band(160,34,'rgba(184,115,51,0.45)');
-    band(470,40,'rgba(212,137,90,0.4)');
+    band(50,105,'rgba(255,250,240,0.92)');
+    band(235,55,'rgba(235,225,210,0.5)');
+    band(350,125,'rgba(255,244,228,0.7)');
+    band(175,32,'rgba(232,168,124,0.5)');
+    band(468,42,'rgba(184,115,51,0.45)');
     const t=new THREE.CanvasTexture(c);
     t.mapping=THREE.EquirectangularReflectionMapping;
     return t;
   }
   scene.environment = makeEnv();
 
-  scene.add(new THREE.AmbientLight(0xfff6ec, 0.9));
-  const key = new THREE.DirectionalLight(0xfff3e4, 1.2); key.position.set(-4,7,5); scene.add(key);
-  const copperLight = new THREE.PointLight(0xB87333, 2.4, 18); copperLight.position.set(3,2,3); scene.add(copperLight);
-  const warmFill = new THREE.PointLight(0xE8A87C, 1.4, 16); warmFill.position.set(-4,0,4); scene.add(warmFill);
+  scene.add(new THREE.AmbientLight(0x14100c, 1));
+  const key = new THREE.DirectionalLight(0xfff3e4, 1.4); key.position.set(-4,7,5); scene.add(key);
+  const copperGlow = new THREE.PointLight(0xB87333, 4, 20); copperGlow.position.set(3,1.5,3); scene.add(copperGlow);
+  const coolRim = new THREE.PointLight(0x7d8fa3, 1.4, 16); coolRim.position.set(-5,-1,3); scene.add(coolRim);
 
   const noiseGLSL = `
   vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
@@ -4056,82 +4138,86 @@
 
   const uTime = { value: 0 };
 
-  function silkWave(w,h,seg,amp,freq,speed,rough,color){
+  function chromeWave(w,h,seg,amp,freq,speed,rough,color){
     const geo = new THREE.PlaneGeometry(w,h,seg,Math.round(seg*0.55));
-    const mat = new THREE.MeshStandardMaterial({ color:color, metalness:0.85, roughness:rough, envMapIntensity:1.35 });
+    const mat = new THREE.MeshStandardMaterial({ color:color, metalness:1.0, roughness:rough, envMapIntensity:1.5 });
+    const F=(n)=>n.toFixed(5);
     mat.onBeforeCompile = (sh)=>{
       sh.uniforms.uTime = uTime;
       sh.vertexShader = `uniform float uTime; ${noiseGLSL}\n` + sh.vertexShader;
-      const d = `float d0 = snoise(vec3(position.x*${freq}, position.y*${freq*1.35}, uTime*${speed}))*${amp}
-                 + snoise(vec3(position.x*${freq*2.4}, position.y*${freq*2.8}, uTime*${speed*1.5}))*${amp*0.22};`;
+      const d = `float d0 = snoise(vec3(position.x*${F(freq)}, position.y*${F(freq*1.35)}, uTime*${F(speed)}))*${F(amp)}
+                 + snoise(vec3(position.x*${F(freq*2.5)}, position.y*${F(freq*2.9)}, uTime*${F(speed*1.5)}))*${F(amp*0.24)};`;
       sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>',
         `${d}\nvec3 transformed = position + vec3(0.0, 0.0, d0);`);
       sh.vertexShader = sh.vertexShader.replace('#include <beginnormal_vertex>',
         `float e=0.2;
          ${d.replace(/d0/g,'dc')}
-         float dxx = snoise(vec3((position.x+e)*${freq}, position.y*${freq*1.35}, uTime*${speed}))*${amp}
-                   + snoise(vec3((position.x+e)*${freq*2.4}, position.y*${freq*2.8}, uTime*${speed*1.5}))*${amp*0.22};
-         float dyy = snoise(vec3(position.x*${freq}, (position.y+e)*${freq*1.35}, uTime*${speed}))*${amp}
-                   + snoise(vec3(position.x*${freq*2.4}, (position.y+e)*${freq*2.8}, uTime*${speed*1.5}))*${amp*0.22};
+         float dxx = snoise(vec3((position.x+e)*${F(freq)}, position.y*${F(freq*1.35)}, uTime*${F(speed)}))*${F(amp)}
+                   + snoise(vec3((position.x+e)*${F(freq*2.5)}, position.y*${F(freq*2.9)}, uTime*${F(speed*1.5)}))*${F(amp*0.24)};
+         float dyy = snoise(vec3(position.x*${F(freq)}, (position.y+e)*${F(freq*1.35)}, uTime*${F(speed)}))*${F(amp)}
+                   + snoise(vec3(position.x*${F(freq*2.5)}, (position.y+e)*${F(freq*2.9)}, uTime*${F(speed*1.5)}))*${F(amp*0.24)};
          vec3 objectNormal = normalize(vec3(-(dxx-dc)/e, -(dyy-dc)/e, 1.0));`);
     };
     return new THREE.Mesh(geo, mat);
   }
 
-  // Pearl silk sweep — lower third
-  const silk1 = silkWave(36, 16, 210, 2.1, 0.14, 0.1, 0.18, 0xEDE0D0);
-  silk1.rotation.x = -Math.PI/2.45;
-  silk1.position.set(0, -2.5, -1.5);
-  scene.add(silk1);
+  // Liquid black chrome ocean — the NOIR floor
+  const wave1 = chromeWave(38, 18, 220, 2.0, 0.13, 0.1, 0.1, 0x9DA0A6);
+  wave1.rotation.x = -Math.PI/2.4;
+  wave1.position.set(0, -2.6, -2);
+  scene.add(wave1);
 
-  // Copper silk ribbon — deeper, catches the warm light
-  const silk2 = silkWave(40, 11, 180, 1.6, 0.19, 0.13, 0.11, 0xCEA57E);
-  silk2.rotation.x = -Math.PI/2.2;
-  silk2.rotation.z = 0.14;
-  silk2.position.set(2, -2.0, -6);
-  scene.add(silk2);
+  const wave2 = chromeWave(42, 12, 180, 1.5, 0.18, 0.13, 0.16, 0x6E7178);
+  wave2.rotation.x = -Math.PI/2.15;
+  wave2.rotation.z = 0.16;
+  wave2.position.set(2, -1.8, -6.5);
+  scene.add(wave2);
 
-  // Floating copper orbs
-  const orbs = [];
-  const orbSpecs = [
-    { r:0.62, x:3.7, y:1.5, z:-2, c:0xB87333, rough:0.06 },
-    { r:0.26, x:-4.2, y:2.2, z:-3, c:0xD4895A, rough:0.1 },
-    { r:0.18, x:-2.6, y:0.4, z:-1, c:0xE8A87C, rough:0.15 }
-  ];
-  orbSpecs.forEach((s,i)=>{
-    const o = new THREE.Mesh(
-      new THREE.SphereGeometry(s.r, 96, 96),
-      new THREE.MeshStandardMaterial({ color:s.c, metalness:1, roughness:s.rough, envMapIntensity:1.6 })
-    );
-    o.position.set(s.x, s.y, s.z);
-    o.userData = { baseY: s.y, ph: i*2.1 };
-    scene.add(o); orbs.push(o);
-  });
+  // THE MORPHING CHROME ORGANISM — right side, the signature
+  const blobGeo = new THREE.SphereGeometry(1.6, 200, 200);
+  const blobMat = new THREE.MeshStandardMaterial({ color:0xD5D8DD, metalness:1, roughness:0.05, envMapIntensity:1.8 });
+  blobMat.onBeforeCompile = (sh)=>{
+    sh.uniforms.uTime = uTime;
+    sh.vertexShader = `uniform float uTime; ${noiseGLSL}\n` + sh.vertexShader;
+    sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>',
+      `float b = snoise(position*0.85 + vec3(uTime*0.2))*0.55 + snoise(position*2.3 - vec3(uTime*0.13))*0.12;
+       vec3 transformed = position + normal * b;`);
+    sh.vertexShader = sh.vertexShader.replace('#include <beginnormal_vertex>',
+      `float be = 0.07;
+       float bb0 = snoise(position*0.85 + vec3(uTime*0.2));
+       float bbx = snoise((position+vec3(be,0.,0.))*0.85 + vec3(uTime*0.2));
+       float bby = snoise((position+vec3(0.,be,0.))*0.85 + vec3(uTime*0.2));
+       float bbz = snoise((position+vec3(0.,0.,be))*0.85 + vec3(uTime*0.2));
+       vec3 bgrad = vec3(bbx-bb0, bby-bb0, bbz-bb0)/be;
+       vec3 objectNormal = normalize(normal - bgrad*0.5);`);
+  };
+  const blob = new THREE.Mesh(blobGeo, blobMat);
+  blob.position.set(3.3, 0.4, -1);
+  scene.add(blob);
 
-  // Grand copper ring — slow, sculptural
+  // Gold companion orb
+  const orb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 96, 96),
+    new THREE.MeshStandardMaterial({ color:0xC9A96E, metalness:1, roughness:0.08, envMapIntensity:1.8 })
+  );
+  orb.position.set(1.3, -1.3, 0.5);
+  scene.add(orb);
+
+  // Copper ring drifting far left
   const ring = new THREE.Mesh(
-    new THREE.TorusGeometry(1.7, 0.16, 64, 200),
-    new THREE.MeshStandardMaterial({ color:0xC98A50, metalness:1, roughness:0.1, envMapIntensity:1.7 })
+    new THREE.TorusGeometry(1.5, 0.12, 64, 200),
+    new THREE.MeshStandardMaterial({ color:0xB87333, metalness:1, roughness:0.1, envMapIntensity:1.6 })
   );
-  ring.position.set(-4.6, 1.6, -4.5);
-  ring.rotation.set(0.9, 0.4, 0);
+  ring.position.set(-4.8, 1.2, -5);
+  ring.rotation.set(1.0, 0.4, 0);
   scene.add(ring);
-
-  // Thin satellite ring
-  const ring2 = new THREE.Mesh(
-    new THREE.TorusGeometry(0.9, 0.05, 48, 160),
-    new THREE.MeshStandardMaterial({ color:0xE8A87C, metalness:1, roughness:0.14, envMapIntensity:1.5 })
-  );
-  ring2.position.set(4.4, -0.4, -3);
-  ring2.rotation.set(1.4, -0.5, 0.2);
-  scene.add(ring2);
 
   // Gold dust
   const dg = new THREE.BufferGeometry();
-  const dn = 340, dp = new Float32Array(dn*3);
-  for (let i=0;i<dn*3;i+=3){ dp[i]=(Math.random()-0.5)*22; dp[i+1]=(Math.random()-0.5)*10; dp[i+2]=(Math.random()-0.5)*8-2; }
+  const dn = 380, dp = new Float32Array(dn*3);
+  for (let i=0;i<dn*3;i+=3){ dp[i]=(Math.random()-0.5)*24; dp[i+1]=(Math.random()-0.5)*12; dp[i+2]=(Math.random()-0.5)*9-2; }
   dg.setAttribute('position', new THREE.BufferAttribute(dp,3));
-  const dust = new THREE.Points(dg, new THREE.PointsMaterial({ color:0xB87333, size:0.024, transparent:true, opacity:0.45 }));
+  const dust = new THREE.Points(dg, new THREE.PointsMaterial({ color:0xC9A96E, size:0.022, transparent:true, opacity:0.5 }));
   scene.add(dust);
 
   let t=0, mx=0, my=0, tmx=0, tmy=0;
@@ -4147,23 +4233,33 @@
   function loop(){
     requestAnimationFrame(loop);
     if (!visible) return;
-    t += reduce ? 0.0012 : 0.007;
+    t += reduce ? 0.0012 : 0.008;
     uTime.value = t;
-    mx += (tmx-mx)*0.04; my += (tmy-my)*0.04;
+    mx += (tmx-mx)*0.045; my += (tmy-my)*0.045;
 
-    orbs.forEach(o=>{
-      o.position.y = o.userData.baseY + Math.sin(t*0.7 + o.userData.ph)*0.22;
-      o.rotation.y = t*0.2;
-    });
-    dust.rotation.y = t*0.015;
-    ring.rotation.z = t*0.12; ring.rotation.x = 0.9 + Math.sin(t*0.3)*0.15;
-    ring.position.y = 1.6 + Math.sin(t*0.5)*0.25;
-    ring2.rotation.z = -t*0.2; ring2.position.y = -0.4 + Math.cos(t*0.6)*0.2;
+    blob.rotation.y = t*0.14 + mx*0.3;
+    blob.rotation.x = my*0.15;
+    blob.position.y = 0.4 + Math.sin(t*0.5)*0.12;
+
+    orb.position.y = -1.3 + Math.sin(t*0.8+2)*0.2;
+    orb.position.x = 1.3 + Math.cos(t*0.45)*0.3;
+
+    ring.rotation.z = t*0.14;
+    ring.position.y = 1.2 + Math.sin(t*0.4)*0.25;
+
+    dust.rotation.y = t*0.014;
 
     const scroll = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
-    camera.position.x = mx*0.35;
-    camera.position.y = 1.2 - my*0.2 - scroll*1.6;
-    camera.lookAt(0.3, -0.4 - scroll*1.2, -2);
+    camera.position.x = mx*0.4;
+    camera.position.y = 0.5 - my*0.2 - scroll*1.4;
+    camera.lookAt(0.6, -0.3 - scroll*1.0, -2);
+
+    // Hero owns the top of the page — scene reveals itself just below it
+    const heroEl = document.querySelector('.page.active .hero, .page.active .page-hero') || document.querySelector('.hero');
+    const heroH = heroEl ? heroEl.offsetHeight : window.innerHeight;
+    const reveal = Math.min(1, Math.max(0, (window.scrollY - heroH*0.25) / (heroH*0.5)));
+    canvas.style.opacity = reveal;
+
     renderer.render(scene, camera);
   }
   loop();
