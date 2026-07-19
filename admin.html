@@ -1718,25 +1718,18 @@ async function loadEvents() {
 function openEventModal(editId) {
   openModal(editId ? 'Edit Event' : 'Add Event');
   document.getElementById('modalBody').innerHTML = `
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Event Type</label><input class="form-input" id="mType" placeholder="e.g. Weddings" /></div>
-      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="mTitle" placeholder="e.g. Hilltop Ceremonies" /></div>
-    </div>
-    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the event offering"></textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Capacity / Meta Text</label><input class="form-input" id="mMeta" placeholder="e.g. Up to 200 Guests" /></div>
-      <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
-    </div>
-    <div class="form-group"><label class="form-label">Image</label>${fileInputHtml('mImg')}</div>`;
+    <div class="form-group"><label class="form-label">Event Category</label><input class="form-input" id="mType" placeholder="e.g. Weddings" /></div>
+    <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
+    <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
     <button class="btn btn-copper" onclick="saveEvent('${editId||''}')">Save</button>`;
-  if (editId) loadEditData('events', editId, ['mType:type','mTitle:title','mDesc:description','mMeta:metaText','mOrder:order'], 'mImg');
+  if (editId) loadEditData('events', editId, ['mType:type','mOrder:order'], 'mImg');
 }
 
 async function saveEvent(editId) {
-  const data = { type: gv('mType'), title: gv('mTitle'), description: gv('mDesc'), metaText: gv('mMeta'), order: parseInt(gv('mOrder')) || 0 };
-  if (!data.type || !data.title) { alert('Type and title are required.'); return; }
+  const data = { type: gv('mType'), order: parseInt(gv('mOrder')) || 0 };
+  if (!data.type) { alert('Category is required.'); return; }
   await saveItem('events', editId, data, 'mImg', `events/${Date.now()}`);
   closeModal(); await loadEvents(); showToast('Event saved');
 }
