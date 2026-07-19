@@ -156,8 +156,7 @@
             if (data.roomsHeroUrl) {
               const img = document.querySelector('#page-rooms .page-hero-bg img');
               if (img) img.src = data.roomsHeroUrl;
-              const bgPhoto = document.getElementById('silk-bg-photo');
-              if (bgPhoto) bgPhoto.style.backgroundImage = `url("${data.roomsHeroUrl}")`;
+              // (home background is now the light animated backdrop — no photo override)
             }
             if (data.eventsHeroUrl) {
               const img = document.querySelector('#page-events .page-hero-bg img');
@@ -511,12 +510,48 @@
        text) so the key is never hidden behind anything — it's click-through,
        and it sits safely below the nav (1000), sticky CTA (900) and cursor. */
     #silk-bg { position: fixed; inset: 0; width: 100%; height: 100vh; z-index: 40; pointer-events: none; }
-    /* Static photo behind the key — replaces the old liquid-chrome floor. Sits one layer further back than the canvas. */
+    /* ── LIGHT LIVING BACKDROP ──
+       Replaces the old dark photo. A warm cream base with two enormous,
+       heavily-blurred colour fields that drift very slowly — reads as soft
+       depth/light moving behind the glass sections, never as "an animation".
+       Pure CSS, GPU-cheap (transform-only), frozen for reduced-motion. */
     #silk-bg-photo {
       position: fixed; inset: 0; width: 100%; height: 100vh; z-index: -2; pointer-events: none;
-      background-size: cover; background-position: center; opacity: 1;
+      background:
+        radial-gradient(120% 90% at 85% -10%, rgba(212,137,90,0.14) 0%, transparent 55%),
+        radial-gradient(110% 90% at 0% 100%, rgba(184,115,51,0.10) 0%, transparent 52%),
+        linear-gradient(180deg, #FBF8F3 0%, #F6EFE6 55%, #F2E9DD 100%);
+      overflow: hidden;
     }
-    #silk-bg-photo::after { content:''; position:absolute; inset:0; background: linear-gradient(180deg, rgba(10,9,8,0.55) 0%, rgba(10,9,8,0.72) 100%); }
+    /* drifting champagne light-field */
+    #silk-bg-photo::before {
+      content:''; position:absolute; width: 72vmax; height: 72vmax;
+      left: -18vmax; top: -24vmax; border-radius: 50%;
+      background: radial-gradient(circle, rgba(226,192,106,0.20) 0%, rgba(212,137,90,0.10) 42%, transparent 68%);
+      filter: blur(60px);
+      animation: bgDriftA 64s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    /* drifting cool counterweight — keeps the warmth from going flat */
+    #silk-bg-photo::after {
+      content:''; position:absolute; width: 64vmax; height: 64vmax;
+      right: -22vmax; bottom: -26vmax; border-radius: 50%;
+      background: radial-gradient(circle, rgba(125,143,163,0.13) 0%, rgba(180,196,188,0.08) 45%, transparent 70%);
+      filter: blur(70px);
+      animation: bgDriftB 78s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    @keyframes bgDriftA {
+      from { transform: translate3d(0,0,0) scale(1); }
+      to   { transform: translate3d(9vmax, 7vmax, 0) scale(1.12); }
+    }
+    @keyframes bgDriftB {
+      from { transform: translate3d(0,0,0) scale(1.08); }
+      to   { transform: translate3d(-8vmax, -6vmax, 0) scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #silk-bg-photo::before, #silk-bg-photo::after { animation: none; }
+    }
     .glass-section { background: rgba(255,253,250,0.58) !important; backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25); }
     .glass-card { background: rgba(255,255,255,0.55) !important; backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3); border: 1px solid rgba(184,115,51,0.22) !important; box-shadow: 0 8px 32px rgba(139,69,19,0.08), inset 0 1px 0 rgba(255,255,255,0.7) !important; }
     .glass-cream { background: rgba(245,240,234,0.55) !important; backdrop-filter: blur(20px) saturate(1.25); -webkit-backdrop-filter: blur(20px) saturate(1.25); }
@@ -1522,6 +1557,17 @@
        the whole key's on-screen footprint. No ring, no outline, no label —
        pressing ANYWHERE on the key itself starts the hold. All feedback is
        the key: it turns in its lock and its glow swells as you hold. */
+    /* Reserved space in the layout where the key "lives" — like an image slot.
+       The 3D canvas draws the key over this exact rect every frame, so the key
+       scrolls in lock-step with the surrounding text. */
+    .key-slot {
+      height: clamp(190px, 30vh, 300px);
+      margin-top: var(--space-lg);
+      pointer-events: none;
+    }
+    @media (max-width: 768px) {
+      .key-slot { height: clamp(150px, 24vh, 220px); }
+    }
     .key-hold-target {
       position: fixed;
       left: 0; top: 0;
@@ -1541,8 +1587,8 @@
     }
     .key-hold-target.show { opacity: 1; pointer-events: auto; }
     .key-hold-target:focus-visible { outline: 2px solid rgba(226,192,106,0.7); outline-offset: 4px; }
-    /* subline reads pure white per design */
-    #escapeSub { color: #FFFFFF !important; }
+    /* subline reads warm ink on the light backdrop */
+    #escapeSub { color: var(--copper-deep) !important; }
     /* headline evolves into the new-era line */
     .escape-banner.unlocked .escape-text h3 { text-shadow: 0 0 32px rgba(226,192,106,0.55); }
 
@@ -2421,6 +2467,10 @@
             </button>
           </div>
         </div>
+        <!-- The key's home in the document flow — the 3D key renders exactly
+             over this slot every frame, so it scrolls with the page like a
+             photo. It only comes alive (turns/glows) while being held. -->
+        <div class="key-slot" id="keyAnchor" aria-hidden="true"></div>
         <!-- Full-screen golden burst played the instant the key turns -->
         <div class="era-flash" id="eraFlash" aria-hidden="true"></div>
         <!-- Invisible hold zone that rides the WHOLE key — press anywhere on
@@ -4285,7 +4335,6 @@
   if (!window.THREE) return;
   const canvas = document.getElementById('silk-bg');
   if (!canvas) return;
-  const photoBg = document.getElementById('silk-bg-photo');
   let renderer;
   // Low-end friendly: fewer cores / small screens get lighter geometry + lower resolution
   const lowEnd = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 768;
@@ -4307,9 +4356,12 @@
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, lowEnd ? 1.0 : 1.5));
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x0A0908, 8, 30);
+  scene.fog = new THREE.Fog(0xF6EFE6, 8, 30);
+  // Camera is COMPLETELY STATIC — no scroll drift, no mouse parallax.
+  // The key holds its position on the page purely by tracking its layout slot.
   const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 100);
   camera.position.set(0, 0.5, 7);
+  camera.lookAt(0, 0.5, 0);
 
   // Dark studio env — light streaks give the chrome its liquid look
   function makeEnv(){
@@ -4436,9 +4488,9 @@
     return new THREE.Mesh(geo, mat);
   }
 
-  // Liquid black chrome ocean — the NOIR floor — REMOVED per request; replaced with
-  // the accommodation page's hero photo (#silk-bg-photo), rendered behind this canvas.
-  // The master key below replaces the old key centerpiece.
+  // Liquid black chrome ocean — REMOVED. The page background is now the light
+  // animated backdrop (#silk-bg-photo, pure CSS) rendered behind this canvas.
+  // The master key below is the only 3D object in the scene.
 
   /* wave2 removed — it rendered as a floating grey slab mid-screen on desktop */
 
@@ -4553,103 +4605,71 @@
   keyGlow.position.z -= 0.7;
   scene.add(keyGlow);
 
-  // Gold dust
+  // Gold dust — a small halo that lives around the key and scrolls with it
   const dg = new THREE.BufferGeometry();
-  const dn = lowEnd ? 160 : 380, dp = new Float32Array(dn*3);
-  for (let i=0;i<dn*3;i+=3){ dp[i]=(Math.random()-0.5)*24; dp[i+1]=(Math.random()-0.5)*12; dp[i+2]=(Math.random()-0.5)*9-2; }
+  const dn = lowEnd ? 90 : 200, dp = new Float32Array(dn*3);
+  for (let i=0;i<dn*3;i+=3){ dp[i]=(Math.random()-0.5)*7; dp[i+1]=(Math.random()-0.5)*4; dp[i+2]=(Math.random()-0.5)*4-1; }
   dg.setAttribute('position', new THREE.BufferAttribute(dp,3));
   const dust = new THREE.Points(dg, new THREE.PointsMaterial({ color:0xC9A96E, size:0.022, transparent:true, opacity:0.5 }));
   scene.add(dust);
 
-  let t=0, mx=0, my=0, tmx=0, tmy=0, smoothScroll=0;
+  let t=0;
 
   // ── HOLD → STORM → GONE ──
   // holdProgress (0..1) is fed live from the on-key hold zone — the key turns
   // in its invisible lock exactly with the visitor's thumb. When the hold
   // completes, the storm plays: the key spins up and blasts straight through
   // the camera ("a whole new era"), then it's gone until the next page load.
-  // keyFade handles the other exit: scroll past the CTA section and the key
-  // (and its glow/dust) simply fades out of the scene — it is never a
-  // permanent fixture on the page.
   let holdProgress = 0;            // scrubbed by the hold-the-key zone
   let stormActive = false, stormProgress = 0, keyGone = false;
-  let zoneEl = null, textEl = null, keyZoneTarget = 1, keyFade = 0;
   let frame = 0;
   const holdUI = document.getElementById('keyHoldBtn');
   const projV = new THREE.Vector3();
 
   window._keyHold = (p) => { holdProgress = Math.max(0, Math.min(1, p)); };
   window._keyStorm = () => { if (!keyGone) stormActive = true; };
-  window._keySetZone = (el) => { zoneEl = el; textEl = el ? el.querySelector('.escape-text') : null; };
-  if (window._pendingKeyZone) { window._keySetZone(window._pendingKeyZone); window._pendingKeyZone = null; }
-  window.addEventListener('mousemove',(e)=>{
-    tmx=(e.clientX/window.innerWidth-0.5)*2;
-    tmy=(e.clientY/window.innerHeight-0.5)*2;
-  },{ passive:true });
+  window._keySetZone = () => {}; // legacy API — key now tracks #keyAnchor directly
+  window._pendingKeyZone = null;
 
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let visible = true;
   document.addEventListener('visibilitychange',()=>{ visible = !document.hidden; });
 
-  // Perf: cache the hero element — querying the DOM every frame causes jank
-  // on low-end devices. Refreshed on page navigation-sized intervals instead.
-  let cachedHeroEl = null, cachedHeroH = window.innerHeight;
-  function refreshHeroCache(){
-    cachedHeroEl = document.querySelector('.page.active .hero, .page.active .page-hero') || document.querySelector('.hero');
-    cachedHeroH = cachedHeroEl ? cachedHeroEl.offsetHeight : window.innerHeight;
-  }
-  refreshHeroCache();
-
-  // Hard clip boundary: the key must never visually cross above the hairline
-  // sitting directly over "This Key Opens New Doors" (escapeBanner's own
-  // border-top) or below the matching one at the top of .intro right after
-  // it. NOTE: this is deliberately NOT .features's own top edge — that line
-  // sits far above, over the header/feature-grid content, and by the time
-  // the key is actually on screen that edge has long since scrolled past,
-  // which let the key float freely into that empty space above its real line.
-  let clipTopEl = document.getElementById('escapeBanner');
-  let clipBottomEl = document.querySelector('.intro');
+  // ── The key's layout anchor ──
+  // The key is glued to #keyAnchor (a real block in the document flow), so it
+  // scrolls in perfect lock-step with the surrounding text — exactly like a
+  // photo placed on the page. No drifting, no floating, no chasing the scroll.
+  const keyAnchor = document.getElementById('keyAnchor');
+  // Camera never moves, so the key's rest-depth NDC z is a constant.
+  projV.set(0, 0, 0.2).project(camera);
+  const restNdcZ = projV.z;
+  // Last tracked page position — frozen during the storm so the blast-off
+  // launches from wherever the key was sitting.
+  let baseX = ringBaseX, baseY = ringBaseY;
 
   function loop(){
     requestAnimationFrame(loop);
     if (!visible) return;
     frame++;
-    const scroll = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
     t += reduce ? 0.0012 : 0.008;
-    // Mobile: freeze the liquid-chrome shader so the background reads as still —
-    // only the key keeps animating. Desktop: everything keeps moving as before.
-    if (!isMobile) uTime.value = t;
-    mx += (tmx-mx)*0.045; my += (tmy-my)*0.045;
-    // smoothed scroll value so the key's scroll-driven spin never feels jumpy
-    smoothScroll += (scroll - smoothScroll) * 0.06;
 
-    // Hero owns the top of the page — cached, re-measured only occasionally
-    if ((frame % 90) === 0) refreshHeroCache();
-    const heroH = cachedHeroH;
-
-    // ── Key presence zone (direction-aware) ──
-    // Scrolling DOWN: the key fades in once its section is on screen and
-    // fades fast once the CTA passes. Scrolling UP: the key does NOT ride
-    // up with you — the moment you pull away from the CTA it fades out and
-    // stays hidden (no flicker when you stop) until you either head back
-    // down toward the CTA or return near the top for a fresh appearance.
-    if (zoneEl && (frame % 4) === 0) {
-      const zr = zoneEl.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const sy = window.scrollY;
-      const delta = sy - (loop._zoneLastY === undefined ? sy : loop._zoneLastY);
-      loop._zoneLastY = sy;
-
-      const bannerNear = zr.bottom > vh * 0.18 && zr.top < vh * 0.95;
-      if (delta < -2 && !bannerNear) loop._keySuppressed = true;          // pulled away upward
-      if (delta > 2 || bannerNear || sy < heroH * 0.3) loop._keySuppressed = false;
-
-      keyZoneTarget = (!loop._keySuppressed && zr.bottom > vh * 0.18) ? 1 : 0;
+    // ── Glue the key to its layout slot ──
+    // #keyAnchor is a real block in the document flow. Tracking its rect every
+    // frame pins the key to that exact spot on the page, so it scrolls 1:1
+    // with the surrounding text — like a photo. Nothing else moves it.
+    let anchorOn = false;
+    if (keyAnchor && !stormActive && !keyGone) {
+      const ar = keyAnchor.getBoundingClientRect();
+      anchorOn = ar.width > 0 && ar.bottom > -200 && ar.top < window.innerHeight + 200;
+      if (anchorOn) {
+        const ndcX = ((ar.left + ar.width / 2) / window.innerWidth) * 2 - 1;
+        const ndcY = -(((ar.top + ar.height / 2) / window.innerHeight) * 2 - 1);
+        projV.set(ndcX, ndcY, restNdcZ).unproject(camera);
+        baseX = projV.x; baseY = projV.y;
+      }
+    } else if (stormActive) {
+      anchorOn = true;   // the storm plays out from wherever the key was sitting
     }
-    keyFade += ((keyGone ? 0 : keyZoneTarget) - keyFade) * (keyZoneTarget ? 0.07 : 0.22);
-    const sceneFade = Math.max(0, Math.min(1, keyFade));
-
-
 
     // ── Storm: "a whole new era" — plays once the hold completes ──
     // The key whips into a fast spin, rears back a breath, then blasts
@@ -4665,35 +4685,21 @@
     const stormSpin = sp*sp * 26;                     // furious spin as it goes
 
     // hold turn: the key rotates a quarter-turn in its invisible lock,
-    // scrubbed 1:1 by how long the visitor has been holding the button
+    // scrubbed 1:1 by how long the visitor has been holding it
     const holdEase = holdProgress*holdProgress*(3 - 2*holdProgress);
 
-    keyGroup.position.x = ringBaseX;
-    keyGroup.position.z = 0.2 + stormZ;
+    keyGroup.position.set(baseX, baseY + stormEase * 0.6, 0.2 + stormZ);
 
-    // ── Fixed resting spot — dead still while scrolling ──
-    // A constant fraction of the viewport height, not tied to any scrolling
-    // element's position — so scrolling the page can never move the key.
-    // Only resizing the window changes it, and even then only to keep it
-    // sitting in the same relative spot on the new screen size.
-    {
-      projV.set(ringBaseX, ringBaseY, keyGroup.position.z).project(camera);
-      const ndcZ = projV.z;
-      const desiredScreenY = window.innerHeight * 0.6;
-      const ndcY = -((desiredScreenY / window.innerHeight) * 2 - 1);
-      projV.set(0, ndcY, ndcZ).unproject(camera);
-      keyGroup.position.y = projV.y + stormEase * 0.6;
-    }
+    // ── Dead still at rest — a photo on the page ──
+    // No idle sway, no bobbing. The key only comes alive under the visitor's
+    // thumb: it rolls in its lock exactly with the hold, and the storm reuses
+    // the same axis to drill straight through the screen.
+    keyGroup.rotation.x = holdEase * (Math.PI * 0.5) + stormSpin;
+    keyGroup.rotation.y = 0;
+    keyGroup.rotation.z = -Math.PI / 2;
 
-    // Lock-turn: the key lies along X now, so turning it in its invisible lock
-    // is a roll around the X axis — scrubbed 1:1 by the visitor's hold.
-    // The storm reuses the same axis: it drills straight through the screen.
-    keyGroup.rotation.x = holdEase * (Math.PI * 0.5) + Math.sin(t*0.6)*0.03 + stormSpin;
-    keyGroup.rotation.y = Math.sin(t*0.45)*0.05;
-    keyGroup.rotation.z = -Math.PI / 2 + Math.sin(t*0.3)*0.02;
-
-    // fade the whole key with its zone (and hide it entirely once gone)
-    const keyOpacity = sceneFade * (1 - Math.max(0, (sp - 0.85) / 0.15)); // last 15% of storm also fades
+    // solid while its slot is on screen; the storm's last 15% fades it out
+    const keyOpacity = (anchorOn && !keyGone ? 1 : 0) * (1 - Math.max(0, (sp - 0.85) / 0.15));
     for (let i = 0; i < keyMats.length; i++) keyMats[i].opacity = keyOpacity;
     keyGroup.visible = keyOpacity > 0.02;
 
@@ -4736,53 +4742,27 @@
     keyGlow.visible = keyGroup.visible;
     keyGlow.material.opacity = (holdEase*0.75 + sp*0.4) * keyOpacity;
 
-    // dust belongs to the key's moment too — it fades out with the zone
-    dust.material.opacity = 0.5 * sceneFade;
-    dust.visible = sceneFade > 0.02;
+    // gold dust hangs gently around the key and scrolls with it — a whisper
+    // of atmosphere, not a floating overlay over the rest of the page
+    dust.position.x = baseX; dust.position.y = baseY;
+    dust.rotation.y = t*0.014;
+    dust.material.opacity = 0.35 * keyOpacity;
+    dust.visible = keyOpacity > 0.02;
 
-    // Dust is part of the ambient background too — keep it still on mobile,
-    // let it drift on desktop as before.
-    if (!isMobile) dust.rotation.y = t*0.014;
+    // Camera never moves — the key's on-page position comes entirely from
+    // its layout slot, so it can never drift, chase the scroll, or parallax.
 
-    if (isMobile) {
-      // Camera stays put on mobile — the background (and its shader) reads as
-      // completely still, while the key still animate in world space.
-      // Looking directly at the key's anchor point puts it exactly in the
-      // center of the screen regardless of the device's aspect ratio.
-      camera.position.x = 0;
-      camera.position.y = 0.5;
-      camera.lookAt(ringBaseX, ringBaseY, -2);
-    } else {
-      camera.position.x = mx*0.4;
-      camera.position.y = 0.5 - my*0.2 - scroll*1.4;
-      camera.lookAt(ringBaseX, -0.3 - scroll*1.0, -2);
+    if (loop._lastCo !== 1) { canvas.style.opacity = 1; loop._lastCo = 1; }
+
+    // Big perf wins:
+    // 1) render nothing while the key's slot is off-screen — after one final
+    //    clearing frame so the last drawn key never lingers on the canvas
+    const wantRender = keyOpacity > 0.01 || stormActive;
+    if (!wantRender) {
+      if (loop._dirty) { renderer.render(scene, camera); loop._dirty = false; }
+      return;
     }
-
-    // Scene fades in quickly just below the hero — and back OUT once the key's
-    // section is behind you, so no GPU work runs over the rest of the page.
-    // (The background photo itself is always fully visible — only the 3D key
-    // canvas fades with scroll.)
-    const reveal = Math.min(1, Math.max(0, (window.scrollY - heroH*0.1) / (heroH*0.28)));
-    const canvasOpacity = reveal * sceneFade;
-    // only touch the style when it meaningfully changed — style writes every
-    // frame trigger needless compositor work on weak devices
-    const co = Math.round(canvasOpacity * 100) / 100;
-    if (co !== loop._lastCo) { canvas.style.opacity = co; loop._lastCo = co; }
-    if (photoBg && loop._lastPo !== 1) { photoBg.style.opacity = 1; loop._lastPo = 1; }
-
-    // Hard barrier: clip the canvas itself to the band between the hairline
-    // above the CTA text and the one at the top of .intro, so the key can
-    // never render above or below that band, no matter what.
-    if (clipTopEl && clipBottomEl && (frame % 4) === 0) {
-      const topPx = Math.max(0, clipTopEl.getBoundingClientRect().top);
-      const bottomPx = Math.max(0, window.innerHeight - clipBottomEl.getBoundingClientRect().top);
-      const clip = 'inset(' + topPx.toFixed(1) + 'px 0px ' + bottomPx.toFixed(1) + 'px 0px)';
-      if (clip !== loop._lastClip) { canvas.style.clipPath = clip; canvas.style.webkitClipPath = clip; loop._lastClip = clip; }
-    }
-
-    // Big perf wins on low-end devices:
-    // 1) never render while the scene is invisible (top of page or scrolled past)
-    if (canvasOpacity <= 0.01) return;
+    loop._dirty = true;
     // 2) low-end devices render at half rate (30fps) — state still updates at
     //    full rate above, so nothing slows down, it just draws less often
     if (lowEnd && (frame & 1)) return;
