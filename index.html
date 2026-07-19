@@ -2379,22 +2379,6 @@
 
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-bg">
-        <picture>
-          <source media="(min-width: 601px)" srcset="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_4%20u.png?alt=media&token=7a3fc9ab-13b2-441a-ad6d-879718bbf03d" />
-          <img id="heroImg" src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_4%20n.png?alt=media&token=00dcea7d-6c8d-44ee-805d-3d164edb7810" alt="Swaby's Hope Hideaway — Spur Tree, Mandeville, Jamaica" />
-        </picture>
-      </div>
-      <script>
-        // Fade the hero photo in the moment it's ready (handles cached loads too)
-        (function(){
-          var img = document.getElementById('heroImg');
-          if (!img) return;
-          function show(){ requestAnimationFrame(function(){ img.classList.add('hero-img-in'); }); }
-          if (img.complete && img.naturalWidth > 0) show();
-          else { img.addEventListener('load', show, { once:true }); img.addEventListener('error', show, { once:true }); }
-        })();
-      </script>
       <div class="hero-content">
         <h1 class="hero-tagline reveal">Use Our <em>Hideaway</em><br/>for Your Getaway</h1>
         <div class="hero-actions reveal" style="transition-delay:0.15s;">
@@ -4590,7 +4574,6 @@
   let holdProgress = 0;            // scrubbed by the hold-the-key zone
   let stormActive = false, stormProgress = 0, keyGone = false;
   let zoneEl = null, textEl = null, keyZoneTarget = 1, keyFade = 0;
-  let cachedAnchorTop = null, cachedAnchorBottom = null;   // the fixed band the key rests dead-center in
   let frame = 0;
   const holdUI = document.getElementById('keyHoldBtn');
   const projV = new THREE.Vector3();
@@ -4662,20 +4645,11 @@
       if (delta > 2 || bannerNear || sy < heroH * 0.3) loop._keySuppressed = false;
 
       keyZoneTarget = (!loop._keySuppressed && zr.bottom > vh * 0.18) ? 1 : 0;
-      // Fixed resting band: dead-center between the bottom of the CTA text
-      // and the top of the next section. Re-measured live every cycle so it
-      // stays exactly right for any screen size or scroll position — but
-      // note there's no lerp/settle here, so the key is never seen sliding
-      // toward this spot, it's simply already there.
-      cachedAnchorTop = textEl ? textEl.getBoundingClientRect().bottom : zr.top;
-      cachedAnchorBottom = clipBottomEl ? clipBottomEl.getBoundingClientRect().top : window.innerHeight;
     }
     keyFade += ((keyGone ? 0 : keyZoneTarget) - keyFade) * (keyZoneTarget ? 0.07 : 0.22);
     const sceneFade = Math.max(0, Math.min(1, keyFade));
 
-    // the key's gentle float — a soft drift so it always feels alive
-    const wobbleX = Math.cos(t*0.45)*0.25;
-    const wobbleY = Math.sin(t*0.8+2)*0.18;
+
 
     // ── Storm: "a whole new era" — plays once the hold completes ──
     // The key whips into a fast spin, rears back a breath, then blasts
@@ -4694,28 +4668,21 @@
     // scrubbed 1:1 by how long the visitor has been holding the button
     const holdEase = holdProgress*holdProgress*(3 - 2*holdProgress);
 
-    keyGroup.position.x = ringBaseX + wobbleX * (1 - sp);
+    keyGroup.position.x = ringBaseX;
     keyGroup.position.z = 0.2 + stormZ;
 
-    // ── Fixed resting spot — no travel, no settle ──
-    // Dead-center between the bottom of the CTA text and the top of the next
-    // section, computed fresh every frame from the live anchor band, then
-    // assigned directly (no lerp). The key is simply already there, exactly
-    // aligned, for any screen size — until the hold-unlock storm launches it.
-    if (cachedAnchorTop !== null) {
+    // ── Fixed resting spot — dead still while scrolling ──
+    // A constant fraction of the viewport height, not tied to any scrolling
+    // element's position — so scrolling the page can never move the key.
+    // Only resizing the window changes it, and even then only to keep it
+    // sitting in the same relative spot on the new screen size.
+    {
       projV.set(ringBaseX, ringBaseY, keyGroup.position.z).project(camera);
       const ndcZ = projV.z;
-      const distT = Math.max(0.5, camera.position.z - keyGroup.position.z);
-      const halfKeyPx = 0.95 * keyScale * (window.innerHeight / (2 * distT * 0.4663));
-      const bandTop = cachedAnchorTop + 28;
-      const bandBottom = cachedAnchorBottom - 16;
-      const centerY = (bandTop + bandBottom) / 2;
-      const desiredScreenY = Math.max(bandTop + halfKeyPx, Math.min(bandBottom - halfKeyPx, centerY));
+      const desiredScreenY = window.innerHeight * 0.6;
       const ndcY = -((desiredScreenY / window.innerHeight) * 2 - 1);
       projV.set(0, ndcY, ndcZ).unproject(camera);
-      keyGroup.position.y = projV.y + wobbleY * 0.35 * (1 - sp) + stormEase * 0.6;
-    } else {
-      keyGroup.position.y = ringBaseY + wobbleY * (1 - sp) + stormEase * 0.6;
+      keyGroup.position.y = projV.y + stormEase * 0.6;
     }
 
     // Lock-turn: the key lies along X now, so turning it in its invisible lock
@@ -4735,7 +4702,7 @@
     // key's full on-screen footprint (tip to bow), so pressing ANYWHERE on
     // the key starts the hold. Nothing is drawn — the key itself is the UI.
     if (holdUI) {
-      const arrived = cachedAnchorTop !== null && !stormActive && !keyGone;
+      const arrived = !stormActive && !keyGone;
       const wantUI = !!window._keyHoldUIWanted && arrived && keyOpacity > 0.5;
       if (wantUI) {
         keyGroup.updateMatrixWorld();
@@ -4767,7 +4734,7 @@
     keyGlow.position.copy(keyGroup.position);
     keyGlow.position.z -= 0.7;
     keyGlow.visible = keyGroup.visible;
-    keyGlow.material.opacity = (0.4 + Math.sin(t*0.9)*0.1 + holdEase*0.55 + sp*0.4) * keyOpacity;
+    keyGlow.material.opacity = (holdEase*0.75 + sp*0.4) * keyOpacity;
 
     // dust belongs to the key's moment too — it fades out with the zone
     dust.material.opacity = 0.5 * sceneFade;
