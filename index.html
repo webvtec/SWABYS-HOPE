@@ -927,6 +927,17 @@
       .hero-bg img.hero-img-in { transform: none; filter: none; }
     }
 
+    /* ── Hero slideshow (2 photos, crossfade) ── */
+    .hero-bg { position: absolute; inset: 0; }
+    .hero-bg .hero-slide {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .hero-bg .hero-slide.active { opacity: 1; }
+
 
     .hero-content {
       position: relative; z-index: 2;
@@ -2388,7 +2399,19 @@
     <!-- HERO -->
     <section class="hero">
       <div class="hero-bg">
-        <img id="heroImg" onload="this.classList.add('hero-img-in')" src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_18.png?alt=media&token=d4a83d37-ee7e-425a-a3ac-4ea10334e6b2" alt="Swaby's Hope Hideaway room interior" />
+        <img class="hero-slide active" src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_18.png?alt=media&token=d4a83d37-ee7e-425a-a3ac-4ea10334e6b2" alt="Swaby's Hope Hideaway room interior" />
+        <img class="hero-slide" src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_7.png?alt=media&token=a9421866-d212-4d95-b186-34bb7e476e3f" alt="Swaby's Hope Hideaway exterior view" />
+        <script>
+          (function(){
+            var slides = document.querySelectorAll('.hero-bg .hero-slide');
+            var cur = 0;
+            setInterval(function(){
+              slides[cur].classList.remove('active');
+              cur = (cur + 1) % slides.length;
+              slides[cur].classList.add('active');
+            }, 5000);
+          })();
+        </script>
       </div>
       <div class="hero-content">
         <h1 class="hero-tagline reveal">Use Our <em>Hideaway</em><br/>for Your Getaway</h1>
