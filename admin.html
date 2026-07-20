@@ -993,7 +993,7 @@ a { color: inherit; text-decoration: none; }
           <div class="section-eyebrow">Celebrations</div>
           <h2 class="section-title">Events &amp; Weddings</h2>
         </div>
-        <button class="btn btn-copper" onclick="openEventModal()">Add Event</button>
+        <button class="btn btn-copper" onclick="openEventModal()">Add Photos</button>
       </div>
       <div class="items-grid" id="eventsList"></div>
     </div>
@@ -1803,8 +1803,8 @@ async function loadEvents() {
     <div class="item-card">
       <div class="item-card-img">${ev.imageUrl ? `<img src="${ev.imageUrl}" />` : '<div class="no-img">No image</div>'}</div>
       <div class="item-card-body">
-        <div class="item-card-title">${ev.title}</div>
-        <div class="item-card-meta">${ev.type} &middot; ${ev.metaText || ''}</div>
+        <div class="item-card-title">${ev.type || 'Untitled'}</div>
+        <div class="item-card-meta">${ev.title ? ev.title + ' &middot; ' : ''}${ev.metaText || ''}</div>
       </div>
       <div class="item-card-actions">
         <button class="btn btn-outline btn-sm" onclick="openEventModal('${ev.id}')">Edit</button>
@@ -1814,15 +1814,36 @@ async function loadEvents() {
 }
 
 function openEventModal(editId) {
-  openModal(editId ? 'Edit Event' : 'Add Event');
+  openModal(editId ? 'Edit Event Photo' : 'Add Event Photos');
+  if (editId) {
+    // Editing a single existing photo — simple form
+    document.getElementById('modalBody').innerHTML = `
+      <div class="form-group"><label class="form-label">Event Category</label><input class="form-input" id="mType" placeholder="e.g. Weddings" /></div>
+      <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
+      <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
+    document.getElementById('modalFooter').innerHTML = `
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-copper" onclick="saveEvent('${editId}')">Save</button>`;
+    loadEditData('events', editId, ['mType:type','mOrder:order'], 'mImg');
+    return;
+  }
+
+  // Adding — mass upload: one heading, many photos at once
+  _eventImages = [];
   document.getElementById('modalBody').innerHTML = `
-    <div class="form-group"><label class="form-label">Event Category</label><input class="form-input" id="mType" placeholder="e.g. Weddings" /></div>
+    <div class="form-group"><label class="form-label">Heading <span style="font-weight:400;color:var(--text-dim)">(e.g. Birthday Party, Weddings)</span></label><input class="form-input" id="mType" placeholder="e.g. Birthday Party" /></div>
     <div class="form-group"><label class="form-label">Display Order</label><input type="number" class="form-input" id="mOrder" value="0" min="0" /></div>
-    <div class="form-group"><label class="form-label">Photo</label>${fileInputHtml('mImg')}</div>`;
+    <div class="form-group">
+      <label class="form-label">Photos <span style="font-weight:400;color:var(--text-dim)">(select multiple at once — drag to reorder)</span></label>
+      <div class="img-upload-zone" onclick="this.querySelector('input').click()" style="margin-bottom:0.5rem;">
+        <input type="file" accept="image/*" multiple id="mEventImgPicker" onchange="eventImgAdd(this)" />
+        <div class="label"><strong>Click to add photos</strong> — select one or multiple at once</div>
+      </div>
+      <div class="multi-img-list" id="eventImgList"></div>
+    </div>`;
   document.getElementById('modalFooter').innerHTML = `
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-    <button class="btn btn-copper" onclick="saveEvent('${editId||''}')">Save</button>`;
-  if (editId) loadEditData('events', editId, ['mType:type','mOrder:order'], 'mImg');
+    <button class="btn btn-copper" id="eventBatchSaveBtn" onclick="saveEventBatch()">Upload Photos</button>`;
 }
 
 async function saveEvent(editId) {
@@ -1830,6 +1851,99 @@ async function saveEvent(editId) {
   if (!data.type) { alert('Category is required.'); return; }
   await saveItem('events', editId, data, 'mImg', `events/${Date.now()}`);
   closeModal(); await loadEvents(); showToast('Event saved');
+}
+
+/* ── Mass photo upload for events ─────────── */
+let _eventImages = [];
+
+function eventImgAdd(input) {
+  Array.from(input.files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => { _eventImages.push({ url: e.target.result, file, name: file.name }); renderEventImgList(); };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function eventImgRemove(idx) { _eventImages.splice(idx, 1); renderEventImgList(); }
+
+function renderEventImgList() {
+  const list = document.getElementById('eventImgList');
+  if (!list) return;
+  list.innerHTML = _eventImages.map((img, i) => `
+    <div class="multi-img-item" data-idx="${i}" draggable="true"
+         ondragstart="eventImgDragStart(event)" ondragover="eventImgDragOver(event)"
+         ondragleave="eventImgDragLeave(event)" ondrop="eventImgDrop(event)" ondragend="eventImgDragEnd(event)">
+      <div class="drag-handle"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <img class="multi-img-thumb" src="${img.url}" />
+      <span class="multi-img-name">${img.file ? img.file.name : img.name}</span>
+      <button class="multi-img-remove" onclick="eventImgRemove(${i})">&#215;</button>
+    </div>`).join('');
+}
+
+/* Drag-and-drop reordering for event photos */
+let _eventImgDragSrc = null;
+
+function eventImgDragStart(e) {
+  _eventImgDragSrc = e.currentTarget;
+  _eventImgDragSrc.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _eventImgDragSrc.dataset.idx);
+}
+
+function eventImgDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if (target !== _eventImgDragSrc) target.classList.add('drag-over');
+}
+
+function eventImgDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function eventImgDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  target.classList.remove('drag-over');
+  if (!_eventImgDragSrc || _eventImgDragSrc === target) return;
+  const srcIdx = parseInt(_eventImgDragSrc.dataset.idx);
+  const tgtIdx = parseInt(target.dataset.idx);
+  const [moved] = _eventImages.splice(srcIdx, 1);
+  _eventImages.splice(tgtIdx, 0, moved);
+  renderEventImgList();
+}
+
+function eventImgDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('#eventImgList .multi-img-item').forEach(i => i.classList.remove('drag-over'));
+  _eventImgDragSrc = null;
+}
+
+async function saveEventBatch() {
+  const type = gv('mType');
+  const baseOrder = parseInt(gv('mOrder')) || 0;
+  if (!type) { alert('Heading is required.'); return; }
+  if (_eventImages.length === 0) { alert('Please add at least one photo.'); return; }
+
+  const btn = document.getElementById('eventBatchSaveBtn');
+  btn.disabled = true;
+  try {
+    const { storage, ref, uploadBytesResumable, getDownloadURL, db, collection, addDoc } = window._fb;
+    for (let i = 0; i < _eventImages.length; i++) {
+      const img = _eventImages[i];
+      btn.textContent = `Uploading ${i + 1} of ${_eventImages.length}…`;
+      const storageRef = ref(storage, `events/${Date.now()}_${i}_${img.file.name}`);
+      const url = await new Promise((resolve, reject) => {
+        const task = uploadBytesResumable(storageRef, img.file);
+        task.on('state_changed', null, reject, async () => resolve(await getDownloadURL(task.snapshot.ref)));
+      });
+      await addDoc(collection(db, 'events'), { type, order: baseOrder + i, imageUrl: url });
+    }
+    closeModal(); await loadEvents(); showToast(`${_eventImages.length} photo${_eventImages.length!==1?'s':''} uploaded!`);
+  } catch(e) {
+    console.error(e); alert('Upload failed. Try again.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Upload Photos';
+  }
 }
 
 /* ── Capacity Stats ─────────────────────── */
