@@ -815,9 +815,17 @@ a { color: inherit; text-decoration: none; }
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
   border-radius: 6px; padding: 0.5rem 0.625rem;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+  cursor: grab; user-select: none;
 }
 .multi-img-item:hover { border-color: var(--border-copper); }
+.multi-img-item.dragging { opacity: 0.4; cursor: grabbing; }
+.multi-img-item.drag-over { border-color: var(--copper); box-shadow: 0 0 0 2px rgba(184,115,51,0.25); }
+.multi-img-cover-badge {
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--copper-shine); background: var(--copper-soft); border: 1px solid var(--border-copper);
+  border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
+}
 .multi-img-thumb {
   width: 56px; height: 40px; border-radius: 4px;
   object-fit: cover; background: #070910; flex-shrink: 0;
@@ -1646,7 +1654,7 @@ function openRoomModal(editId) {
       <div id="mAmenitiesWrap">${amenityCheckboxesHtml([])}</div>
     </div>
     <div class="form-group">
-      <label class="form-label">Photos <span style="font-weight:400;color:var(--text-dim)">(add multiple — users will swipe through them)</span></label>
+      <label class="form-label">Photos <span style="font-weight:400;color:var(--text-dim)">(add multiple — users will swipe through them in this order; drag to reorder, first photo is the cover)</span></label>
       <div class="img-upload-zone" onclick="this.querySelector('input').click()" style="margin-bottom:0.5rem;">
         <input type="file" accept="image/*" multiple id="mRoomImgPicker" onchange="roomImgAdd(this)" />
         <div class="label"><strong>Click to add photos</strong> — select one or multiple at once</div>
@@ -1692,11 +1700,52 @@ function renderRoomImgList() {
   const list = document.getElementById('roomImgList');
   if (!list) return;
   list.innerHTML = _roomImages.map((img, i) => `
-    <div class="multi-img-item">
+    <div class="multi-img-item" data-idx="${i}" draggable="true"
+         ondragstart="roomImgDragStart(event)" ondragover="roomImgDragOver(event)"
+         ondragleave="roomImgDragLeave(event)" ondrop="roomImgDrop(event)" ondragend="roomImgDragEnd(event)">
+      <div class="drag-handle"><span></span><span></span><span></span><span></span><span></span><span></span></div>
       <img class="multi-img-thumb" src="${img.url}" />
       <span class="multi-img-name">${img.file ? img.file.name : img.name}</span>
+      ${i === 0 ? '<span class="multi-img-cover-badge">Cover</span>' : ''}
       <button class="multi-img-remove" onclick="roomImgRemove(${i})">&#215;</button>
     </div>`).join('');
+}
+
+/* Drag-and-drop reordering for room photos */
+let _roomImgDragSrc = null;
+
+function roomImgDragStart(e) {
+  _roomImgDragSrc = e.currentTarget;
+  _roomImgDragSrc.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', _roomImgDragSrc.dataset.idx);
+}
+
+function roomImgDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if (target !== _roomImgDragSrc) target.classList.add('drag-over');
+}
+
+function roomImgDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+
+function roomImgDrop(e) {
+  e.preventDefault();
+  const target = e.currentTarget;
+  target.classList.remove('drag-over');
+  if (!_roomImgDragSrc || _roomImgDragSrc === target) return;
+  const srcIdx = parseInt(_roomImgDragSrc.dataset.idx);
+  const tgtIdx = parseInt(target.dataset.idx);
+  const [moved] = _roomImages.splice(srcIdx, 1);
+  _roomImages.splice(tgtIdx, 0, moved);
+  renderRoomImgList();
+}
+
+function roomImgDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('#roomImgList .multi-img-item').forEach(i => i.classList.remove('drag-over'));
+  _roomImgDragSrc = null;
 }
 
 async function loadRoomAmenities(editId) {
