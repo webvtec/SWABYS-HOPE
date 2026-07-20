@@ -2731,6 +2731,28 @@
         <input type="hidden" id="bmCheckOut" />
         <!-- Price summary -->
         <div class="booking-price-summary" id="bmPriceSummary" style="display:none;"></div>
+        <!-- Number of guests -->
+        <div class="form-group">
+          <label class="form-label">Guests <span id="bmGuestsMax" style="font-weight:400;font-size:var(--text-xs);color:var(--text-muted);"></span></label>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.7);border:1px solid #D0D5DE;border-radius:var(--radius-md);">
+              <span style="font-size:var(--text-sm);color:var(--text-primary);">Adults</span>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" onclick="bmChangeGuests('adults',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--copper);background:transparent;color:var(--copper);font-size:1rem;line-height:1;cursor:pointer;">−</button>
+                <span id="bmAdultsCount" style="min-width:16px;text-align:center;font-weight:600;">1</span>
+                <button type="button" onclick="bmChangeGuests('adults',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--copper);background:transparent;color:var(--copper);font-size:1rem;line-height:1;cursor:pointer;">+</button>
+              </div>
+            </div>
+            <div style="flex:1;min-width:140px;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.7);border:1px solid #D0D5DE;border-radius:var(--radius-md);">
+              <span style="font-size:var(--text-sm);color:var(--text-primary);">Children</span>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <button type="button" onclick="bmChangeGuests('children',-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--copper);background:transparent;color:var(--copper);font-size:1rem;line-height:1;cursor:pointer;">−</button>
+                <span id="bmChildrenCount" style="min-width:16px;text-align:center;font-weight:600;">0</span>
+                <button type="button" onclick="bmChangeGuests('children',1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--copper);background:transparent;color:var(--copper);font-size:1rem;line-height:1;cursor:pointer;">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- Guest info -->
         <div class="form-row">
           <div class="form-group"><label for="bmName" class="form-label">Full Name <span class="required">*</span></label><input class="form-input" id="bmName" placeholder="Your full name" /></div>
@@ -3016,6 +3038,10 @@
                 <div class="room-card-price"><span class="price">$${room.price}</span><span class="per-night"> / night</span></div>
               </div>
               <p class="room-card-desc">${room.description}</p>
+              <div class="room-card-capacity" style="display:flex;align-items:center;gap:6px;font-size:var(--text-xs);color:var(--text-muted);margin-bottom:var(--space-sm);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                <span>Sleeps up to ${room.maxAdults||1} adult${(room.maxAdults||1)!==1?'s':''}${room.maxChildren ? ' + ' + room.maxChildren + ' child' + (room.maxChildren!==1?'ren':'') : ''}</span>
+              </div>
               ${amenitiesHtml ? `<div class="room-amenities">${amenitiesHtml}</div>` : ''}
               <div class="room-card-actions">
                 <button class="btn-primary" onclick="handleBookRoom('${room.id}')">Book Now <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
@@ -3045,6 +3071,24 @@
     ═══════════════════════════════════════════ */
     let _bookingRoomId = null;
     let _bookingDiscount = null; // { type, value, title } from active promo
+    let _bmAdults = 1;
+    let _bmChildren = 0;
+    let _bmMaxAdults = 1;
+    let _bmMaxChildren = 0;
+
+    function bmChangeGuests(type, delta) {
+      if (type === 'adults') {
+        const next = _bmAdults + delta;
+        if (next < 1 || next > _bmMaxAdults) return;
+        _bmAdults = next;
+        document.getElementById('bmAdultsCount').textContent = _bmAdults;
+      } else {
+        const next = _bmChildren + delta;
+        if (next < 0 || next > _bmMaxChildren) return;
+        _bmChildren = next;
+        document.getElementById('bmChildrenCount').textContent = _bmChildren;
+      }
+    }
 
     /* Guest clicked a promo banner's Book Now — lock in that discount for their booking */
     function claimPromo(idx) {
@@ -3095,6 +3139,16 @@
       document.getElementById('bmPhone').value = '';
       document.getElementById('bmRequests').value = '';
       document.getElementById('bmUnavail').style.display = 'none';
+
+      // Guest selector — capped by what the admin set for this room
+      _bmMaxAdults = room.maxAdults || 1;
+      _bmMaxChildren = room.maxChildren || 0;
+      _bmAdults = Math.min(1, _bmMaxAdults) || 1;
+      _bmChildren = 0;
+      document.getElementById('bmAdultsCount').textContent = _bmAdults;
+      document.getElementById('bmChildrenCount').textContent = _bmChildren;
+      const maxLabel = document.getElementById('bmGuestsMax');
+      if (maxLabel) maxLabel.textContent = `(max ${_bmMaxAdults} adult${_bmMaxAdults!==1?'s':''}${_bmMaxChildren ? ' + ' + _bmMaxChildren + ' child' + (_bmMaxChildren!==1?'ren':'') : ''})`;
       document.getElementById('bmDateStrip').style.display = 'none';
       // Auto-fill from profile if logged in
       if (window._currentUser) autoFillBookingForm();
@@ -3340,6 +3394,8 @@
       if (!name) { showBmError('Please enter your full name.'); return; }
       if (!phone) { showBmError('Please enter your phone number.'); return; }
       if (!email) { showBmError('Please enter your email address.'); return; }
+      if (_bmAdults < 1) { showBmError('Please select at least 1 adult.'); return; }
+      if (_bmAdults > _bmMaxAdults || _bmChildren > _bmMaxChildren) { showBmError(`This room sleeps up to ${_bmMaxAdults} adult${_bmMaxAdults!==1?'s':''}${_bmMaxChildren ? ' + ' + _bmMaxChildren + ' child' + (_bmMaxChildren!==1?'ren':'') : ''}.`); return; }
 
       const btn = document.getElementById('bmSubmitBtn');
       btn.disabled = true; btn.textContent = 'Checking availability…';
@@ -3386,6 +3442,7 @@
           roomId: _bookingRoomId, roomName: room.name,
           checkIn, checkOut, nights,
           guestName: name, email, phone, specialRequests: requests || null,
+          adults: _bmAdults, children: _bmChildren, totalGuests: _bmAdults + _bmChildren,
           uid: user?.uid || null,
           authEmail: user?.email || null,
           pricePerNight: room.price, baseTotal: base,

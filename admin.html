@@ -1528,7 +1528,7 @@ async function loadRooms() {
       ${thumb ? `<img class="drag-item-img" src="${thumb}" />` : '<div class="drag-item-img" style="background:rgba(255,255,255,0.05);border-radius:5px;"></div>'}
       <div class="drag-item-body">
         <div class="drag-item-title">${r.name}</div>
-        <div class="drag-item-meta">$${r.price}/night${r.badge ? ' · ' + r.badge : ''}${amenityIcons ? '<br><span style="display:inline-flex;gap:5px;margin-top:3px;flex-wrap:wrap;">' + amenityIcons + '</span>' : ''}</div>
+        <div class="drag-item-meta">$${r.price}/night${r.badge ? ' · ' + r.badge : ''} · ${(r.maxAdults||1)} adult${(r.maxAdults||1)!==1?'s':''}${r.maxChildren ? ' + ' + r.maxChildren + ' child' + (r.maxChildren!==1?'ren':'') : ''} max${amenityIcons ? '<br><span style="display:inline-flex;gap:5px;margin-top:3px;flex-wrap:wrap;">' + amenityIcons + '</span>' : ''}</div>
       </div>
       <div class="drag-item-actions">
         <button class="btn btn-outline btn-sm" onclick="openRoomModal('${r.id}')">Edit</button>
@@ -1636,6 +1636,10 @@ function openRoomModal(editId) {
       <div class="form-group"><label class="form-label">Price per Night ($)</label><input type="number" class="form-input" id="mPrice" placeholder="185" min="0" /></div>
       <div class="form-group"><label class="form-label">Badge Label</label><input class="form-input" id="mBadge" placeholder="Signature, Popular…" /></div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Max Adults</label><input type="number" class="form-input" id="mMaxAdults" placeholder="2" min="1" /></div>
+      <div class="form-group"><label class="form-label">Max Children</label><input type="number" class="form-input" id="mMaxChildren" placeholder="0" min="0" /></div>
+    </div>
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="mDesc" placeholder="Describe the room"></textarea></div>
     <div class="form-group">
       <label class="form-label">Amenities & Inclusions</label>
@@ -1653,9 +1657,12 @@ function openRoomModal(editId) {
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
     <button class="btn btn-copper" onclick="saveRoom('${editId||''}')">Save</button>`;
   if (editId) {
-    loadEditData('rooms', editId, ['mName:name','mPrice:price','mBadge:badge','mDesc:description']);
+    loadEditData('rooms', editId, ['mName:name','mPrice:price','mBadge:badge','mDesc:description','mMaxAdults:maxAdults','mMaxChildren:maxChildren']);
     loadRoomAmenities(editId);
     loadRoomImages(editId);
+  } else {
+    document.getElementById('mMaxAdults').value = 2;
+    document.getElementById('mMaxChildren').value = 0;
   }
 }
 
@@ -1707,6 +1714,8 @@ async function saveRoom(editId) {
     name: gv('mName'), price: parseInt(gv('mPrice')) || 0,
     badge: gv('mBadge'),
     description: gv('mDesc'),
+    maxAdults: parseInt(gv('mMaxAdults')) || 1,
+    maxChildren: Math.max(0, parseInt(gv('mMaxChildren')) || 0),
     amenities: getSelectedAmenities()
   };
   if (!data.name || !data.price) { alert('Name and price are required.'); return; }
@@ -1872,6 +1881,7 @@ async function loadBookings() {
         <div class="booking-card-row"><span>Check-in</span><span>${fmtDate(b.checkIn)}</span></div>
         <div class="booking-card-row"><span>Check-out</span><span>${fmtDate(b.checkOut)}</span></div>
         <div class="booking-card-row"><span>Nights</span><span>${b.nights || '—'}</span></div>
+        ${(typeof b.adults === 'number') ? `<div class="booking-card-row"><span>Guests</span><span>${b.adults} adult${b.adults!==1?'s':''}${b.children ? ' + ' + b.children + ' child' + (b.children!==1?'ren':'') : ''}</span></div>` : ''}
         ${typeof b.total === 'number' ? `<div class="booking-card-row"><span>Total</span><span style="color:var(--copper-shine);font-weight:700;">$${b.total.toLocaleString()}${b.discountApplied > 0 ? ` <span style="color:var(--success);font-size:0.65rem;">(-$${b.discountApplied})</span>` : ''}</span></div>` : ''}
         <div class="booking-card-row" style="margin-top:0.5rem;">
           <span>Status</span>
