@@ -36,6 +36,17 @@
     window._fb = { db, storage, auth, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp, ref, uploadBytesResumable, getDownloadURL, deleteObject, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
     window._currentUser = null;
 
+    /* Local calendar date as YYYY-MM-DD.
+       NEVER use toISOString() for this — it converts to UTC, so after 7pm
+       Jamaica time (UTC-5) it reports tomorrow's date and same-day bookings
+       get rejected as "in the past". */
+    window._localToday = function () {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+             String(d.getMonth() + 1).padStart(2, '0') + '-' +
+             String(d.getDate()).padStart(2, '0');
+    };
+
     // Track auth state — update UI whenever user signs in/out
     const ADMIN_UID = 'BxvlpyhRr3Wev3GezyQqmtRDDnD2';
 
@@ -204,7 +215,7 @@
         try {
           const pSnap = await getDocs(query(collection(db, 'promotions'), orderBy('createdAt', 'desc')));
           const promos = [];
-          const nowStr = new Date().toISOString().split('T')[0];
+          const nowStr = window._localToday();
           pSnap.forEach(d => {
             const p = { id: d.id, ...d.data() };
             if (!p.active) return;
@@ -2796,6 +2807,13 @@
           <div id="bmDateStripText" style="font-size:0.8rem;color:#1D4ED8;font-weight:600;"></div>
           <div id="bmDateStripSub" style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;"></div>
         </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;flex-wrap:wrap;padding:0.55rem 0.75rem;background:rgba(184,115,51,0.05);border:1px solid rgba(184,115,51,0.16);border-radius:var(--radius-md);margin-bottom:0.75rem;font-size:0.72rem;color:var(--text-muted);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--copper)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>
+          <span>Check-in from <strong style="color:var(--copper);">3:00 PM</strong></span>
+          <span style="opacity:0.4;">·</span>
+          <span>Check-out by <strong style="color:var(--copper);">11:00 AM</strong></span>
+        </div>
+
         <div class="booking-unavail-msg" id="bmUnavail">⚠️ Those dates are already booked. Please choose different dates.</div>
         <!-- Hidden date values (set by calendar clicks) -->
         <input type="hidden" id="bmCheckIn" />
@@ -2993,6 +3011,16 @@
 
   <!-- JAVASCRIPT -->
   <script>
+/* Safety net: ensure the local-date helper exists regardless of script order. */
+if (!window._localToday) {
+  window._localToday = function () {
+    const d = new Date();
+    return d.getFullYear() + '-' +
+           String(d.getMonth() + 1).padStart(2, '0') + '-' +
+           String(d.getDate()).padStart(2, '0');
+  };
+}
+
     /* ════════════════════════════════════════
        SCROLL REVEAL — IntersectionObserver
     ════════════════════════════════════════ */
@@ -3191,7 +3219,7 @@
       _bookingDiscount = null;
       const cp = window._claimedPromo;
       if (cp) {
-        const today = new Date().toISOString().split('T')[0];
+        const today = window._localToday();
         const stillValid = cp.active !== false &&
           (!cp.startDate || cp.startDate <= today) &&
           (!cp.endDate || cp.endDate >= today);
@@ -3332,7 +3360,7 @@
         stripSub.textContent = 'Now tap a check-out date on the calendar';
       } else if (ci && co) {
         const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
-        stripText.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)} &nbsp;→&nbsp; <span style="opacity:0.6;font-weight:500;">Check-Out:</span> ${fmt(co)}`;
+        stripText.innerHTML = `<span style="opacity:0.6;font-weight:500;">Check-In:</span> ${fmt(ci)} <span style="opacity:0.55;font-weight:500;">${STAY_TIMES.in}</span> &nbsp;→&nbsp; <span style="opacity:0.6;font-weight:500;">Check-Out:</span> ${fmt(co)} <span style="opacity:0.55;font-weight:500;">${STAY_TIMES.out}</span>`;
         stripSub.textContent = `${nights} night${nights !== 1 ? 's' : ''} · Tap any date to change`;
       }
     }
@@ -3355,7 +3383,7 @@
       }
 
       const atCurrentMonth = (year === now.getFullYear() && month === now.getMonth());
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const todayStr = window._localToday();
 
       let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.625rem;">
         <button onclick="bmCalNav(-1)" ${atCurrentMonth ? 'disabled style="opacity:0.25;cursor:default;width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.15);background:#fff;font-size:1rem;"' : 'style="width:28px;height:28px;border-radius:5px;border:1px solid rgba(184,115,51,0.2);background:#fff;cursor:pointer;color:var(--copper);font-size:1rem;"'}>&#8249;</button>
@@ -3466,7 +3494,7 @@
       const phone = document.getElementById('bmPhone').value.trim();
       const requests = document.getElementById('bmRequests').value.trim();
 
-      const todayCheck = new Date().toISOString().split('T')[0];
+      const todayCheck = window._localToday();
       if (!checkIn || !checkOut) { showBmError('Please select your check-in and check-out dates on the calendar above.'); return; }
       if (checkOut <= checkIn) { showBmError('Check-out must be after check-in. Please re-select your dates.'); return; }
       if (checkIn < todayCheck) { showBmError('Check-in date cannot be in the past.'); return; }
@@ -3521,6 +3549,7 @@
         const _bookingRef = await addDoc(collection(db, 'bookings'), {
           roomId: _bookingRoomId, roomName: room.name,
           checkIn, checkOut, nights,
+          checkInTime: STAY_TIMES.inRaw, checkOutTime: STAY_TIMES.outRaw,
           guestName: name, email, phone, specialRequests: requests || null,
           adults: _bmAdults, children: _bmChildren, totalGuests: _bmAdults + _bmChildren,
           uid: user?.uid || null,
@@ -3567,6 +3596,7 @@
             <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:500;margin-bottom:0.5rem;">Booking Confirmed!</h3>
             <p style="color:var(--text-muted);line-height:1.7;margin-bottom:0.25rem;">Thank you, <strong>${name}</strong>.</p>
             <p style="color:var(--text-muted);line-height:1.7;"><strong>${room.name}</strong> · ${checkIn} → ${checkOut} · <strong style="color:var(--copper);">$${total}</strong></p>
+            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem;">Check-in from <strong>${STAY_TIMES.in}</strong> · Check-out by <strong>${STAY_TIMES.out}</strong></p>
             <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem;">A confirmation will be sent to <strong>${email}</strong>.</p>
             ${_addOns.length ? `<div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(184,115,51,0.05);border:1px solid rgba(184,115,51,0.18);border-radius:10px;text-align:left;">
               <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--copper);margin-bottom:0.4rem;">Add-ons requested</div>
@@ -3895,6 +3925,10 @@
       if (emailEl && !emailEl.value) emailEl.value = profile.email || user.email || '';
     }
 
+    /* ══════ STAY TIMES ══════
+       Change these two lines to change the times shown across the whole site. */
+    const STAY_TIMES = { in: '3:00 PM', out: '11:00 AM', inRaw: '15:00', outRaw: '11:00' };
+
     /* ══════ SERVICE CATALOG (shared by guest + admin) ══════ */
     const SERVICE_CATALOG = [
       { id: 'island_tour',   label: 'Island Tour Adventure Package', desc: 'Waterfalls, river rafting, Blue Mountain drives & more — guided day trips.', icon: '🌴' },
@@ -3905,10 +3939,7 @@
 
     window._myBookingsCache = [];
 
-    function _svcTodayStr() {
-      const d = new Date(); d.setHours(0,0,0,0);
-      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    }
+    function _svcTodayStr() { return window._localToday(); }
 
     function _fmtStayDate(str) {
       if (!str) return '—';
@@ -3928,7 +3959,8 @@
           <div style="font-family:var(--font-display);font-size:0.95rem;font-weight:500;color:var(--text-primary);">${b.roomName || '—'}</div>
           <span style="font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${stColor};background:${stColor}18;padding:2px 8px;border-radius:20px;border:1px solid ${stColor}30;white-space:nowrap;">${st}</span>
         </div>
-        <div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:0.7rem;line-height:1.5;">${meta}</div>
+        <div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:0.35rem;line-height:1.5;">${meta}</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);opacity:0.85;margin-bottom:0.7rem;">In from ${STAY_TIMES.in} · Out by ${STAY_TIMES.out}</div>
         <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
           <button onclick="openServiceRequest('${b.id}')" style="flex:1;min-width:130px;font-size:0.68rem;color:var(--copper);background:rgba(184,115,51,0.06);border:1px solid rgba(184,115,51,0.28);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:var(--font-body);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">+ Add Services</button>
           ${(!isPast && st !== 'cancelled') ? `<button onclick="cancelMyBooking('${b.id}')" style="font-size:0.68rem;color:#DC2626;background:none;border:1px solid rgba(220,38,38,0.25);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font-body);font-weight:600;">Cancel</button>` : ''}
@@ -4505,7 +4537,7 @@
       const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+      const todayStr = window._localToday();
       const selVal = document.getElementById('formDate')?.value || '';
       const atCurrentMonth = (year === now.getFullYear() && month === now.getMonth());
 

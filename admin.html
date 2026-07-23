@@ -24,6 +24,15 @@
       messagingSenderId: "183455042448",
       appId: "1:183455042448:web:cf2bed23dcb20e578ac115"
     };
+    /* Local calendar date as YYYY-MM-DD — see note in index.html.
+       toISOString() rolls over to tomorrow after 7pm Jamaica time. */
+    window._localToday = function () {
+      const d = new Date();
+      return d.getFullYear() + '-' +
+             String(d.getMonth() + 1).padStart(2, '0') + '-' +
+             String(d.getDate()).padStart(2, '0');
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const storage = getStorage(app);
@@ -1382,6 +1391,16 @@ a { color: inherit; text-decoration: none; }
 <div class="toast" id="toast"></div>
 
 <script>
+/* Safety net: ensure the local-date helper exists regardless of script order. */
+if (!window._localToday) {
+  window._localToday = function () {
+    const d = new Date();
+    return d.getFullYear() + '-' +
+           String(d.getMonth() + 1).padStart(2, '0') + '-' +
+           String(d.getDate()).padStart(2, '0');
+  };
+}
+
 /* ── Drawer ─────────────────────────────── */
 function openDrawer() {
   document.getElementById('drawer').classList.add('show');
@@ -2231,8 +2250,8 @@ async function loadBookings() {
         <td style="font-size:0.75rem;">${email}</td>
         <td>${b.phone || '—'}</td>
         <td>${roomLabel}</td>
-        <td>${fmtDate(b.checkIn)}</td>
-        <td>${fmtDate(b.checkOut)}</td>
+        <td>${fmtDate(b.checkIn)}<div style="font-size:0.6rem;color:var(--text-dim);">${STAY_TIMES.in}</div></td>
+        <td>${fmtDate(b.checkOut)}<div style="font-size:0.6rem;color:var(--text-dim);">${STAY_TIMES.out}</div></td>
         <td style="text-align:center;">${b.nights || '—'}</td>
         <td>${totalStr}</td>
         <td><span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>${_addOnTags(b.addOns)}</td>
@@ -2252,8 +2271,8 @@ async function loadBookings() {
         <div class="booking-card-row"><span>Email</span><span style="font-size:0.7rem;">${email}</span></div>
         <div class="booking-card-row"><span>Phone</span><span>${b.phone || '—'}</span></div>
         <div class="booking-card-row"><span>Room</span><span>${roomLabel}</span></div>
-        <div class="booking-card-row"><span>Check-in</span><span>${fmtDate(b.checkIn)}</span></div>
-        <div class="booking-card-row"><span>Check-out</span><span>${fmtDate(b.checkOut)}</span></div>
+        <div class="booking-card-row"><span>Check-in</span><span>${fmtDate(b.checkIn)} · ${STAY_TIMES.in}</span></div>
+        <div class="booking-card-row"><span>Check-out</span><span>${fmtDate(b.checkOut)} · ${STAY_TIMES.out}</span></div>
         <div class="booking-card-row"><span>Nights</span><span>${b.nights || '—'}</span></div>
         ${(typeof b.adults === 'number') ? `<div class="booking-card-row"><span>Guests</span><span>${b.adults} adult${b.adults!==1?'s':''}${b.children ? ' + ' + b.children + ' child' + (b.children!==1?'ren':'') : ''}</span></div>` : ''}
         ${typeof b.total === 'number' ? `<div class="booking-card-row"><span>Total</span><span style="color:var(--copper-shine);font-weight:700;">$${b.total.toLocaleString()}${b.discountApplied > 0 ? ` <span style="color:var(--success);font-size:0.65rem;">(-$${b.discountApplied})</span>` : ''}</span></div>` : ''}
@@ -2278,6 +2297,8 @@ async function loadBookings() {
    SERVICE REQUESTS (Island tours / Airport transfers /
    Family retreats / Custom concierge enquiries)
    ══════════════════════════════════════════════════════════ */
+const STAY_TIMES = { in: '3:00 PM', out: '11:00 AM' };
+
 let _reqItems = [];
 let _reqFilter = 'all';
 
@@ -2649,7 +2670,7 @@ function renderEditCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const ciVal = document.getElementById('editCheckIn')?.value || '';
   const coVal = document.getElementById('editCheckOut')?.value || '';
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = window._localToday();
   const atCurrent = (year === now.getFullYear() && month === now.getMonth());
 
   function isBooked(ds) { return _editBookedRanges.some(r => ds >= r.checkIn && ds < r.checkOut); }
@@ -2812,7 +2833,7 @@ async function loadPromotionsAdmin() {
     if (snap.empty) {
       container.innerHTML = '<div class="empty-state">No promotions yet</div>'; return;
     }
-    const today = new Date().toISOString().split('T')[0];
+    const today = window._localToday();
     container.innerHTML = '';
     snap.forEach(docSnap => {
       const p = docSnap.data(); const id = docSnap.id;
@@ -3182,7 +3203,7 @@ function renderAbCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const ciVal = document.getElementById('abCheckIn')?.value || '';
   const coVal = document.getElementById('abCheckOut')?.value || '';
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = window._localToday();
   const atCurrent = (year === now.getFullYear() && month === now.getMonth());
 
   function isBooked(ds) { return _abBookedRanges.some(r => ds >= r.checkIn && ds < r.checkOut); }
