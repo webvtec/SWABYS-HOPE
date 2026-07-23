@@ -633,6 +633,206 @@ a { color: inherit; text-decoration: none; }
   .booking-cards { display: block; }
 }
 
+/* ═══ SERVICE REQUESTS ══════════════════════════════ */
+.req-toolbar {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.req-chip {
+  padding: 0.5rem 1rem; border-radius: 999px;
+  border: 1px solid var(--border-copper);
+  font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-2); background: transparent;
+  transition: all 0.25s var(--ease); white-space: nowrap;
+}
+.req-chip:hover { border-color: var(--copper); color: var(--copper-shine); }
+.req-chip.active {
+  background: linear-gradient(135deg, var(--copper-shine), var(--copper) 60%, var(--copper-deep));
+  color: #fff; border-color: rgba(232,168,124,0.35);
+  box-shadow: 0 0 12px rgba(184,115,51,0.25);
+}
+.req-chip .cnt {
+  display: inline-block; margin-left: 6px; opacity: 0.7;
+  font-size: 0.6rem;
+}
+
+.req-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  align-items: start;
+}
+.req-card {
+  border: 1px solid var(--border-copper);
+  border-left: 3px solid var(--copper);
+  border-radius: 10px;
+  background: var(--surface-2);
+  padding: 1.125rem 1.125rem 1rem;
+  display: flex; flex-direction: column;
+  transition: border-color 0.25s, transform 0.25s var(--ease);
+  min-width: 0;
+}
+.req-card:hover { border-color: rgba(184,115,51,0.4); }
+.req-card.is-new { border-left-color: var(--warning); }
+.req-card.is-confirmed { border-left-color: var(--success); }
+.req-card.is-declined { border-left-color: var(--danger); opacity: 0.72; }
+.req-card.is-inprogress { border-left-color: #4A90D9; }
+
+.req-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 0.75rem; margin-bottom: 0.75rem;
+}
+.req-service {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem; font-weight: 500;
+  color: var(--text); line-height: 1.25;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+.req-when {
+  font-size: 0.62rem; color: var(--text-dim);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-top: 3px;
+}
+.req-guest {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.7rem 0; margin-bottom: 0.75rem;
+}
+.req-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.75rem; font-size: 0.73rem; margin-bottom: 0.3rem;
+}
+.req-row:last-child { margin-bottom: 0; }
+.req-row > span:first-child {
+  color: var(--text-dim); flex-shrink: 0;
+  font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.req-row > span:last-child {
+  color: var(--text-2); text-align: right;
+  overflow-wrap: anywhere; min-width: 0;
+}
+.req-row a { color: var(--copper-shine); }
+.req-notes {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 0.92rem; line-height: 1.55;
+  color: var(--text-2);
+  background: rgba(184,115,51,0.04);
+  border-left: 2px solid var(--border-copper);
+  padding: 0.55rem 0.75rem; border-radius: 0 6px 6px 0;
+  margin-bottom: 0.75rem; overflow-wrap: anywhere;
+}
+.req-internal {
+  background: rgba(232,160,48,0.05);
+  border-left: 2px solid var(--warning);
+  padding: 0.55rem 0.75rem; border-radius: 0 6px 6px 0;
+  margin-bottom: 0.75rem; font-size: 0.74rem;
+  color: var(--text-2); line-height: 1.55; overflow-wrap: anywhere;
+}
+.req-internal strong {
+  display: block; font-size: 0.6rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--warning); margin-bottom: 0.2rem;
+}
+.req-source {
+  display: inline-block; align-self: flex-start;
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--copper-shine); background: var(--copper-soft);
+  border: 1px solid var(--border-copper);
+  padding: 3px 9px; border-radius: 20px; margin-bottom: 0.75rem;
+}
+.addon-tag {
+  display: inline-block;
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--copper-shine); background: var(--copper-soft);
+  border: 1px solid var(--border-copper);
+  padding: 2px 8px; border-radius: 20px;
+  margin: 0 4px 4px 0; white-space: nowrap;
+}
+.req-actions {
+  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: auto;
+  padding-top: 0.25rem;
+}
+.req-actions .btn { flex: 1 1 auto; justify-content: center; min-width: 0; }
+
+.st-new        { background: var(--warning-soft); color: var(--warning); }
+.st-inprogress { background: rgba(74,144,217,0.12); color: #7FB3E8; }
+.st-declined   { background: rgba(224,80,80,0.08); color: var(--danger); }
+
+.nav-badge {
+  display: none; margin-left: auto;
+  min-width: 20px; height: 20px; padding: 0 6px;
+  border-radius: 999px; background: var(--copper);
+  color: #fff; font-size: 0.62rem; font-weight: 700;
+  align-items: center; justify-content: center;
+  line-height: 1;
+}
+.nav-link { display: flex; align-items: center; gap: 0.5rem; }
+
+/* ═══ MOBILE POLISH ═════════════════════════════════ */
+@media (max-width: 900px) {
+  .dash-main { padding: 1.75rem 1.25rem 3.5rem; }
+  .req-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .topbar { padding: 0 0.875rem; gap: 0.5rem; }
+  .topbar-left { gap: 0.625rem; min-width: 0; }
+  .topbar-right { gap: 0.5rem; flex-shrink: 0; }
+  .topbar-brand { font-size: 0.95rem; letter-spacing: 0.08em; white-space: nowrap; }
+  .hamburger { width: 36px; height: 36px; padding: 7px; gap: 4px; }
+  .btn-bookings-topbar { padding: 0.45rem 0.7rem; font-size: 0.6rem; letter-spacing: 0.08em; gap: 0.35rem; }
+  .btn-bookings-topbar svg { width: 13px; height: 13px; }
+
+  .dash-main { padding: 1.25rem 0.875rem 3.5rem; }
+
+  .section-header {
+    flex-direction: column; align-items: stretch;
+    gap: 0.875rem; margin-bottom: 1.375rem; padding-bottom: 1rem;
+  }
+  .section-header > .btn,
+  .section-header > div > .btn { width: 100%; justify-content: center; }
+  .section-title { font-size: 1.4rem; }
+  .section-eyebrow { font-size: 0.55rem; letter-spacing: 0.2em; }
+
+  .req-toolbar {
+    gap: 0.4rem; margin-bottom: 1.125rem;
+    overflow-x: auto; flex-wrap: nowrap;
+    padding-bottom: 0.4rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .req-toolbar::-webkit-scrollbar { display: none; }
+  .req-chip { padding: 0.45rem 0.8rem; font-size: 0.58rem; letter-spacing: 0.1em; }
+
+  .req-card { padding: 1rem; border-radius: 9px; }
+  .req-service { font-size: 1.05rem; }
+  .req-actions .btn { flex: 1 1 45%; font-size: 0.6rem; padding: 0.55rem 0.5rem; letter-spacing: 0.08em; }
+
+  .booking-card { padding: 1rem; }
+  .booking-card-row { font-size: 0.72rem; }
+
+  .modal { border-radius: 12px; max-height: 92vh; }
+  .modal-header { padding: 1.1rem 1.1rem; }
+  .modal-header h3 { font-size: 1.1rem; }
+  .modal-body { padding: 1.1rem; }
+  .modal-footer { padding: 0.875rem 1.1rem; flex-direction: column-reverse; gap: 0.5rem; }
+  .modal-footer .btn { width: 100%; justify-content: center; }
+  .modal-overlay { padding: 0.625rem; }
+
+  .items-grid { grid-template-columns: 1fr !important; }
+  .empty-state { padding: 2.5rem 1rem; font-size: 0.9rem; }
+}
+
+@media (max-width: 380px) {
+  .topbar-brand { font-size: 0.85rem; }
+  .btn-bookings-topbar span,
+  .pending-pill { font-size: 0.56rem; }
+  .dash-main { padding: 1.125rem 0.7rem 3rem; }
+  .section-title { font-size: 1.25rem; }
+}
+
 /* ═══ MODAL ═════════════════════════════════════════ */
 .modal-overlay {
   position: fixed; inset: 0;
@@ -918,6 +1118,7 @@ a { color: inherit; text-decoration: none; }
 
   <div class="drawer-section-label">Operations</div>
   <button class="nav-link active" onclick="switchTab('bookings');closeDrawer()">Bookings</button>
+  <button class="nav-link" onclick="switchTab('requests');closeDrawer()">Service Requests<span class="nav-badge" id="reqNavBadge">0</span></button>
   <button class="nav-link" onclick="switchTab('promotions');closeDrawer()">Promotions</button>
 
   <div class="drawer-divider"></div>
@@ -1079,6 +1280,20 @@ a { color: inherit; text-decoration: none; }
       <div id="bookingsEmpty" class="empty-state" style="display:none;">No bookings yet</div>
     </div>
 
+    <!-- SERVICE REQUESTS -->
+    <div class="dash-section" id="tab-requests">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Concierge</div>
+          <h2 class="section-title">Service Requests</h2>
+        </div>
+        <button class="btn btn-outline" onclick="loadServiceRequests()">↻ Refresh</button>
+      </div>
+      <div class="req-toolbar" id="reqToolbar"></div>
+      <div class="req-grid" id="reqGrid"></div>
+      <div id="reqEmpty" class="empty-state" style="display:none;">No service requests yet</div>
+    </div>
+
     <!-- PROMOTIONS -->
     <div class="dash-section" id="tab-promotions">
       <div class="section-header">
@@ -1187,7 +1402,8 @@ const TAB_LABELS = {
   capacity: 'Capacity Stats',
   pageimages: 'Page Images',
   promotions: 'Promotions',
-  bookings: 'Bookings'
+  bookings: 'Bookings',
+  requests: 'Service Requests'
 };
 
 function switchTab(tab) {
@@ -1269,7 +1485,7 @@ function gv(id) { return document.getElementById(id)?.value?.trim() || ''; }
 
 /* ── Load all ───────────────────────────── */
 async function loadAllData() {
-  await Promise.all([loadFeatures(), loadRooms(), loadEvents(), loadCapacity(), loadBookings()]);
+  await Promise.all([loadFeatures(), loadRooms(), loadEvents(), loadCapacity(), loadBookings(), loadServiceRequests()]);
 }
 
 /* ── Generic CRUD helpers ───────────────── */
@@ -1992,13 +2208,8 @@ async function loadBookings() {
     const snap = await getDocs(query(collection(db, 'bookings'), orderBy('createdAt', 'desc')));
     const items = []; snap.forEach(d => items.push({ id: d.id, ...d.data() }));
 
-    const pendingCount = items.filter(b => (b.status || 'pending') === 'pending').length;
-    const pill = document.getElementById('pendingPill');
-    if (pill) {
-      pill.style.display = pendingCount > 0 ? 'inline-flex' : 'none';
-      const pt = document.getElementById('pendingText');
-      if (pt) pt.textContent = `${pendingCount} pending`;
-    }
+    window._pendingBookings = items.filter(b => (b.status || 'pending') === 'pending').length;
+    try { _updatePendingPill(); } catch(e) {}
 
     const emptyEl = document.getElementById('bookingsEmpty');
     if (items.length === 0) { emptyEl.style.display = 'block'; document.getElementById('bookingsTableBody').innerHTML = ''; document.getElementById('bookingCardsList').innerHTML = ''; return; }
@@ -2024,7 +2235,7 @@ async function loadBookings() {
         <td>${fmtDate(b.checkOut)}</td>
         <td style="text-align:center;">${b.nights || '—'}</td>
         <td>${totalStr}</td>
-        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span></td>
+        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>${_addOnTags(b.addOns)}</td>
         <td style="white-space:nowrap;">
           <button class="btn btn-outline btn-sm" onclick="openEditBookingDates('${b.id}')" title="Edit dates">✏️ Dates</button>
           ${st !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')" style="margin-left:4px;" title="Cancel booking">Cancel</button>` : ''}
@@ -2050,6 +2261,10 @@ async function loadBookings() {
           <span>Status</span>
           <span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>
         </div>
+        ${(Array.isArray(b.addOns) && b.addOns.length) ? `<div style="margin-top:0.6rem;padding-top:0.6rem;border-top:1px solid var(--border);">
+          <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.4rem;">Add-ons requested</div>
+          ${_addOnTags(b.addOns)}
+        </div>` : ''}
         <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
           <button class="btn btn-outline btn-sm" onclick="openEditBookingDates('${b.id}')" style="flex:1;justify-content:center;">✏️ Edit Dates</button>
           ${st !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')" style="flex:1;justify-content:center;">Cancel</button>` : ''}
@@ -2057,6 +2272,271 @@ async function loadBookings() {
       </div>`;
     }).join('');
   } catch(e) { console.warn('Bookings error:', e); }
+}
+
+/* ══════════════════════════════════════════════════════════
+   SERVICE REQUESTS (Island tours / Airport transfers /
+   Family retreats / Custom concierge enquiries)
+   ══════════════════════════════════════════════════════════ */
+let _reqItems = [];
+let _reqFilter = 'all';
+
+const REQ_STATUSES = [
+  { id: 'new',        label: 'New' },
+  { id: 'inprogress', label: 'Arranging' },
+  { id: 'confirmed',  label: 'Confirmed' },
+  { id: 'declined',   label: 'Declined' }
+];
+
+function _reqStatusLabel(id) {
+  const f = REQ_STATUSES.find(x => x.id === id);
+  return f ? f.label : (id || 'New');
+}
+
+function _reqFmtDate(str) {
+  if (!str) return '—';
+  const p = String(str).split('-');
+  if (p.length !== 3) return str;
+  return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function _reqFmtCreated(ts) {
+  if (!ts || !ts.seconds) return '';
+  const d = new Date(ts.seconds * 1000);
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function _addOnTags(addOns) {
+  if (!Array.isArray(addOns) || !addOns.length) return '';
+  return addOns.map(a => `<span class="addon-tag" title="${_esc(a.details || '')}">${_esc(a.label || a.id)}</span>`).join('');
+}
+
+function _esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+async function loadServiceRequests() {
+  const grid  = document.getElementById('reqGrid');
+  const empty = document.getElementById('reqEmpty');
+  if (!grid) return;
+  try {
+    const { db, collection, getDocs } = window._fb;
+    const snap = await getDocs(collection(db, 'serviceRequests'));
+    _reqItems = [];
+    snap.forEach(d => _reqItems.push({ id: d.id, ...d.data() }));
+    _reqItems.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (e) {
+    console.warn('Service requests error:', e);
+    grid.innerHTML = '';
+    if (empty) { empty.style.display = 'block'; empty.textContent = 'Could not load service requests'; }
+    return;
+  }
+  _renderReqToolbar();
+  _renderReqGrid();
+  _updatePendingPill();
+}
+
+function _renderReqToolbar() {
+  const bar = document.getElementById('reqToolbar');
+  if (!bar) return;
+  const counts = { all: _reqItems.length };
+  REQ_STATUSES.forEach(st => {
+    counts[st.id] = _reqItems.filter(r => (r.status || 'new') === st.id).length;
+  });
+  const chips = [{ id: 'all', label: 'All' }].concat(REQ_STATUSES);
+  bar.innerHTML = chips.map(c =>
+    `<button class="req-chip ${_reqFilter === c.id ? 'active' : ''}" onclick="setReqFilter('${c.id}')">${c.label}<span class="cnt">${counts[c.id] || 0}</span></button>`
+  ).join('');
+}
+
+function setReqFilter(f) {
+  _reqFilter = f;
+  _renderReqToolbar();
+  _renderReqGrid();
+}
+
+function _renderReqGrid() {
+  const grid  = document.getElementById('reqGrid');
+  const empty = document.getElementById('reqEmpty');
+  if (!grid) return;
+
+  const items = _reqFilter === 'all'
+    ? _reqItems
+    : _reqItems.filter(r => (r.status || 'new') === _reqFilter);
+
+  if (!items.length) {
+    grid.innerHTML = '';
+    if (empty) {
+      empty.style.display = 'block';
+      empty.textContent = _reqItems.length
+        ? 'No requests with this status'
+        : 'No service requests yet';
+    }
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  grid.innerHTML = items.map(r => {
+    const st = r.status || 'new';
+    const rows = [];
+
+    rows.push(`<div class="req-row"><span>Guest</span><span>${_esc(r.guestName || '—')}</span></div>`);
+    if (r.phone) rows.push(`<div class="req-row"><span>Phone</span><span><a href="tel:${_esc(r.phone)}">${_esc(r.phone)}</a></span></div>`);
+    if (r.email) rows.push(`<div class="req-row"><span>Email</span><span><a href="mailto:${_esc(r.email)}">${_esc(r.email)}</a></span></div>`);
+    if (r.bookingRoom) {
+      const stay = r.bookingCheckIn ? ` · ${_reqFmtDate(r.bookingCheckIn)}` : '';
+      rows.push(`<div class="req-row"><span>Stay</span><span>${_esc(r.bookingRoom)}${stay}</span></div>`);
+    }
+
+    // Service-specific details, whatever the guest filled in
+    const det = Array.isArray(r.details) ? r.details : [];
+    det.forEach(d => {
+      if (d && d.value) rows.push(`<div class="req-row"><span>${_esc(d.label)}</span><span>${_esc(d.value)}</span></div>`);
+    });
+
+    // Legacy shape support (older requests saved before this update)
+    if (!det.length) {
+      if (r.preferredDate) rows.push(`<div class="req-row"><span>Preferred</span><span>${_reqFmtDate(r.preferredDate)}</span></div>`);
+      if (r.guests) rows.push(`<div class="req-row"><span>Guests</span><span>${_esc(r.guests)}</span></div>`);
+      if (r.flight) {
+        if (r.flight.airport) rows.push(`<div class="req-row"><span>Airport</span><span>${_esc(r.flight.airport)}</span></div>`);
+        const fl = [r.flight.flightNumber, r.flight.arrivalTime].filter(Boolean).join(' · ');
+        if (fl) rows.push(`<div class="req-row"><span>Flight</span><span>${_esc(fl)}</span></div>`);
+        rows.push(`<div class="req-row"><span>Return trip</span><span>${r.flight.returnTrip ? 'Yes' : 'No'}</span></div>`);
+      }
+    }
+
+    const msg = r.message || r.notes;
+    const fromBooking = r.source === 'booking';
+
+    return `<div class="req-card is-${st}">
+      <div class="req-card-top">
+        <div style="min-width:0;">
+          <div class="req-service">${_esc(r.serviceLabel || 'Request')}</div>
+          <div class="req-when">${_reqFmtCreated(r.createdAt)}${fromBooking ? ' · added at booking' : ''}</div>
+        </div>
+        <span class="status-pill st-${st}">${_reqStatusLabel(st)}</span>
+      </div>
+      ${fromBooking ? '<div class="req-source">Added during room booking</div>' : ''}
+      <div class="req-guest">${rows.join('')}</div>
+      ${msg ? `<div class="req-notes">${_esc(msg)}</div>` : ''}
+      ${r.adminNote ? `<div class="req-internal"><strong>Internal note · staff only</strong>${_esc(r.adminNote)}</div>` : ''}
+      <div class="req-actions">
+        <button class="btn btn-copper btn-sm" onclick="openReqManage('${r.id}')">Manage</button>
+        ${r.phone ? `<a class="btn btn-outline btn-sm" href="tel:${_esc(r.phone)}" style="justify-content:center;">Call</a>` : ''}
+        ${r.email ? `<a class="btn btn-outline btn-sm" href="mailto:${_esc(r.email)}?subject=${encodeURIComponent("Your request: " + (r.serviceLabel || 'Service'))}" style="justify-content:center;">Email</a>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteServiceRequest('${r.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Manage modal: set status + reply to guest ── */
+function openReqManage(id) {
+  const r = _reqItems.find(x => x.id === id);
+  if (!r) return;
+  const st = r.status || 'new';
+
+  openModal('Manage Request');
+  document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom:1.25rem;padding:0.875rem 1rem;background:rgba(184,115,51,0.04);border:1px solid var(--border-copper);border-radius:8px;">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--text);margin-bottom:0.2rem;">${_esc(r.serviceLabel || 'Request')}</div>
+      <div style="font-size:0.72rem;color:var(--text-dim);">from ${_esc(r.guestName || 'Guest')}${r.email ? ' · ' + _esc(r.email) : ''}</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <div class="promo-type-row" style="grid-template-columns:1fr 1fr;">
+        ${REQ_STATUSES.map(x => `<div class="promo-type-opt ${st === x.id ? 'selected' : ''}" id="rqOpt-${x.id}" onclick="setReqModalStatus('${x.id}')">${x.label}</div>`).join('')}
+      </div>
+      <input type="hidden" id="rqStatus" value="${st}" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Internal note <span style="font-weight:400;color:var(--text-dim);">(staff only — the guest never sees this)</span></label>
+      <textarea class="form-textarea" id="rqNote" placeholder="e.g. Called guest 3pm — driver Marlon assigned, $60 each way, confirmed for the 14th.">${_esc(r.adminNote || '')}</textarea>
+    </div>
+
+    <div style="padding:0.75rem 0.875rem;background:rgba(184,115,51,0.04);border:1px solid var(--border-copper);border-radius:8px;font-size:0.72rem;color:var(--text-2);line-height:1.6;">
+      The guest only sees the status above. Reach them directly on
+      ${r.phone ? `<a href="tel:${_esc(r.phone)}" style="color:var(--copper-shine);">${_esc(r.phone)}</a>` : 'the number on file'}
+      ${r.email ? ` or <a href="mailto:${_esc(r.email)}" style="color:var(--copper-shine);">${_esc(r.email)}</a>` : ''}.
+    </div>`;
+
+  document.getElementById('modalFooter').innerHTML = `
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-copper" id="rqSaveBtn" onclick="saveReqManage('${id}')">Save</button>`;
+}
+
+function setReqModalStatus(id) {
+  REQ_STATUSES.forEach(x => {
+    const el = document.getElementById('rqOpt-' + x.id);
+    if (el) el.classList.toggle('selected', x.id === id);
+  });
+  const h = document.getElementById('rqStatus');
+  if (h) h.value = id;
+}
+
+async function saveReqManage(id) {
+  const btn = document.getElementById('rqSaveBtn');
+  const status = document.getElementById('rqStatus').value;
+  const note   = (document.getElementById('rqNote').value || '').trim();
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  try {
+    const { db, doc, updateDoc, serverTimestamp } = window._fb;
+    await updateDoc(doc(db, 'serviceRequests', id), {
+      status,
+      adminNote: note || null,
+      updatedAt: serverTimestamp()
+    });
+    closeModal();
+    showToast('Request updated.');
+    await loadServiceRequests();
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save'; }
+    showToast('Error: ' + e.message);
+  }
+}
+
+async function deleteServiceRequest(id) {
+  if (!confirm('Delete this request permanently?')) return;
+  try {
+    const { db, doc, deleteDoc } = window._fb;
+    await deleteDoc(doc(db, 'serviceRequests', id));
+    showToast('Request deleted.');
+    await loadServiceRequests();
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
+/* ── Combined pending indicator (bookings + requests) ── */
+window._pendingBookings = 0;
+function _updatePendingPill() {
+  const all = (typeof _reqItems !== 'undefined' && Array.isArray(_reqItems)) ? _reqItems : [];
+  const newReqs = all.filter(r => (r.status || 'new') === 'new').length;
+
+  const badge = document.getElementById('reqNavBadge');
+  if (badge) {
+    badge.textContent = newReqs;
+    badge.style.display = newReqs > 0 ? 'inline-flex' : 'none';
+  }
+
+  const total = (window._pendingBookings || 0) + newReqs;
+  const pill = document.getElementById('pendingPill');
+  const pt   = document.getElementById('pendingText');
+  if (pill) pill.style.display = total > 0 ? 'inline-flex' : 'none';
+  if (pt) {
+    const parts = [];
+    if (window._pendingBookings > 0) parts.push(window._pendingBookings + ' booking' + (window._pendingBookings !== 1 ? 's' : ''));
+    if (newReqs > 0) parts.push(newReqs + ' request' + (newReqs !== 1 ? 's' : ''));
+    pt.textContent = parts.length ? parts.join(' · ') + ' pending' : '0 pending';
+  }
 }
 
 async function cancelBooking(bookingId) {
@@ -2517,6 +2997,7 @@ window.switchTab = function(tab) {
   _origSwitchTab(tab);
   if (tab === 'pageimages') { loadRoomsHeroImage(); loadEventsHeroImage(); }
   if (tab === 'promotions') { loadPromotionsAdmin(); }
+  if (tab === 'requests')   { loadServiceRequests(); }
 };
 
 /* ── Add Booking (Admin) — calendar + discount + auto-calc ── */

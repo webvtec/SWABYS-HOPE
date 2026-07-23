@@ -2656,9 +2656,10 @@
 
         <!-- Tabs -->
         <div style="padding:1.25rem 1.75rem 0;">
-          <div style="display:grid;grid-template-columns:1fr 1fr;border:1.5px solid rgba(184,115,51,0.2);border-radius:8px;overflow:hidden;margin-bottom:1.25rem;">
-            <button id="profileTabProfile" onclick="switchProfileTab('profile')" style="padding:0.6rem;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:rgba(184,115,51,0.08);color:var(--copper);border:none;cursor:pointer;font-family:var(--font-body);transition:all 0.18s;">Profile</button>
-            <button id="profileTabBookings" onclick="switchProfileTab('bookings')" style="padding:0.6rem;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;background:#fff;color:var(--text-muted);border:none;cursor:pointer;font-family:var(--font-body);transition:all 0.18s;">My Bookings</button>
+          <div style="display:grid;grid-template-columns:1fr 1.2fr 1fr;border:1.5px solid rgba(184,115,51,0.2);border-radius:8px;overflow:hidden;margin-bottom:1.25rem;">
+            <button id="profileTabProfile" onclick="switchProfileTab('profile')" style="padding:0.6rem 0.3rem;font-size:0.66rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:rgba(184,115,51,0.08);color:var(--copper);border:none;cursor:pointer;font-family:var(--font-body);transition:all 0.18s;">Profile</button>
+            <button id="profileTabBookings" onclick="switchProfileTab('bookings')" style="padding:0.6rem 0.3rem;font-size:0.66rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#fff;color:var(--text-muted);border:none;cursor:pointer;font-family:var(--font-body);transition:all 0.18s;border-left:1px solid rgba(184,115,51,0.16);border-right:1px solid rgba(184,115,51,0.16);">My Bookings</button>
+            <button id="profileTabRequests" onclick="switchProfileTab('requests')" style="padding:0.6rem 0.3rem;font-size:0.66rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;background:#fff;color:var(--text-muted);border:none;cursor:pointer;font-family:var(--font-body);transition:all 0.18s;">Requests</button>
           </div>
         </div>
 
@@ -2699,8 +2700,22 @@
 
         <!-- Bookings tab content -->
         <div id="profileTabContentBookings" style="display:none;padding:0 1.75rem 1.75rem;">
+          <!-- Add-on services banner -->
+          <div style="background:linear-gradient(135deg,rgba(184,115,51,0.09),rgba(184,115,51,0.03));border:1px solid rgba(184,115,51,0.2);border-radius:12px;padding:0.95rem 1rem;margin-bottom:1.125rem;">
+            <div style="font-family:var(--font-display);font-size:0.98rem;font-weight:500;color:var(--text-primary);margin-bottom:0.2rem;">Make your stay more</div>
+            <div style="font-size:0.73rem;color:var(--text-muted);line-height:1.55;margin-bottom:0.7rem;">Island tours, airport transfers and family retreats — tell us what you'd like and we'll arrange it.</div>
+            <button onclick="openServiceRequest()" style="width:100%;padding:0.7rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(184,115,51,0.25);">+ Request a Service</button>
+          </div>
           <div id="profileBookingsList">
             <div style="text-align:center;padding:2rem 0;color:var(--text-muted);font-style:italic;font-size:0.85rem;">Loading your bookings…</div>
+          </div>
+        </div>
+
+        <!-- Service requests tab content -->
+        <div id="profileTabContentRequests" style="display:none;padding:0 1.75rem 1.75rem;">
+          <button onclick="openServiceRequest()" style="width:100%;padding:0.75rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(184,115,51,0.25);margin-bottom:1.125rem;">+ New Request</button>
+          <div id="profileRequestsList">
+            <div style="text-align:center;padding:2rem 0;color:var(--text-muted);font-style:italic;font-size:0.85rem;">Loading…</div>
           </div>
         </div>
       </div>
@@ -2708,7 +2723,63 @@
     </div>
   </div>
 
-  <!-- BOOKING MODAL -->
+  <!-- ═══ SERVICE / ADD-ON REQUEST MODAL ═══════════════════════ -->
+  <div id="svcModalScrim" style="display:none;position:fixed;inset:0;z-index:4300;background:rgba(0,0,0,0.78);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:1rem;" onclick="if(event.target===this)closeServiceRequest()">
+    <div style="background:#fff;border-radius:20px;width:100%;max-width:460px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.45),0 0 0 1px rgba(184,115,51,0.12);position:relative;animation:eventModalIn 0.32s cubic-bezier(0.16,1,0.3,1);">
+      <button onclick="closeServiceRequest()" style="position:absolute;top:1rem;right:1rem;width:30px;height:30px;border-radius:50%;border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text-muted);background:#fff;cursor:pointer;line-height:1;z-index:3;">&#215;</button>
+
+      <div style="background:linear-gradient(135deg,rgba(184,115,51,0.08),rgba(184,115,51,0.02));border-bottom:1px solid rgba(184,115,51,0.12);padding:1.5rem 1.75rem 1.15rem;border-radius:20px 20px 0 0;">
+        <div style="font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--copper);font-weight:700;margin-bottom:0.3rem;">Concierge</div>
+        <div style="font-family:var(--font-display);font-size:1.35rem;font-weight:500;color:var(--text-primary);line-height:1.2;">Request a Service</div>
+        <div style="font-size:0.73rem;color:var(--text-muted);margin-top:0.3rem;line-height:1.5;">Give us the details and our team will take it from there — we'll contact you to confirm.</div>
+      </div>
+
+      <div id="svcFormWrap" style="padding:1.35rem 1.75rem 1.75rem;">
+        <label style="display:block;font-size:0.7rem;font-weight:700;color:var(--text-primary);margin-bottom:0.5rem;letter-spacing:0.05em;text-transform:uppercase;">What would you like? <span style="color:var(--copper);">*</span></label>
+        <div id="svcOptions" style="display:grid;gap:0.55rem;margin-bottom:1.15rem;"></div>
+
+        <!-- Service-specific fields, built by JS -->
+        <div id="svcDetailFields"></div>
+
+        <div style="margin-bottom:0.9rem;">
+          <label for="svcBooking" style="display:block;font-size:0.72rem;font-weight:600;color:var(--text-primary);margin-bottom:0.375rem;letter-spacing:0.04em;">Related to which stay? <span style="font-weight:400;color:var(--text-muted);font-size:0.65rem;">(optional)</span></label>
+          <select id="svcBooking" class="form-input" style="width:100%;"><option value="">Not tied to a specific booking</option></select>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <label for="svcNotes" style="display:block;font-size:0.72rem;font-weight:600;color:var(--text-primary);margin-bottom:0.375rem;letter-spacing:0.04em;">Additional details for our team</label>
+          <textarea id="svcNotes" rows="3" placeholder="Anything else that helps us plan — pickup address, ages of children, dietary needs, special occasion…" class="form-input" style="width:100%;resize:vertical;font-family:var(--font-body);"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+          <div>
+            <label for="svcName" style="display:block;font-size:0.72rem;font-weight:600;color:var(--text-primary);margin-bottom:0.375rem;letter-spacing:0.04em;">Name <span style="color:var(--copper);">*</span></label>
+            <input id="svcName" type="text" class="form-input" style="width:100%;" />
+          </div>
+          <div>
+            <label for="svcPhone" style="display:block;font-size:0.72rem;font-weight:600;color:var(--text-primary);margin-bottom:0.375rem;letter-spacing:0.04em;">Phone <span style="color:var(--copper);">*</span></label>
+            <input id="svcPhone" type="tel" class="form-input" style="width:100%;" />
+          </div>
+        </div>
+
+        <div id="svcError" style="display:none;margin-bottom:0.75rem;padding:0.6rem 0.85rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.75rem;color:#DC2626;text-align:center;"></div>
+
+        <button id="svcSubmitBtn" onclick="submitServiceRequest()" style="width:100%;padding:0.9rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#fff;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(184,115,51,0.28);">Send Request</button>
+        <div style="text-align:center;font-size:0.68rem;color:var(--text-muted);margin-top:0.65rem;line-height:1.5;">No payment is taken now. Our team will reach out by phone or email to confirm availability and pricing.</div>
+      </div>
+
+      <div id="svcSuccess" style="display:none;padding:2.25rem 1.75rem 2rem;text-align:center;">
+        <div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B87333" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:500;color:var(--text-primary);margin-bottom:0.5rem;">Request sent</div>
+        <p style="color:var(--text-muted);font-size:0.85rem;line-height:1.7;">Our team has your details and will be in touch shortly to confirm. You can see the status any time under <strong style="color:var(--copper);">Requests</strong> in your account.</p>
+        <button onclick="closeServiceRequest();switchProfileTab('requests')" style="margin-top:1.25rem;padding:0.7rem 1.5rem;background:none;border:1px solid rgba(184,115,51,0.3);border-radius:8px;color:var(--copper);font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;">View my requests</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING MODAL -->  <!-- BOOKING MODAL -->
   <div class="booking-modal-scrim" id="bookingModalScrim" onclick="if(event.target===this)closeBookingModal()">
     <div class="booking-modal">
       <button class="booking-modal-close" onclick="closeBookingModal()">&#215;</button>
@@ -2759,6 +2830,12 @@
           <div class="form-group"><label for="bmPhone" class="form-label">Phone <span class="required">*</span></label><input type="tel" class="form-input" id="bmPhone" placeholder="+1 (876) ..." /></div>
         </div>
         <div class="form-group"><label for="bmEmail" class="form-label">Email <span class="required">*</span></label><input type="email" class="form-input" id="bmEmail" placeholder="you@email.com" /></div>
+        <!-- ENHANCE YOUR STAY — add-on services attached to this booking -->
+        <div class="form-group" id="bmAddOnsGroup">
+          <label class="form-label">Enhance Your Stay <span style="font-weight:400;font-size:var(--text-xs);color:var(--text-muted);">(optional — we'll confirm pricing separately)</span></label>
+          <div id="bmAddOnsList" style="display:grid;gap:0.5rem;"></div>
+        </div>
+
         <div class="form-group"><label for="bmRequests" class="form-label">Special Requests <span style="font-weight:400;font-size:var(--text-xs);color:var(--text-muted);">(optional)</span></label><textarea class="form-textarea" id="bmRequests" placeholder="Any special requests or notes?" style="min-height:70px;"></textarea></div>
         <button class="btn-primary form-submit" id="bmSubmitBtn" onclick="submitBooking()" style="width:100%;justify-content:center;margin-top:0.5rem;">
           Confirm Booking
@@ -3139,6 +3216,8 @@
       document.getElementById('bmPhone').value = '';
       document.getElementById('bmRequests').value = '';
       document.getElementById('bmUnavail').style.display = 'none';
+      _bmAddOnSel = {};
+      _renderBmAddOns();
 
       // Guest selector — capped by what the admin set for this room
       _bmMaxAdults = room.maxAdults || 1;
@@ -3438,7 +3517,8 @@
       try {
         const { db, collection, addDoc, serverTimestamp } = window._fb;
         const user = window._currentUser;
-        await addDoc(collection(db, 'bookings'), {
+        const _addOns = _collectBmAddOns();
+        const _bookingRef = await addDoc(collection(db, 'bookings'), {
           roomId: _bookingRoomId, roomName: room.name,
           checkIn, checkOut, nights,
           guestName: name, email, phone, specialRequests: requests || null,
@@ -3451,8 +3531,31 @@
           promoDiscountType: _bookingDiscount?.discountType || null,
           promoDiscountValue: _bookingDiscount?.discountValue || null,
           total, status: 'confirmed',
+          addOns: _addOns.length ? _addOns : null,
           createdAt: serverTimestamp()
         });
+
+        // Each selected add-on becomes a service request in the admin dashboard
+        if (_addOns.length) {
+          await Promise.all(_addOns.map(a => addDoc(collection(db, 'serviceRequests'), {
+            uid: user?.uid || null,
+            guestName: name,
+            email,
+            phone,
+            serviceId: a.id,
+            serviceLabel: a.label,
+            details: [],
+            message: a.details || null,
+            bookingId: _bookingRef.id,
+            bookingRoom: room.name,
+            bookingCheckIn: checkIn,
+            bookingCheckOut: checkOut,
+            source: 'booking',
+            status: 'new',
+            adminNote: null,
+            createdAt: serverTimestamp()
+          })));
+        }
         // Show success
         document.getElementById('bmWrap').style.display = 'none';
         document.getElementById('bmSuccess').style.display = 'block';
@@ -3465,6 +3568,11 @@
             <p style="color:var(--text-muted);line-height:1.7;margin-bottom:0.25rem;">Thank you, <strong>${name}</strong>.</p>
             <p style="color:var(--text-muted);line-height:1.7;"><strong>${room.name}</strong> · ${checkIn} → ${checkOut} · <strong style="color:var(--copper);">$${total}</strong></p>
             <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem;">A confirmation will be sent to <strong>${email}</strong>.</p>
+            ${_addOns.length ? `<div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(184,115,51,0.05);border:1px solid rgba(184,115,51,0.18);border-radius:10px;text-align:left;">
+              <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--copper);margin-bottom:0.4rem;">Add-ons requested</div>
+              <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">${_addOns.map(a => a.label).join(' · ')}</div>
+              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.45rem;line-height:1.5;">Our team will contact you to confirm availability and pricing for these.</div>
+            </div>` : ''}
           </div>`;
         setTimeout(() => closeBookingModal(), 5000);
       } catch(e) {
@@ -3680,20 +3788,26 @@
     
 
     function switchProfileTab(tab) {
-      const pEl = document.getElementById('profileTabContentProfile');
-      const bEl = document.getElementById('profileTabContentBookings');
-      const pBtn = document.getElementById('profileTabProfile');
-      const bBtn = document.getElementById('profileTabBookings');
-      if (tab === 'profile') {
-        pEl.style.display = ''; bEl.style.display = 'none';
-        pBtn.style.background = 'rgba(184,115,51,0.08)'; pBtn.style.color = 'var(--copper)';
-        bBtn.style.background = '#fff'; bBtn.style.color = 'var(--text-muted)';
-      } else {
-        pEl.style.display = 'none'; bEl.style.display = '';
-        bBtn.style.background = 'rgba(184,115,51,0.08)'; bBtn.style.color = 'var(--copper)';
-        pBtn.style.background = '#fff'; pBtn.style.color = 'var(--text-muted)';
-        loadUserBookings();
-      }
+      const panes = {
+        profile:  document.getElementById('profileTabContentProfile'),
+        bookings: document.getElementById('profileTabContentBookings'),
+        requests: document.getElementById('profileTabContentRequests')
+      };
+      const btns = {
+        profile:  document.getElementById('profileTabProfile'),
+        bookings: document.getElementById('profileTabBookings'),
+        requests: document.getElementById('profileTabRequests')
+      };
+      if (!panes[tab]) tab = 'profile';
+      Object.keys(panes).forEach(k => {
+        if (panes[k]) panes[k].style.display = (k === tab) ? '' : 'none';
+        if (btns[k]) {
+          btns[k].style.background = (k === tab) ? 'rgba(184,115,51,0.08)' : '#fff';
+          btns[k].style.color      = (k === tab) ? 'var(--copper)' : 'var(--text-muted)';
+        }
+      });
+      if (tab === 'bookings') loadUserBookings();
+      if (tab === 'requests') loadUserRequests();
     }
 
     async function saveUserProfile() {
@@ -3781,6 +3895,55 @@
       if (emailEl && !emailEl.value) emailEl.value = profile.email || user.email || '';
     }
 
+    /* ══════ SERVICE CATALOG (shared by guest + admin) ══════ */
+    const SERVICE_CATALOG = [
+      { id: 'island_tour',   label: 'Island Tour Adventure Package', desc: 'Waterfalls, river rafting, Blue Mountain drives & more — guided day trips.', icon: '🌴' },
+      { id: 'airport',       label: 'Airport Pickup & Drop-off',     desc: 'Private transfer to and from your arrival airport.',                        icon: '✈️' },
+      { id: 'family_retreat',label: 'Family Retreat',                desc: 'Multi-room stays with group dining, activities and kid-friendly planning.', icon: '👨‍👩‍👧‍👦' },
+      { id: 'other',         label: 'Something Else',                desc: 'Tell us what you have in mind and we will try to arrange it.',              icon: '✦' }
+    ];
+
+    window._myBookingsCache = [];
+
+    function _svcTodayStr() {
+      const d = new Date(); d.setHours(0,0,0,0);
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    function _fmtStayDate(str) {
+      if (!str) return '—';
+      const p = String(str).split('-');
+      if (p.length !== 3) return str;
+      return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+
+    function _bookingCardHtml(b, isPast) {
+      const st = b.status || 'confirmed';
+      const stColor = st === 'cancelled' ? '#DC2626' : st === 'pending' ? '#D97706' : '#059669';
+      const meta = _fmtStayDate(b.checkIn) + ' → ' + _fmtStayDate(b.checkOut)
+        + (b.nights ? ' · ' + b.nights + ' night' + (b.nights !== 1 ? 's' : '') : '')
+        + (typeof b.total === 'number' ? ' · $' + b.total.toLocaleString() : '');
+      return `<div style="border:1px solid rgba(184,115,51,${isPast ? '0.12' : '0.22'});border-radius:10px;padding:0.95rem 1rem;margin-bottom:0.7rem;background:${isPast ? '#FCFBF9' : 'rgba(184,115,51,0.03)'};">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.4rem;">
+          <div style="font-family:var(--font-display);font-size:0.95rem;font-weight:500;color:var(--text-primary);">${b.roomName || '—'}</div>
+          <span style="font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${stColor};background:${stColor}18;padding:2px 8px;border-radius:20px;border:1px solid ${stColor}30;white-space:nowrap;">${st}</span>
+        </div>
+        <div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:0.7rem;line-height:1.5;">${meta}</div>
+        <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
+          <button onclick="openServiceRequest('${b.id}')" style="flex:1;min-width:130px;font-size:0.68rem;color:var(--copper);background:rgba(184,115,51,0.06);border:1px solid rgba(184,115,51,0.28);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:var(--font-body);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">+ Add Services</button>
+          ${(!isPast && st !== 'cancelled') ? `<button onclick="cancelMyBooking('${b.id}')" style="font-size:0.68rem;color:#DC2626;background:none;border:1px solid rgba(220,38,38,0.25);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font-body);font-weight:600;">Cancel</button>` : ''}
+        </div>
+      </div>`;
+    }
+
+    function _sectionLabel(text, count) {
+      return `<div style="display:flex;align-items:center;gap:0.6rem;margin:0.25rem 0 0.7rem;">
+        <span style="font-size:0.62rem;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:var(--copper);white-space:nowrap;">${text}</span>
+        <span style="font-size:0.62rem;color:var(--text-muted);">${count}</span>
+        <span style="flex:1;height:1px;background:rgba(184,115,51,0.15);"></span>
+      </div>`;
+    }
+
     async function loadUserBookings() {
       const user = window._currentUser;
       const listEl = document.getElementById('profileBookingsList');
@@ -3788,40 +3951,374 @@
       if (!user) { listEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-style:italic;font-size:0.85rem;">Sign in to see your bookings.</div>'; return; }
       listEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem;">Loading…</div>';
       try {
-        const { db, collection, getDocs, query, where, orderBy } = window._fb;
+        const { db, collection, getDocs, query, where } = window._fb;
         const snap = await getDocs(query(collection(db, 'bookings'), where('uid','==',user.uid)));
         const bookings = [];
         snap.forEach(d => bookings.push({ id: d.id, ...d.data() }));
-        // Sort newest first client-side — avoids needing a Firestore composite index
-        bookings.sort((a, b) => {
-          const ta = a.createdAt?.seconds || 0;
-          const tb = b.createdAt?.seconds || 0;
-          return tb - ta;
-        });
-        const recent = bookings.slice(0, 5);
-        if (recent.length === 0) {
+        window._myBookingsCache = bookings;
+
+        if (bookings.length === 0) {
           listEl.innerHTML = '<div style="text-align:center;padding:2rem 0;color:var(--text-muted);font-style:italic;font-size:0.85rem;">No bookings yet. Your stays will appear here.</div>';
           return;
         }
-        const fmtDate = s => { if(!s) return '—'; const [y,m,d]=s.split('-'); return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); };
-        listEl.innerHTML = recent.map(b => {
-          const st = b.status || 'confirmed';
-          const stColor = st === 'cancelled' ? '#DC2626' : st === 'pending' ? '#D97706' : '#059669';
-          return `<div style="border:1px solid rgba(184,115,51,0.15);border-radius:10px;padding:1rem;margin-bottom:0.75rem;position:relative;">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem;">
-              <div style="font-family:var(--font-display);font-size:0.95rem;font-weight:500;color:var(--text-primary);">${b.roomName || '—'}</div>
-              <span style="font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${stColor};background:${stColor}18;padding:2px 8px;border-radius:20px;border:1px solid ${stColor}30;white-space:nowrap;">${st}</span>
-            </div>
-            <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.625rem;">${fmtDate(b.checkIn)} → ${fmtDate(b.checkOut)}${b.nights ? ' · ' + b.nights + ' night' + (b.nights!==1?'s':'') : ''}${typeof b.total==='number'?' · $'+b.total.toLocaleString():''}</div>
-            ${st !== 'cancelled' ? `<button onclick="cancelMyBooking('${b.id}')" style="font-size:0.7rem;color:#DC2626;background:none;border:1px solid rgba(220,38,38,0.25);border-radius:5px;padding:4px 10px;cursor:pointer;font-family:var(--font-body);font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='rgba(220,38,38,0.06)'" onmouseout="this.style.background='none'">Cancel booking</button>` : ''}
-          </div>`;
-        }).join('');
-        if (bookings.length > 5) {
-          listEl.innerHTML += `<div style="text-align:center;font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem;">Showing 5 most recent · ${bookings.length - 5} older booking${bookings.length-5!==1?'s':''} not shown</div>`;
+
+        const today = _svcTodayStr();
+        // Current / upcoming = not cancelled AND check-out is today or later
+        const current = bookings.filter(b => (b.status || 'confirmed') !== 'cancelled' && (b.checkOut || '') >= today);
+        const past    = bookings.filter(b => !current.includes(b));
+
+        // Current: soonest check-in first
+        current.sort((a,b) => String(a.checkIn||'').localeCompare(String(b.checkIn||'')));
+        // Past: most recent first
+        past.sort((a,b) => String(b.checkOut||'').localeCompare(String(a.checkOut||'')));
+        const past10 = past.slice(0, 10);
+
+        let html = '';
+        html += _sectionLabel('Current & Upcoming', current.length);
+        html += current.length
+          ? current.map(b => _bookingCardHtml(b, false)).join('')
+          : '<div style="padding:0.9rem 1rem;border:1px dashed rgba(184,115,51,0.22);border-radius:10px;color:var(--text-muted);font-size:0.78rem;font-style:italic;margin-bottom:0.9rem;">No upcoming stays right now.</div>';
+
+        html += '<div style="height:1rem;"></div>';
+        html += _sectionLabel('Past Stays', past10.length ? 'last ' + past10.length : '0');
+        html += past10.length
+          ? past10.map(b => _bookingCardHtml(b, true)).join('')
+          : '<div style="padding:0.9rem 1rem;border:1px dashed rgba(184,115,51,0.15);border-radius:10px;color:var(--text-muted);font-size:0.78rem;font-style:italic;">Nothing here yet.</div>';
+
+        if (past.length > 10) {
+          html += `<div style="text-align:center;font-size:0.7rem;color:var(--text-muted);margin-top:0.5rem;">Showing your 10 most recent past stays · ${past.length - 10} older not shown</div>`;
         }
+        listEl.innerHTML = html;
       } catch(e) {
         listEl.innerHTML = `<div style="text-align:center;padding:1rem;color:#DC2626;font-size:0.8rem;">Could not load bookings.</div>`;
       }
+    }
+
+    /* ══════ SERVICE / ADD-ON REQUESTS (guest side, one-way) ══════ */
+    let _svcSelected = null;
+    let _svcPrefillBooking = null;
+
+    // Field definitions per service. Rendered dynamically and stored as an
+    // ordered {label,value} list so the admin dashboard can display anything.
+    const SERVICE_FIELDS = {
+      island_tour: [
+        { key: 'tour',     label: 'Tour / destination', type: 'text', placeholder: 'e.g. Dunn\'s River Falls, YS Falls, Blue Mountain', required: true },
+        { key: 'date',     label: 'Preferred date',     type: 'date' },
+        { key: 'pickup',   label: 'Pickup time',        type: 'time' },
+        { key: 'guests',   label: 'Number of guests',   type: 'number', value: 2, min: 1 }
+      ],
+      airport: [
+        { key: 'direction', label: 'What do you need?', type: 'select', options: ['Pickup only', 'Drop-off only', 'Both ways'], value: 'Both ways' },
+        { key: 'airport',   label: 'Airport', type: 'select', options: [
+            'Norman Manley International (KIN) — Kingston',
+            'Sangster International (MBJ) — Montego Bay',
+            'Ian Fleming International (OCJ) — Ocho Rios',
+            'Other'
+        ]},
+        { key: 'arrDate',   label: 'Arrival date',      type: 'date',   half: true },
+        { key: 'arrTime',   label: 'Arrival time',      type: 'time',   half: true },
+        { key: 'arrFlight', label: 'Arrival flight no.',type: 'text',   placeholder: 'e.g. AA 1123' },
+        { key: 'depDate',   label: 'Return date',       type: 'date',   half: true },
+        { key: 'depTime',   label: 'Return flight time',type: 'time',   half: true },
+        { key: 'depFlight', label: 'Return flight no.', type: 'text',   placeholder: 'e.g. AA 1124' },
+        { key: 'pax',       label: 'Passengers',        type: 'number', value: 2, min: 1, half: true },
+        { key: 'bags',      label: 'Bags',              type: 'number', value: 2, min: 0, half: true }
+      ],
+      family_retreat: [
+        { key: 'from',     label: 'Arriving',          type: 'date',   half: true },
+        { key: 'to',       label: 'Leaving',           type: 'date',   half: true },
+        { key: 'adults',   label: 'Adults',            type: 'number', value: 2, min: 1, half: true },
+        { key: 'children', label: 'Children',          type: 'number', value: 0, min: 0, half: true },
+        { key: 'occasion', label: 'Occasion',          type: 'text',   placeholder: 'e.g. reunion, birthday, anniversary' },
+        { key: 'wants',    label: 'Interested in',     type: 'text',   placeholder: 'e.g. group dinners, kids activities, tours' }
+      ],
+      other: [
+        { key: 'what', label: 'What are you looking for?', type: 'text', placeholder: 'Tell us in a few words', required: true },
+        { key: 'date', label: 'Preferred date',            type: 'date' }
+      ]
+    };
+
+    function _svcFieldId(k) { return 'svcf_' + k; }
+
+    function _renderSvcFields() {
+      const wrap = document.getElementById('svcDetailFields');
+      if (!wrap) return;
+      const defs = SERVICE_FIELDS[_svcSelected];
+      if (!defs) { wrap.innerHTML = ''; return; }
+
+      let html = '<div style="padding:0.95rem 1rem;background:rgba(184,115,51,0.04);border:1px solid rgba(184,115,51,0.16);border-radius:10px;margin-bottom:1rem;">';
+      html += '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--copper);margin-bottom:0.75rem;">Details</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">';
+      defs.forEach(f => {
+        const id = _svcFieldId(f.key);
+        const span = f.half ? '' : 'grid-column:1/-1;';
+        let input;
+        if (f.type === 'select') {
+          input = `<select id="${id}" class="form-input" style="width:100%;">` +
+            f.options.map(o => `<option value="${o}"${f.value === o ? ' selected' : ''}>${o}</option>`).join('') + '</select>';
+        } else {
+          const extra = [
+            f.placeholder ? `placeholder="${f.placeholder}"` : '',
+            f.value !== undefined ? `value="${f.value}"` : '',
+            f.min !== undefined ? `min="${f.min}"` : ''
+          ].filter(Boolean).join(' ');
+          input = `<input id="${id}" type="${f.type}" ${extra} class="form-input" style="width:100%;" />`;
+        }
+        html += `<div style="${span}min-width:0;">
+          <label for="${id}" style="display:block;font-size:0.68rem;font-weight:600;color:var(--text-primary);margin-bottom:0.3rem;">${f.label}${f.required ? ' <span style="color:var(--copper);">*</span>' : ''}</label>
+          ${input}
+        </div>`;
+      });
+      html += '</div></div>';
+      wrap.innerHTML = html;
+
+      // Sensible date floors
+      const today = _svcTodayStr();
+      defs.forEach(f => {
+        if (f.type === 'date') {
+          const el = document.getElementById(_svcFieldId(f.key));
+          if (el) el.min = today;
+        }
+      });
+    }
+
+    function _collectSvcDetails() {
+      const defs = SERVICE_FIELDS[_svcSelected] || [];
+      const out = [];
+      for (const f of defs) {
+        const el = document.getElementById(_svcFieldId(f.key));
+        const v = el ? String(el.value || '').trim() : '';
+        if (f.required && !v) return { error: 'Please fill in "' + f.label + '".' };
+        if (v) out.push({ label: f.label, value: v });
+      }
+      return { details: out };
+    }
+
+    function _renderSvcOptions() {
+      const wrap = document.getElementById('svcOptions');
+      if (!wrap) return;
+      wrap.innerHTML = SERVICE_CATALOG.map(sv => {
+        const on = _svcSelected === sv.id;
+        return `<div onclick="selectService('${sv.id}')" style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.75rem 0.85rem;border:1.5px solid ${on ? 'var(--copper)' : '#E8E4DE'};background:${on ? 'rgba(184,115,51,0.06)' : '#fff'};border-radius:10px;cursor:pointer;transition:all 0.18s;">
+          <span style="font-size:1.1rem;line-height:1.2;flex-shrink:0;">${sv.icon}</span>
+          <div style="min-width:0;">
+            <div style="font-size:0.8rem;font-weight:700;color:${on ? 'var(--copper)' : 'var(--text-primary)'};margin-bottom:2px;">${sv.label}</div>
+            <div style="font-size:0.7rem;color:var(--text-muted);line-height:1.45;">${sv.desc}</div>
+          </div>
+          <span style="margin-left:auto;flex-shrink:0;width:16px;height:16px;border-radius:50%;border:1.5px solid ${on ? 'var(--copper)' : '#D8D2CA'};background:${on ? 'var(--copper)' : '#fff'};display:flex;align-items:center;justify-content:center;margin-top:2px;">${on ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function selectService(id) {
+      _svcSelected = id;
+      _renderSvcOptions();
+      _renderSvcFields();
+      const err = document.getElementById('svcError');
+      if (err) err.style.display = 'none';
+    }
+
+    async function openServiceRequest(bookingId) {
+      if (!window._currentUser) { openAccountModal(); return; }
+      _svcPrefillBooking = bookingId || null;
+      _svcSelected = null;
+
+      const scrim = document.getElementById('svcModalScrim');
+      if (!scrim) return;
+      document.getElementById('svcFormWrap').style.display = '';
+      document.getElementById('svcSuccess').style.display = 'none';
+      const err = document.getElementById('svcError'); if (err) err.style.display = 'none';
+      const btn = document.getElementById('svcSubmitBtn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Send Request'; }
+
+      _renderSvcOptions();
+      document.getElementById('svcDetailFields').innerHTML = '';
+      document.getElementById('svcNotes').value = '';
+
+      const profile = window._userProfile || {};
+      document.getElementById('svcName').value  = profile.displayName || window._currentUser.displayName || '';
+      document.getElementById('svcPhone').value = profile.phone || '';
+
+      const sel = document.getElementById('svcBooking');
+      sel.innerHTML = '<option value="">Not tied to a specific booking</option>';
+      try {
+        if (!window._myBookingsCache.length) {
+          const { db, collection, getDocs, query, where } = window._fb;
+          const snap = await getDocs(query(collection(db, 'bookings'), where('uid','==',window._currentUser.uid)));
+          const arr = []; snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
+          window._myBookingsCache = arr;
+        }
+        const today = _svcTodayStr();
+        const sorted = [...window._myBookingsCache]
+          .filter(b => (b.status || 'confirmed') !== 'cancelled')
+          .sort((a,b) => String(b.checkIn||'').localeCompare(String(a.checkIn||'')));
+        sorted.forEach(b => {
+          const tag = (b.checkOut || '') >= today ? 'Upcoming' : 'Past';
+          const o = document.createElement('option');
+          o.value = b.id;
+          o.textContent = `${b.roomName || 'Stay'} · ${_fmtStayDate(b.checkIn)} (${tag})`;
+          sel.appendChild(o);
+        });
+        if (_svcPrefillBooking) sel.value = _svcPrefillBooking;
+      } catch(e) {}
+
+      scrim.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeServiceRequest() {
+      const scrim = document.getElementById('svcModalScrim');
+      if (scrim) scrim.style.display = 'none';
+      const acct = document.getElementById('accountModalScrim');
+      if (!acct || acct.style.display === 'none') document.body.style.overflow = '';
+    }
+
+    async function submitServiceRequest() {
+      const user = window._currentUser;
+      const err  = document.getElementById('svcError');
+      const btn  = document.getElementById('svcSubmitBtn');
+      const fail = m => { err.textContent = m; err.style.display = 'block'; };
+      if (!user) { closeServiceRequest(); openAccountModal(); return; }
+      err.style.display = 'none';
+
+      if (!_svcSelected) return fail('Please choose a service.');
+      const name  = (document.getElementById('svcName').value || '').trim();
+      const phone = (document.getElementById('svcPhone').value || '').trim();
+      if (!name)  return fail('Please enter your name.');
+      if (!phone) return fail('Please enter a phone number we can reach you on.');
+
+      const collected = _collectSvcDetails();
+      if (collected.error) return fail(collected.error);
+
+      const svc = SERVICE_CATALOG.find(x => x.id === _svcSelected);
+      const bookingId = document.getElementById('svcBooking').value || null;
+      const linked = bookingId ? (window._myBookingsCache.find(b => b.id === bookingId) || null) : null;
+      const message = (document.getElementById('svcNotes').value || '').trim();
+
+      btn.disabled = true; btn.textContent = 'Sending…';
+      try {
+        const { db, collection, addDoc, serverTimestamp } = window._fb;
+        await addDoc(collection(db, 'serviceRequests'), {
+          uid: user.uid,
+          guestName: name,
+          email: (window._userProfile?.email) || user.email || null,
+          phone,
+          serviceId: _svcSelected,
+          serviceLabel: svc ? svc.label : _svcSelected,
+          details: collected.details,
+          message: message || null,
+          bookingId,
+          bookingRoom: linked?.roomName || null,
+          bookingCheckIn: linked?.checkIn || null,
+          bookingCheckOut: linked?.checkOut || null,
+          source: 'account',
+          status: 'new',
+          adminNote: null,
+          createdAt: serverTimestamp()
+        });
+        document.getElementById('svcFormWrap').style.display = 'none';
+        document.getElementById('svcSuccess').style.display = 'block';
+        loadUserRequests();
+      } catch(e) {
+        btn.disabled = false; btn.textContent = 'Send Request';
+        fail('Could not send: ' + e.message);
+      }
+    }
+
+    const REQ_STATUS_STYLE = {
+      new:        { label: 'Received',    color: '#D97706' },
+      inprogress: { label: 'Arranging',   color: '#2563EB' },
+      confirmed:  { label: 'Confirmed',   color: '#059669' },
+      declined:   { label: 'Unavailable', color: '#DC2626' }
+    };
+
+    async function loadUserRequests() {
+      const user = window._currentUser;
+      const listEl = document.getElementById('profileRequestsList');
+      if (!listEl) return;
+      if (!user) { listEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-style:italic;font-size:0.85rem;">Sign in to see your requests.</div>'; return; }
+      listEl.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.85rem;">Loading…</div>';
+      try {
+        const { db, collection, getDocs, query, where } = window._fb;
+        const snap = await getDocs(query(collection(db, 'serviceRequests'), where('uid','==',user.uid)));
+        const reqs = []; snap.forEach(d => reqs.push({ id: d.id, ...d.data() }));
+        reqs.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        if (!reqs.length) {
+          listEl.innerHTML = `<div style="text-align:center;padding:2rem 0.5rem;color:var(--text-muted);font-style:italic;font-size:0.85rem;line-height:1.6;">No requests yet.<br/>Island tours, airport transfers and family retreats can all be arranged here.</div>`;
+          return;
+        }
+        listEl.innerHTML = reqs.slice(0, 20).map(r => {
+          const st = REQ_STATUS_STYLE[r.status] || REQ_STATUS_STYLE.new;
+          const det = Array.isArray(r.details) ? r.details : [];
+          return `<div style="border:1px solid rgba(184,115,51,0.18);border-radius:10px;padding:0.95rem 1rem;margin-bottom:0.7rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;margin-bottom:0.4rem;">
+              <div style="font-size:0.85rem;font-weight:700;color:var(--text-primary);line-height:1.35;">${r.serviceLabel || 'Request'}</div>
+              <span style="font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:${st.color};background:${st.color}18;padding:2px 8px;border-radius:20px;border:1px solid ${st.color}30;white-space:nowrap;">${st.label}</span>
+            </div>
+            ${r.bookingRoom ? `<div style="font-size:0.7rem;color:var(--copper);margin-bottom:0.4rem;">For your stay · ${r.bookingRoom}</div>` : ''}
+            ${det.length ? `<div style="font-size:0.73rem;color:var(--text-muted);line-height:1.65;margin-bottom:0.35rem;">${det.map(d => `<div><span style="color:#9A938C;">${d.label}:</span> ${d.value}</div>`).join('')}</div>` : ''}
+            ${r.message ? `<div style="font-size:0.73rem;color:var(--text-muted);font-style:italic;line-height:1.5;margin-top:0.35rem;">"${r.message}"</div>` : ''}
+            <div style="margin-top:0.6rem;padding-top:0.55rem;border-top:1px solid rgba(184,115,51,0.12);font-size:0.68rem;color:var(--text-muted);line-height:1.5;">
+              ${r.status === 'confirmed' ? 'Confirmed — see you then.'
+                : r.status === 'declined' ? 'We couldn\'t arrange this one. Give us a call and we\'ll find an alternative.'
+                : 'Our team will contact you by phone or email to confirm.'}
+            </div>
+          </div>`;
+        }).join('');
+      } catch(e) {
+        listEl.innerHTML = `<div style="text-align:center;padding:1rem;color:#DC2626;font-size:0.8rem;">Could not load requests.</div>`;
+      }
+    }
+
+    /* ══════ BOOKING-TIME ADD-ONS ══════ */
+    let _bmAddOnSel = {};
+
+    const BM_ADDON_PLACEHOLDER = {
+      island_tour:    'Which tour, preferred day, pickup time, how many guests…',
+      airport:        'Airport, arrival date & time, flight number, passengers, and whether you need the return drop-off…',
+      family_retreat: 'Group size, ages of children, occasion, any group dining or activities…'
+    };
+
+    function _renderBmAddOns() {
+      const wrap = document.getElementById('bmAddOnsList');
+      if (!wrap) return;
+      wrap.innerHTML = SERVICE_CATALOG.filter(sv => sv.id !== 'other').map(sv => {
+        const on = !!_bmAddOnSel[sv.id];
+        return `<div style="border:1.5px solid ${on ? 'var(--copper)' : '#E8E4DE'};background:${on ? 'rgba(184,115,51,0.05)' : '#fff'};border-radius:10px;overflow:hidden;transition:all 0.18s;">
+          <div onclick="toggleBmAddOn('${sv.id}')" style="display:flex;align-items:center;gap:0.7rem;padding:0.7rem 0.85rem;cursor:pointer;">
+            <span style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${on ? 'var(--copper)' : '#D8D2CA'};background:${on ? 'var(--copper)' : '#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${on ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</span>
+            <span style="font-size:1rem;flex-shrink:0;">${sv.icon}</span>
+            <span style="font-size:0.8rem;font-weight:600;color:${on ? 'var(--copper)' : 'var(--text-primary)'};line-height:1.3;">${sv.label}</span>
+          </div>
+          ${on ? `<div style="padding:0 0.85rem 0.8rem;">
+            <textarea id="bmAddOn_${sv.id}" rows="2" placeholder="${BM_ADDON_PLACEHOLDER[sv.id] || 'Details for our team…'}" class="form-input" style="width:100%;resize:vertical;font-family:var(--font-body);font-size:0.78rem;">${_bmAddOnSel[sv.id].details || ''}</textarea>
+          </div>` : ''}
+        </div>`;
+      }).join('');
+    }
+
+    function toggleBmAddOn(id) {
+      // Preserve whatever is typed in the other open boxes before re-rendering
+      _syncBmAddOnText();
+      if (_bmAddOnSel[id]) delete _bmAddOnSel[id];
+      else _bmAddOnSel[id] = { details: '' };
+      _renderBmAddOns();
+    }
+
+    function _syncBmAddOnText() {
+      Object.keys(_bmAddOnSel).forEach(k => {
+        const ta = document.getElementById('bmAddOn_' + k);
+        if (ta) _bmAddOnSel[k].details = ta.value;
+      });
+    }
+
+    function _collectBmAddOns() {
+      _syncBmAddOnText();
+      return Object.keys(_bmAddOnSel).map(id => {
+        const sv = SERVICE_CATALOG.find(x => x.id === id);
+        return { id, label: sv ? sv.label : id, details: (_bmAddOnSel[id].details || '').trim() || null };
+      });
     }
 
     async function cancelMyBooking(bookingId) {
