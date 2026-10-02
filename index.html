@@ -511,13 +511,6 @@
 
     /* ═══ Scroll progress ═══ */
 
-    /* ═══ Copper cursor (desktop) ═══ */
-    .cursor-dot, .cursor-ring { position: fixed; top:0; left:0; pointer-events: none; z-index: 4000; border-radius: 50%; transform: translate(-50%,-50%); }
-    .cursor-dot { width: 6px; height: 6px; background: var(--copper); }
-    .cursor-ring { width: 34px; height: 34px; border: 1.5px solid rgba(184,115,51,0.55); transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s; }
-    .cursor-ring.is-hover { width: 52px; height: 52px; border-color: rgba(184,115,51,0.9); background: rgba(184,115,51,0.08); }
-    @media (pointer: coarse) { .cursor-dot, .cursor-ring { display: none; } }
-
     /* ── No fade-in for feature cards or events photos ── */
     #featuresGrid .img-unveil,
     #featuresGrid .img-unveil.unveiled,
@@ -2332,8 +2325,6 @@
 </head>
 <body>
 <div id="silk-bg-photo"></div>
-<div class="cursor-dot" id="cursorDot"></div>
-<div class="cursor-ring" id="cursorRing"></div>
 
 
 
@@ -2855,6 +2846,10 @@
         </div>
 
         <div class="form-group"><label for="bmRequests" class="form-label">Special Requests <span style="font-weight:400;font-size:var(--text-xs);color:var(--text-muted);">(optional)</span></label><textarea class="form-textarea" id="bmRequests" placeholder="Any special requests or notes?" style="min-height:70px;"></textarea></div>
+        <label style="display:flex;gap:8px;align-items:flex-start;font-size:0.78rem;line-height:1.5;margin:.75rem 0;">
+          <input type="checkbox" id="bmTerms" style="margin-top:3px;">
+          <span>I agree to the <a href="#" onclick="openPolicy(\'terms\');return false;">Terms &amp; Conditions</a>, <a href="#" onclick="openPolicy(\'refund\');return false;">Refund &amp; Cancellation Policy</a> and <a href="#" onclick="openPolicy(\'privacy\');return false;">Privacy Policy</a>. All amounts are in USD.</span>
+        </label>
         <button class="btn-primary form-submit" id="bmSubmitBtn" onclick="submitBooking()" style="width:100%;justify-content:center;margin-top:0.5rem;">
           Confirm Booking
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -2968,6 +2963,25 @@
             <li><a href="mailto:swabyshopehideaway1@gmail.com">swabyshopehideaway1@gmail.com</a></li>
           </ul>
         </div>
+        <div>
+          <h4 class="footer-col-title">Legal</h4>
+          <ul class="footer-links">
+            <li><a href="#" onclick="openPolicy(\'terms\');return false;">Terms &amp; Conditions</a></li>
+            <li><a href="#" onclick="openPolicy(\'privacy\');return false;">Privacy Policy</a></li>
+            <li><a href="#" onclick="openPolicy(\'refund\');return false;">Refund &amp; Cancellation</a></li>
+            <li><a href="#" onclick="openPolicy(\'delivery\');return false;">Service Delivery</a></li>
+          </ul>
+        </div>
+      </div>
+      <div style="padding:1rem 0;font-size:0.75rem;opacity:.85;line-height:1.7;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:.5rem;">
+          <span>We accept:</span>
+          <!-- Replace these with the official Visa / Mastercard logo files from their brand centres -->
+          <img alt="Visa" height="26" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='36'%3E%3Crect width='56' height='36' rx='5' fill='%231A1F71'/%3E%3Ctext x='28' y='24' font-family='Arial' font-weight='900' font-style='italic' font-size='16' text-anchor='middle' fill='%23fff'%3EVISA%3C/text%3E%3C/svg%3E">
+          <img alt="Mastercard" height="26" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='36'%3E%3Crect width='56' height='36' rx='5' fill='%23fff' stroke='%23ccc'/%3E%3Ccircle cx='22' cy='18' r='10' fill='%23EB001B'/%3E%3Ccircle cx='34' cy='18' r='10' fill='%23F79E1B' fill-opacity='.9'/%3E%3C/svg%3E">
+          <span>Secured by 3D Secure · Payments processed by Sagicor Bank Jamaica</span>
+        </div>
+        <div>Swaby's Hope Hideaway Ltd · Spur Tree, Mandeville, Manchester, <strong>Jamaica</strong> · All prices in <strong>US Dollars (USD)</strong></div>
       </div>
       <div class="footer-bottom">
         <span>&copy; 2026 Swaby's Hope Hideaway Ltd. All rights reserved.</span>
@@ -3279,15 +3293,8 @@ if (!window._localToday) {
 
     async function loadBookedDatesForRoom(roomId) {
       try {
-        const { db, collection, getDocs, query, where } = window._fb;
-        const snap = await getDocs(query(
-          collection(db, 'bookings'),
-          where('roomId', '==', roomId),
-          where('status', 'in', ['confirmed', 'pending'])
-        ));
-        const ranges = [];
-        snap.forEach(d => { const b = d.data(); ranges.push({ checkIn: b.checkIn, checkOut: b.checkOut }); });
-        window._bookedRanges[roomId] = ranges;
+        const r = await fetch('/api/availability?roomId=' + encodeURIComponent(roomId));
+        window._bookedRanges[roomId] = await r.json();
         renderBookingCalendar(roomId);
       } catch(e) { console.warn('Could not load booked dates:', e); }
     }
@@ -3459,7 +3466,7 @@ if (!window._localToday) {
       summaryEl.innerHTML = `
         <div class="bps-row"><span>${nights} night${nights>1?'s':''} × $${room.price}</span><span>$${base}</span></div>
         ${discountHtml}
-        <div class="bps-row total"><span>Total</span><span>$${total}</span></div>`;
+        <div class="bps-row total"><span>Total (USD)</span><span>$${total} USD</span></div>`;
       summaryEl.style.display = 'block';
       // Check availability
       checkAvailability();
@@ -3508,113 +3515,30 @@ if (!window._localToday) {
       if (_bmAdults < 1) { showBmError('Please select at least 1 adult.'); return; }
       if (_bmAdults > _bmMaxAdults || _bmChildren > _bmMaxChildren) { showBmError(`This room sleeps up to ${_bmMaxAdults} adult${_bmMaxAdults!==1?'s':''}${_bmMaxChildren ? ' + ' + _bmMaxChildren + ' child' + (_bmMaxChildren!==1?'ren':'') : ''}.`); return; }
 
+      if (!document.getElementById('bmTerms').checked) { showBmError('Please accept the Terms & Conditions to continue.'); return; }
+
       const btn = document.getElementById('bmSubmitBtn');
-      btn.disabled = true; btn.textContent = 'Checking availability…';
+      btn.disabled = true; btn.textContent = 'Preparing secure payment…';
 
-      // FRESH overlap check straight from Firebase (prevents double-booking race)
+      // The server recomputes the price from Firestore and returns Sagicor's secure payment page
+      // (card entry + 3D Secure happen there). The booking is confirmed only after Sagicor verifies payment.
       try {
-        const { db, collection, getDocs, query, where } = window._fb;
-        const freshSnap = await getDocs(query(
-          collection(db, 'bookings'),
-          where('roomId', '==', _bookingRoomId),
-          where('status', 'in', ['confirmed', 'pending'])
-        ));
-        const freshRanges = [];
-        freshSnap.forEach(d => { const b = d.data(); freshRanges.push({ checkIn: b.checkIn, checkOut: b.checkOut }); });
-        window._bookedRanges[_bookingRoomId] = freshRanges;
-        if (freshRanges.some(r => checkIn < r.checkOut && checkOut > r.checkIn)) {
-          alert('Sorry, those dates were just booked by someone else. Please choose different dates.');
-          btn.disabled = false; btn.textContent = 'Confirm Booking';
-          renderBookingCalendar(_bookingRoomId);
-          checkAvailability();
-          return;
-        }
-      } catch(e) {
-        console.error(e); alert('Could not verify availability. Please try again.');
-        btn.disabled = false; btn.textContent = 'Confirm Booking';
-        return;
-      }
-
-      const room = (window._roomsData || []).find(r => r.id === _bookingRoomId);
-      const nights = Math.round((new Date(checkOut) - new Date(checkIn)) / 86400000);
-      const base = room.price * nights;
-      let discountAmt = 0;
-      if (_bookingDiscount) {
-        if (_bookingDiscount.discountType === 'percent') discountAmt = Math.round(base * _bookingDiscount.discountValue / 100);
-        else discountAmt = Math.min(_bookingDiscount.discountValue, base);
-      }
-      const total = base - discountAmt;
-
-      btn.textContent = 'Confirming…';
-      try {
-        const { db, collection, addDoc, serverTimestamp } = window._fb;
-        const user = window._currentUser;
-        const _addOns = _collectBmAddOns();
-        const _bookingRef = await addDoc(collection(db, 'bookings'), {
-          roomId: _bookingRoomId, roomName: room.name,
-          checkIn, checkOut, nights,
-          checkInTime: STAY_TIMES.inRaw, checkOutTime: STAY_TIMES.outRaw,
-          guestName: name, email, phone, specialRequests: requests || null,
-          adults: _bmAdults, children: _bmChildren, totalGuests: _bmAdults + _bmChildren,
-          uid: user?.uid || null,
-          authEmail: user?.email || null,
-          pricePerNight: room.price, baseTotal: base,
-          discountApplied: discountAmt,
-          promoTitle: _bookingDiscount?.title || null,
-          promoDiscountType: _bookingDiscount?.discountType || null,
-          promoDiscountValue: _bookingDiscount?.discountValue || null,
-          total, status: 'confirmed',
-          addOns: _addOns.length ? _addOns : null,
-          createdAt: serverTimestamp()
-        });
-
-        // Each selected add-on becomes a service request in the admin dashboard
-        if (_addOns.length) {
-          await Promise.all(_addOns.map(a => addDoc(collection(db, 'serviceRequests'), {
-            uid: user?.uid || null,
-            guestName: name,
-            email,
-            phone,
-            serviceId: a.id,
-            serviceLabel: a.label,
-            details: [],
-            message: a.details || null,
-            bookingId: _bookingRef.id,
-            bookingRoom: room.name,
-            bookingCheckIn: checkIn,
-            bookingCheckOut: checkOut,
-            source: 'booking',
-            status: 'new',
-            adminNote: null,
-            createdAt: serverTimestamp()
-          })));
-        }
-        // Show success
-        document.getElementById('bmWrap').style.display = 'none';
-        document.getElementById('bmSuccess').style.display = 'block';
-        document.getElementById('bmSuccess').innerHTML = `
-          <div style="text-align:center;padding:1.5rem 0;">
-            <div style="width:64px;height:64px;border-radius:50%;background:rgba(184,115,51,0.08);border:1px solid rgba(184,115,51,0.25);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B87333" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <h3 style="font-family:var(--font-display);font-size:1.5rem;font-weight:500;margin-bottom:0.5rem;">Booking Confirmed!</h3>
-            <p style="color:var(--text-muted);line-height:1.7;margin-bottom:0.25rem;">Thank you, <strong>${name}</strong>.</p>
-            <p style="color:var(--text-muted);line-height:1.7;"><strong>${room.name}</strong> · ${checkIn} → ${checkOut} · <strong style="color:var(--copper);">$${total}</strong></p>
-            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem;">Check-in from <strong>${STAY_TIMES.in}</strong> · Check-out by <strong>${STAY_TIMES.out}</strong></p>
-            <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.75rem;">A confirmation will be sent to <strong>${email}</strong>.</p>
-            ${_addOns.length ? `<div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(184,115,51,0.05);border:1px solid rgba(184,115,51,0.18);border-radius:10px;text-align:left;">
-              <div style="font-size:0.62rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--copper);margin-bottom:0.4rem;">Add-ons requested</div>
-              <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">${_addOns.map(a => a.label).join(' · ')}</div>
-              <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.45rem;line-height:1.5;">Our team will contact you to confirm availability and pricing for these.</div>
-            </div>` : ''}
-          </div>`;
-        setTimeout(() => closeBookingModal(), 5000);
-      } catch(e) {
-        console.error(e); alert('Booking failed. Please try again.');
-        btn.disabled = false; btn.textContent = 'Confirm Booking';
-      }
+        if (!window._currentUser) throw new Error('Please sign in to complete your booking.');
+        const idToken = await window._currentUser.getIdToken();
+        const r = await fetch('/api/checkout', { method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + idToken },
+          body: JSON.stringify({ roomId: _bookingRoomId, checkIn, checkOut, name, email, phone,
+            adults: _bmAdults, children: _bmChildren, requests, termsAccepted: true,
+            promoId: _bookingDiscount?.id || null, addOns: _collectBmAddOns() }) });
+        const out = await r.json();
+        if (!r.ok) throw new Error(out.error || 'Payment could not be started.');
+        btn.textContent = 'Opening secure payment…';
+        await new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = out.checkoutScript;
+          sc.onload = ok; sc.onerror = () => bad(new Error('Could not load the secure payment page.')); document.head.appendChild(sc); });
+        Checkout.configure({ session: { id: out.sessionId } });
+        Checkout.showPaymentPage();
+      } catch (e) { showBmError(e.message); btn.disabled = false; btn.textContent = 'Confirm Booking'; }
     }
-
 
     /* ════════════════════════════════════════
        NAVIGATION
@@ -4793,28 +4717,6 @@ if (!window._localToday) {
 
   /* ---------- (marquee removed) ---------- */
 
-  /* ---------- Copper cursor (desktop only) ---------- */
-  if (window.matchMedia('(pointer: fine)').matches && !reduceMotion) {
-    const dot = document.getElementById('cursorDot');
-    const ring = document.getElementById('cursorRing');
-    if (dot && ring) {
-      let cx=-100, cy=-100, rx=-100, ry=-100;
-      document.addEventListener('mousemove', (e)=>{ cx=e.clientX; cy=e.clientY; }, { passive:true });
-      (function cLoop(){
-        requestAnimationFrame(cLoop);
-        rx += (cx-rx)*0.16; ry += (cy-ry)*0.16;
-        dot.style.transform = 'translate(' + (cx-3) + 'px,' + (cy-3) + 'px)';
-        ring.style.transform = 'translate(' + (rx-17) + 'px,' + (ry-17) + 'px)';
-      })();
-      document.addEventListener('mouseover', (e)=>{
-        if (e.target.closest('a, button, .room-card, .event-card, .feature-card, input, select, textarea, [onclick]')) ring.classList.add('is-hover');
-      }, { passive:true });
-      document.addEventListener('mouseout', (e)=>{
-        if (e.target.closest('a, button, .room-card, .event-card, .feature-card, input, select, textarea, [onclick]')) ring.classList.remove('is-hover');
-      }, { passive:true });
-    }
-  }
-
   /* ---------- Image unveil + parallax — dynamic-content safe ---------- */
   const unveilObs = new IntersectionObserver((entries)=>{
     entries.forEach(en=>{
@@ -4930,5 +4832,47 @@ if (!window._localToday) {
 })();
 </script>
 
+
+  <!-- POLICIES POPUP -->
+  <div id="policyScrim" onclick="if(event.target===this)closePolicy()" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(20,14,10,.6);align-items:center;justify-content:center;padding:1rem;">
+    <div style="background:#faf6f1;max-width:680px;width:100%;max-height:85vh;overflow:auto;border-radius:14px;padding:1.75rem;position:relative;color:#2b2420;line-height:1.7;font-size:.9rem;">
+      <button onclick="closePolicy()" aria-label="Close" style="position:absolute;top:10px;right:14px;border:0;background:none;font-size:1.6rem;cursor:pointer;">&times;</button>
+      <h3 id="policyTitle" style="font-family:var(--font-display);color:#B87333;margin:0 0 .75rem;"></h3>
+      <div id="policyBody"></div>
+      <p style="font-size:.72rem;color:#7a6e63;margin-top:1.25rem;">Swaby's Hope Hideaway Ltd · Spur Tree, Mandeville, Manchester, Jamaica · (876) 909-4437 · swabyshopehideaway1@gmail.com · Version 2026-10</p>
+    </div>
+  </div>
+  <script>
+    const POLICIES = {
+      terms: ['Terms & Conditions', `
+        <p><strong>Who we are.</strong> This site is operated by Swaby's Hope Hideaway Ltd, a company based in Jamaica. By booking you agree to these terms.</p>
+        <p><strong>Services.</strong> Boutique accommodation, weddings and events, and optional guest services (airport transfer, guided tours, room service, event planning, gift vouchers).</p>
+        <p><strong>Prices and currency.</strong> All prices are shown and charged in US Dollars (USD), per room per night unless stated. The order summary before payment shows your total. Your card issuer may add foreign-exchange charges.</p>
+        <p><strong>Booking and payment.</strong> A booking is confirmed only once payment is approved. Card payments are processed by Sagicor Bank Jamaica's secure gateway with 3D Secure. We never see or store your full card number.</p>
+        <p><strong>Check-in / check-out.</strong> Check-in from 3:00 PM, check-out by 11:00 AM. Guest numbers must not exceed the room's capacity.</p>
+        <p><strong>Conduct and damage.</strong> Guests are responsible for damage during their stay. We may refuse or end a stay for unlawful or disruptive behaviour.</p>
+        <p><strong>Governing law.</strong> The laws of Jamaica apply.</p>`],
+      privacy: ['Privacy Policy', `
+        <p><strong>What we collect.</strong> Name, email, phone, booking details, special requests, account profile, reviews you submit, and basic technical data needed to run the site.</p>
+        <p><strong>Why.</strong> To process bookings and payments, communicate with you, provide requested services, prevent fraud and meet legal duties. We do not sell your data.</p>
+        <p><strong>Payments.</strong> Card details are entered on our processor's secure page and handled by Sagicor Bank Jamaica. We receive only the result and a transaction reference.</p>
+        <p><strong>Who sees it.</strong> Our staff, our hosting providers (Google Cloud / Firebase) and our payment processor. We disclose to authorities only where the law requires.</p>
+        <p><strong>Your rights.</strong> Under the Jamaica Data Protection Act, 2020 you may request access, correction or deletion of your data by emailing swabyshopehideaway1@gmail.com.</p>
+        <p><strong>Cookies.</strong> Only essential storage for sign-in and booking.</p>`],
+      refund: ['Refund & Cancellation Policy', `
+        <p><strong>Guest cancellations.</strong> 7 or more days before check-in: full refund. 3–6 days before: 50% refund. Less than 3 days, or no-show: no refund.</p>
+        <p><strong>If we cancel.</strong> You receive a full refund or may rebook free of charge.</p>
+        <p><strong>How refunds are paid.</strong> To the original card, in USD, normally within 7–14 business days depending on your bank.</p>
+        <p><strong>To cancel.</strong> Use "My Bookings" on this site or contact us at (876) 909-4437 or swabyshopehideaway1@gmail.com. Add-on services are cancelled by contacting us.</p>`],
+      delivery: ['Service Delivery Policy', `
+        <p>We provide services, not shipped goods. Accommodation is delivered on your booked dates at our property in Spur Tree, Mandeville. After payment you receive an email confirmation and receipt showing your booking, amount (USD) and transaction reference. Add-on services are confirmed separately by our team.</p>`]
+    };
+    (function(){const q=new URLSearchParams(location.search),st=q.get('payment');if(!st)return;history.replaceState({},'','/');
+      const m={success:'Payment approved. Your booking is confirmed — see it under My Bookings. Thank you!',failed:'Your payment was not approved and you were not charged for this booking. Please try again or use another card.',cancelled:'Payment cancelled. Your dates were not booked.'};
+      window.addEventListener('load',()=>setTimeout(()=>alert(m[st]||''),400));})();
+    function openPolicy(k){const p=POLICIES[k];if(!p)return;document.getElementById('policyTitle').textContent=p[0];document.getElementById('policyBody').innerHTML=p[1];document.getElementById('policyScrim').style.display='flex';}
+    function closePolicy(){document.getElementById('policyScrim').style.display='none';}
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closePolicy();});
+  </script>
 </body>
 </html>
