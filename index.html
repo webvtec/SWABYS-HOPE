@@ -3292,11 +3292,17 @@ if (!window._localToday) {
     window._bookedRanges = {};
 
     async function loadBookedDatesForRoom(roomId) {
+      window._bookedRanges = window._bookedRanges || {};
       try {
         const r = await fetch('/api/availability?roomId=' + encodeURIComponent(roomId));
+        if (!r.ok) throw new Error('availability ' + r.status);
         window._bookedRanges[roomId] = await r.json();
-        renderBookingCalendar(roomId);
-      } catch(e) { console.warn('Could not load booked dates:', e); }
+      } catch(e) {
+        // Never leave the guest without a calendar; the server still blocks double bookings at checkout
+        console.warn('Could not load booked dates:', e);
+        window._bookedRanges[roomId] = window._bookedRanges[roomId] || [];
+      }
+      renderBookingCalendar(roomId);
     }
 
     let _bmCalMonth = null, _bmCalYear = null;
