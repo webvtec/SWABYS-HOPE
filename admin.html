@@ -2235,6 +2235,37 @@ function _fmtBookedOn(ts, withTime) {
   return datePart + ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
+/* ── Payment status helpers (deposit / balance / cash) ── */
+const _money = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function _hasBalance(b) { return (b.status === 'confirmed') && typeof b.balanceDue === 'number' && b.balanceDue > 0; }
+function _payBadge(b) {
+  if (b.status !== 'confirmed' || typeof b.balanceDue !== 'number') return '';
+  if (b.balanceDue > 0) return `<div style="margin-top:4px;font-size:0.62rem;font-weight:700;color:#D97706;line-height:1.4;">${_money(b.amountPaid)} paid · ${_money(b.balanceDue)} due</div>`;
+  return `<div style="margin-top:4px;font-size:0.62rem;font-weight:700;color:var(--success);">Paid in full</div>`;
+}
+function _cashBtn(b, full) {
+  if (!_hasBalance(b)) return '';
+  return `<button class="btn btn-sm" onclick="markBalancePaidCash('${b.id}')" title="Guest paid the remaining balance in cash" style="${full ? 'flex:1 1 100%;justify-content:center;' : 'margin-left:4px;'}background:rgba(5,150,105,0.12);color:var(--success);border:1px solid rgba(5,150,105,0.35);">💵 Mark balance paid (cash)</button>`;
+}
+async function markBalancePaidCash(bookingId) {
+  const { db, doc, updateDoc, serverTimestamp } = window._fb;
+  try {
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+    const ref = doc(db, 'bookings', bookingId), snap = await getDoc(ref);
+    if (!snap.exists()) { showToast('Booking not found.'); return; }
+    const b = snap.data();
+    const bal = Number(b.balanceDue) || 0;
+    if (!(bal > 0)) { showToast('This booking has no balance due.'); await loadBookings(); return; }
+    if (!confirm(`Confirm you have received ${_money(bal)} in cash from ${b.guestName || 'the guest'}?\n\nThis will mark the booking as paid in full and cannot be undone from here.`)) return;
+    const paid = Math.round(((Number(b.amountPaid) || 0) + bal) * 100) / 100;
+    const payments = Array.isArray(b.payments) ? b.payments.slice() : [];
+    payments.push({ type: 'cash', amount: Math.round(bal * 100) / 100, ref: 'CASH', at: Date.now() });
+    await updateDoc(ref, { amountPaid: paid, balanceDue: 0, payments, balancePaidAt: serverTimestamp(), cashReceived: true });
+    showToast('Balance marked as paid (cash).');
+    await loadBookings();
+  } catch (e) { showToast('Error: ' + e.message); }
+}
+
 async function loadBookings() {
   const { db, collection, getDocs, query, orderBy } = window._fb;
   try {
@@ -2268,9 +2299,10 @@ async function loadBookings() {
         <td>${fmtDate(b.checkOut)}<div style="font-size:0.6rem;color:var(--text-dim);">${STAY_TIMES.out}</div></td>
         <td style="text-align:center;">${b.nights || '—'}</td>
         <td style="white-space:nowrap;" title="Date this booking was originally made">${_fmtBookedOn(b.createdAt)}<div style="font-size:0.6rem;color:var(--text-dim);">booked</div></td>
-        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>${_addOnTags(b.addOns)}</td>
+        <td><span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>${_payBadge(b)}${_addOnTags(b.addOns)}</td>
         <td style="white-space:nowrap;">
           <button class="btn btn-outline btn-sm" onclick="openEditBookingDates('${b.id}')" title="Edit dates">✏️ Dates</button>
+          ${_cashBtn(b, false)}
           ${st !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')" style="margin-left:4px;" title="Cancel booking">Cancel</button>` : ''}
         </td>
       </tr>`;
@@ -2295,11 +2327,13 @@ async function loadBookings() {
           <span>Status</span>
           <span class="status-pill ${st === 'pending' ? 'st-pending' : st === 'cancelled' ? 'st-cancelled' : 'st-confirmed'}">${st}</span>
         </div>
+        ${(st === 'confirmed' && typeof b.balanceDue === 'number') ? `<div class="booking-card-row"><span>Payment</span><span style="font-weight:700;color:${b.balanceDue > 0 ? '#D97706' : 'var(--success)'};">${b.balanceDue > 0 ? _money(b.amountPaid) + ' paid · ' + _money(b.balanceDue) + ' due' : 'Paid in full'}</span></div>` : ''}
         ${(Array.isArray(b.addOns) && b.addOns.length) ? `<div style="margin-top:0.6rem;padding-top:0.6rem;border-top:1px solid var(--border);">
           <div style="font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.4rem;">Add-ons requested</div>
           ${_addOnTags(b.addOns)}
         </div>` : ''}
-        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+        <div style="display:flex;gap:0.5rem;margin-top:0.75rem;flex-wrap:wrap;">
+          ${_cashBtn(b, true)}
           <button class="btn btn-outline btn-sm" onclick="openEditBookingDates('${b.id}')" style="flex:1;justify-content:center;">✏️ Edit Dates</button>
           ${st !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')" style="flex:1;justify-content:center;">Cancel</button>` : ''}
         </div>
@@ -2312,7 +2346,7 @@ async function loadBookings() {
    SERVICE REQUESTS (Island tours / Airport transfers /
    Family retreats / Custom concierge enquiries)
    ══════════════════════════════════════════════════════════ */
-const STAY_TIMES = { in: '3:00 PM', out: '11:00 AM' };
+const STAY_TIMES = { in: '2:00 PM', out: '11:00 AM' };
 
 let _reqItems = [];
 let _reqFilter = 'all';
@@ -2771,10 +2805,21 @@ async function saveEditedDates() {
   btn.disabled = true; btn.textContent = 'Saving…';
   try {
     const { db, doc, updateDoc } = window._fb;
+    const { getDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
+    const bref = doc(db, 'bookings', _editBookingId);
+    const cur = (await getDoc(bref)).data() || {};
     const updates = { checkIn: ci, checkOut: co, nights };
-    if (total !== null) { updates.total = total; updates.baseTotal = total; updates.discountApplied = 0; }
-    await updateDoc(doc(db, 'bookings', _editBookingId), updates);
-    closeModal(); showToast('Dates updated!'); await loadBookings();
+    let overpaid = 0;
+    if (total !== null) {
+      updates.total = total; updates.baseTotal = total; updates.discountApplied = 0;
+      // keep the balance in step with the new total (only for bookings that track payments)
+      if (typeof cur.amountPaid === 'number') {
+        updates.balanceDue = Math.max(0, Math.round((total - cur.amountPaid) * 100) / 100);
+        overpaid = Math.max(0, Math.round((cur.amountPaid - total) * 100) / 100);
+      }
+    }
+    await updateDoc(bref, updates);
+    closeModal(); showToast(overpaid > 0 ? 'Dates updated. Guest has paid ' + _money(overpaid) + ' more than the new total, so arrange a refund.' : 'Dates updated!'); await loadBookings();
   } catch(e) {
     errEl.textContent = 'Failed: ' + e.message; errEl.style.display='block';
     btn.disabled=false; btn.textContent='Save Changes';
