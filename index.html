@@ -433,7 +433,8 @@
       --lux-pearl:     #E8E2D8;
 
       /* Functional */
-      --text-primary:   #1A1D26;
+      --brand-green:    #153C06;
+      --text-primary:   #153C06;
       --text-secondary: #4A5060;
       --text-muted:     #6B7280;
       --text-on-dark:   #E8E2D8;
@@ -785,8 +786,8 @@
     .nav-link:hover::after, .nav-link.active::after { width: 100%; }
     .nav:not(.scrolled) .nav-link { color: rgba(250,248,245,0.85); }
     .nav:not(.scrolled) .nav-link:hover, .nav:not(.scrolled) .nav-link.active { color: var(--copper-shine); }
-    .nav.scrolled .nav-link { color: var(--text-secondary); }
-    .nav.scrolled .nav-link:hover, .nav.scrolled .nav-link.active { color: var(--copper); }
+    .nav.scrolled .nav-link { color: var(--brand-green); }
+    .nav.scrolled .nav-link:hover, .nav.scrolled .nav-link.active { color: var(--brand-green); }
 
     .nav-cta { display: none; }
 
@@ -801,7 +802,7 @@
     }
     .nav-location-btn svg { width: 26px; height: 26px; stroke-width: 2.5; }
     .nav:not(.scrolled) .nav-location-btn { color: var(--copper-shine); }
-    .nav.scrolled .nav-location-btn { color: var(--copper); }
+    .nav.scrolled .nav-location-btn { color: var(--brand-green); }
     .nav-location-btn:hover {
       color: var(--copper-light);
       transform: translateY(-2px);
@@ -1245,7 +1246,7 @@
        ═══════════════════════════════════════════ */
     .footer {
       /* premium matte fade: soft warm white easing into rich black, semi-transparent so the 3D scene still shows through */
-      background: linear-gradient(180deg, rgba(250,248,245,0.16) 0%, rgba(45,41,37,0.48) 42%, rgba(8,7,6,0.8) 100%);
+      background: linear-gradient(180deg, rgba(250,248,245,0.16) 0%, rgba(21,60,6,0.55) 42%, rgba(12,38,3,0.88) 100%);
       backdrop-filter: blur(10px) saturate(1.1);
       -webkit-backdrop-filter: blur(10px) saturate(1.1);
       padding: var(--space-2xl) 0 var(--space-lg);
@@ -2682,7 +2683,7 @@
           style="width:100%;padding:0.75rem 1rem;background:#FAF8F5;border:1.5px solid #E8E4DE;border-radius:8px;font-family:var(--font-body);font-size:0.85rem;color:var(--text-primary);outline:none;margin-bottom:1rem;"
           onfocus="this.style.borderColor='var(--copper)'" onblur="this.style.borderColor='#E8E4DE'"
           onkeydown="if(event.key==='Enter')authSubmit()" />
-        <button id="authSubmitBtn" onclick="authSubmit()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#1B3A0C;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.3);">Sign In</button>
+        <button id="authSubmitBtn" onclick="authSubmit()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#153C06;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.3);">Sign In</button>
         <div id="authModalError" style="display:none;margin-top:0.75rem;padding:0.625rem 0.875rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.75rem;color:#DC2626;text-align:center;"></div>
       </div>
 
@@ -2735,7 +2736,7 @@
             </div>
           </div>
           <div id="profileSaveMsg" style="display:none;font-size:0.75rem;margin-bottom:0.75rem;padding:0.5rem 0.75rem;border-radius:6px;"></div>
-          <button onclick="saveUserProfile()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#1B3A0C;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.28);margin-bottom:0.75rem;">Save Profile</button>
+          <button onclick="saveUserProfile()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#153C06;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.28);margin-bottom:0.75rem;">Save Profile</button>
 
           <!-- Admin access — hidden by default, only shown to admin UID -->
           <div id="adminAccessSection" style="display:none;margin-bottom:0.75rem;">
@@ -2755,7 +2756,7 @@
           <div style="background:linear-gradient(135deg,rgba(248,196,76,0.09),rgba(248,196,76,0.03));border:1px solid rgba(248,196,76,0.2);border-radius:12px;padding:0.95rem 1rem;margin-bottom:1.125rem;">
             <div style="font-family:var(--font-display);font-size:0.98rem;font-weight:500;color:var(--text-primary);margin-bottom:0.2rem;">Make your stay more</div>
             <div style="font-size:0.73rem;color:var(--text-muted);line-height:1.55;margin-bottom:0.7rem;">Island tours, airport transfers and family retreats — tell us what you'd like and we'll arrange it.</div>
-            <button onclick="openServiceRequest()" style="width:100%;padding:0.7rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#1B3A0C;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(248,196,76,0.25);">+ Request a Service</button>
+            <button onclick="openServiceRequest()" style="width:100%;padding:0.7rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#153C06;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(248,196,76,0.25);">+ Request a Service</button>
           </div>
           <div id="profileBookingsList">
             <div style="text-align:center;padding:2rem 0;color:var(--text-muted);font-style:italic;font-size:0.85rem;">Loading your bookings…</div>
@@ -2772,7 +2773,7 @@
 
         <!-- Service requests tab content -->
         <div id="profileTabContentRequests" style="display:none;padding:0 1.75rem 1.75rem;">
-          <button onclick="openServiceRequest()" style="width:100%;padding:0.75rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#1B3A0C;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(248,196,76,0.25);margin-bottom:1.125rem;">+ New Request</button>
+          <button onclick="openServiceRequest()" style="width:100%;padding:0.75rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#153C06;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 14px rgba(248,196,76,0.25);margin-bottom:1.125rem;">+ New Request</button>
           <div id="profileRequestsList">
             <div style="text-align:center;padding:2rem 0;color:var(--text-muted);font-style:italic;font-size:0.85rem;">Loading…</div>
           </div>
@@ -2823,7 +2824,7 @@
 
         <div id="svcError" style="display:none;margin-bottom:0.75rem;padding:0.6rem 0.85rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.75rem;color:#DC2626;text-align:center;"></div>
 
-        <button id="svcSubmitBtn" onclick="submitServiceRequest()" style="width:100%;padding:0.9rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#1B3A0C;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.28);">Send Request</button>
+        <button id="svcSubmitBtn" onclick="submitServiceRequest()" style="width:100%;padding:0.9rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#153C06;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.28);">Send Request</button>
         <div style="text-align:center;font-size:0.68rem;color:var(--text-muted);margin-top:0.65rem;line-height:1.5;">No payment is taken now. Our team will reach out by phone or email to confirm availability and pricing.</div>
       </div>
 
@@ -3915,7 +3916,7 @@ if (!window._localToday) {
         ${bookedOn ? `<div style="font-size:0.66rem;color:var(--text-muted);opacity:0.8;margin-bottom:0.7rem;">Booked on ${bookedOn}</div>` : '<div style="height:0.35rem;"></div>'}
         ${payHtml}
         <div style="display:flex;gap:0.45rem;flex-wrap:wrap;">
-          ${canPayBal ? `<button onclick="payBalance('${b.id}', this)" style="flex:1 1 100%;font-size:0.72rem;color:#1B3A0C;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));border:none;border-radius:6px;padding:9px 10px;cursor:pointer;font-family:var(--font-body);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Pay balance ${money(balDue)} by card</button>` : ''}
+          ${canPayBal ? `<button onclick="payBalance('${b.id}', this)" style="flex:1 1 100%;font-size:0.72rem;color:#153C06;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));border:none;border-radius:6px;padding:9px 10px;cursor:pointer;font-family:var(--font-body);font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Pay balance ${money(balDue)} by card</button>` : ''}
           ${st === 'confirmed' ? `<button onclick="openInvoice('${b.id}')" style="font-size:0.68rem;color:var(--copper);background:#fff;border:1px solid rgba(248,196,76,0.28);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font-body);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Invoice</button>` : ''}
           <button onclick="openServiceRequest('${b.id}')" style="flex:1;min-width:130px;font-size:0.68rem;color:var(--copper);background:rgba(248,196,76,0.06);border:1px solid rgba(248,196,76,0.28);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:var(--font-body);font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">+ Add Services</button>
           ${(!isPast && st !== 'cancelled') ? `<button onclick="cancelMyBooking('${b.id}')" style="font-size:0.68rem;color:#DC2626;background:none;border:1px solid rgba(220,38,38,0.25);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--font-body);font-weight:600;">Cancel</button>` : ''}
@@ -4668,7 +4669,7 @@ if (!window._localToday) {
         if (isPast) {
           html += `<div style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;color:#CBD5E1;text-decoration:line-through;cursor:not-allowed;user-select:none;">${d}</div>`;
         } else if (isSel) {
-          html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:var(--copper);color:#1B3A0C;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
+          html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:var(--copper);color:#153C06;font-weight:700;cursor:pointer;user-select:none;">${d}</div>`;
         } else {
           html += `<div onclick="eiCalSelect('${dateStr}')" style="text-align:center;padding:6px 2px;font-size:0.75rem;border-radius:5px;background:rgba(37,99,235,0.08);color:#1D4ED8;font-weight:600;border:1px solid rgba(37,99,235,0.18);cursor:pointer;user-select:none;" onmouseover="this.style.background='rgba(37,99,235,0.18)'" onmouseout="this.style.background='rgba(37,99,235,0.08)'">${d}</div>`;
         }
@@ -4993,7 +4994,7 @@ if (!window._localToday) {
     <div style="background:#fff;max-width:780px;width:100%;height:90vh;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;">
       <iframe id="invFrame" title="Invoice" style="flex:1;border:0;width:100%;background:#fff;"></iframe>
       <div style="display:flex;gap:8px;padding:.75rem;background:#faf6f1;border-top:1px solid #eadfd2;">
-        <button onclick="printInvoice()" style="flex:1;padding:.65rem;border:0;background:#F8C44C;color:#1B3A0C;border-radius:8px;cursor:pointer;font-weight:600;">Print / Save as PDF</button>
+        <button onclick="printInvoice()" style="flex:1;padding:.65rem;border:0;background:#F8C44C;color:#153C06;border-radius:8px;cursor:pointer;font-weight:600;">Print / Save as PDF</button>
         <button onclick="closeInvoice()" style="flex:1;padding:.65rem;border:1px solid #F8C44C;background:#fff;color:#D6A01E;border-radius:8px;cursor:pointer;font-weight:600;">Close</button>
       </div>
     </div>
@@ -5006,7 +5007,7 @@ if (!window._localToday) {
       <div id="payBody"></div>
       <div style="display:flex;gap:8px;margin-top:1rem;">
         <button id="payPrint" onclick="document.getElementById('payScrim').style.display='none';openInvoice(window._payBid)" style="display:none;flex:1;padding:.6rem;border:1px solid #F8C44C;background:#fff;color:#D6A01E;border-radius:8px;cursor:pointer;font-weight:600;">View invoice</button>
-        <button onclick="document.getElementById('payScrim').style.display='none'" style="flex:1;padding:.6rem;border:0;background:#F8C44C;color:#1B3A0C;border-radius:8px;cursor:pointer;font-weight:600;">Close</button>
+        <button onclick="document.getElementById('payScrim').style.display='none'" style="flex:1;padding:.6rem;border:0;background:#F8C44C;color:#153C06;border-radius:8px;cursor:pointer;font-weight:600;">Close</button>
       </div>
     </div>
   </div>
