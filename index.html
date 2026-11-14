@@ -8,8 +8,8 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Swaby's Hope Hideaway Ltd — Use Our Hideaway for Your Getaway</title>
-  <link rel="icon" type="image/jpeg" href="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpeg?alt=media&token=00d097fc-4086-4a83-8440-db922cb50c1e">
-  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpeg?alt=media&token=00d097fc-4086-4a83-8440-db922cb50c1e">
+  <link rel="icon" type="image/jpeg" href="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpg?alt=media&token=857d9287-95d4-449c-a209-6a5cd8e4ba68">
+  <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/SWABYS%20HOPE%20LOGO.jpg?alt=media&token=857d9287-95d4-449c-a209-6a5cd8e4ba68">
   <meta name="description" content="An intimate boutique hotel perched in the cool, tranquil hills of Spur Tree, Mandeville, Manchester, Jamaica. Elegance meets serenity." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,7 +20,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js';
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js';
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-storage.js';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCxRadGAXnaBOfUHABUPIgG3_XUyH0a1vs",
@@ -138,6 +138,24 @@
         await createUserWithEmailAndPassword(auth, email, pass);
         if (typeof _showProfilePanel === 'function') _showProfilePanel();
       } catch(e) { if(errEl){errEl.textContent=e.code==='auth/email-already-in-use'?'This email is already registered. Try signing in.':e.message;errEl.style.display='block';} }
+    };
+
+    window._resetPassword = async () => {
+      const email = document.getElementById('authEmail')?.value.trim();
+      const errEl = document.getElementById('authModalError');
+      const show = (msg, ok) => { if (!errEl) return; errEl.textContent = msg; errEl.style.display = 'block';
+        errEl.style.background = ok ? 'rgba(5,150,105,0.07)' : 'rgba(220,38,38,0.06)';
+        errEl.style.borderColor = ok ? 'rgba(5,150,105,0.25)' : 'rgba(220,38,38,0.18)';
+        errEl.style.color = ok ? '#059669' : '#DC2626'; };
+      if (!email) { show('Enter your email address above first, then tap "Forgot password?".', false); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        show('If an account exists for ' + email + ', a password reset link is on its way. Check your inbox and spam folder.', true);
+      } catch (e) {
+        if (e.code === 'auth/invalid-email') show('That email address does not look right.', false);
+        else if (e.code === 'auth/too-many-requests') show('Too many attempts. Please wait a few minutes and try again.', false);
+        else show('If an account exists for ' + email + ', a password reset link is on its way. Check your inbox and spam folder.', true);
+      }
     };
 
     window._signOut = async () => { try { await signOut(auth); } catch(e) {} };
@@ -2396,7 +2414,6 @@
             <span class="call-option-desc">Tap to call</span>
           </div>
         </a>
-        <a class="call-wa" href="https://wa.me/18769646486" target="_blank" rel="noopener" aria-label="WhatsApp (876) 964-6486"><svg width="22" height="22" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.122 1.524 5.855L.057 23.882a.5.5 0 00.61.61l6.098-1.485A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.805 9.805 0 01-5.031-1.388l-.36-.214-3.733.909.936-3.637-.235-.374A9.787 9.787 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg></a>
       </div>
     </div>
   </div>
@@ -2459,11 +2476,11 @@
     <section class="hero">
       <div class="hero-bg">
         <img class="hero-slide active" src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_18.png?alt=media&token=d4a83d37-ee7e-425a-a3ac-4ea10334e6b2" alt="Swaby's Hope Hideaway room interior" />
-        <img class="hero-slide" src="https://firebasestorage.googleapis.com/v0/b/swabys-hope-hideaway.firebasestorage.app/o/IMG_7.png?alt=media&token=1297448a-1a48-41e4-bd96-e67dacefab9e" alt="Swaby's Hope Hideaway exterior" />
         <script>
           (function(){
             var slides = document.querySelectorAll('.hero-bg .hero-slide');
             var cur = 0;
+            if (slides.length < 2) return;
             setInterval(function(){
               slides[cur].classList.remove('active');
               cur = (cur + 1) % slides.length;
@@ -2697,6 +2714,7 @@
           style="width:100%;padding:0.75rem 1rem;background:#FAF8F5;border:1.5px solid #E8E4DE;border-radius:8px;font-family:var(--font-body);font-size:0.85rem;color:var(--text-primary);outline:none;margin-bottom:1rem;"
           onfocus="this.style.borderColor='var(--copper)'" onblur="this.style.borderColor='#E8E4DE'"
           onkeydown="if(event.key==='Enter')authSubmit()" />
+        <div id="authForgotWrap" style="text-align:right;margin:-0.5rem 0 0.875rem;"><button type="button" onclick="window._resetPassword()" style="font-size:0.72rem;color:var(--copper);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;font-family:var(--font-body);font-weight:600;">Forgot password?</button></div>
         <button id="authSubmitBtn" onclick="authSubmit()" style="width:100%;padding:0.875rem;background:linear-gradient(135deg,var(--copper-shine),var(--copper),var(--copper-deep));color:#153C06;border:none;border-radius:8px;font-family:var(--font-body);font-size:0.8rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 4px 16px rgba(248,196,76,0.3);">Sign In</button>
         <div id="authModalError" style="display:none;margin-top:0.75rem;padding:0.625rem 0.875rem;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:6px;font-size:0.75rem;color:#DC2626;text-align:center;"></div>
       </div>
@@ -4605,11 +4623,13 @@ if (!window._localToday) {
         su.style.background = '#fff';                  su.style.color = 'var(--text-muted)';
         btn.textContent = 'Sign In';
         if (pass) pass.placeholder = 'Password';
+        { const fw = document.getElementById('authForgotWrap'); if (fw) fw.style.display = ''; }
       } else {
         su.style.background = 'rgba(248,196,76,0.07)'; su.style.color = 'var(--copper)';
         si.style.background = '#fff';                  si.style.color = 'var(--text-muted)';
         btn.textContent = 'Create Account';
         if (pass) pass.placeholder = 'Password (min 6 characters)';
+        { const fw = document.getElementById('authForgotWrap'); if (fw) fw.style.display = 'none'; }
       }
       const errEl = document.getElementById('authModalError');
       if (errEl) errEl.style.display = 'none';
