@@ -65,6 +65,7 @@
         }
       } else {
         window._userProfile = {};
+        window._userProfileLoaded = false;
       }
       if (typeof updateNavAvatar === 'function') updateNavAvatar();
       if (typeof updateAuthUI === 'function') updateAuthUI();
@@ -3285,6 +3286,7 @@ if (!window._localToday) {
         return;
       }
       window._pendingBookRoomId = null;
+      if (!window._userProfileLoaded) { try { await loadUserProfile(window._currentUser); } catch(e) {} }
       _bookingRoomId = roomId;
       const room = (window._roomsData || []).find(r => r.id === roomId);
       if (!room) return;
@@ -3813,9 +3815,14 @@ if (!window._localToday) {
         if (!window._userProfile.displayName && user.displayName) window._userProfile.displayName = user.displayName;
         if (!window._userProfile.photoURL && user.photoURL)       window._userProfile.photoURL = user.photoURL;
         if (!window._userProfile.email && user.email)             window._userProfile.email = user.email;
-      } catch(e) { window._userProfile = {}; }
+      } catch(e) {
+        console.warn('Profile load failed:', e);
+        window._userProfile = { displayName: user.displayName || '', photoURL: user.photoURL || '', email: user.email || '' };
+      }
+      window._userProfileLoaded = true;
       updateNavAvatar();
       autoFillBookingForm();
+      if (typeof _eiPrefill === 'function') _eiPrefill();
     }
 
     function autoFillBookingForm() {
@@ -3846,23 +3853,27 @@ if (!window._localToday) {
     }
     function bmEditGuestDetails() { window._bmEditingGuest = true; _bmRefreshGuestSummary(); document.getElementById('bmName')?.focus(); }
 
-    // First booking: keep what the guest typed so they are never asked again (only fills blanks; edits are made on the Profile tab)
-    async function _saveProfileFromBooking(name, phone, email) {
+    // Saves name / phone / email to the guest's profile so no form ever asks again.
+    // overwrite=false: only fills blanks. overwrite=true: guest deliberately changed a value, so replace it.
+    async function _rememberContact(name, phone, email, overwrite) {
       try {
         const user = window._currentUser; if (!user) return;
         const prof = window._userProfile || {};
         const patch = {};
-        if (!prof.displayName && name) patch.displayName = name;
-        if (!prof.phone && phone)      patch.phone = phone;
-        if (!prof.email && email)      patch.email = email;
+        const put = (key, val) => {
+          val = (val || '').trim();
+          if (val && (overwrite ? val !== prof[key] : !prof[key])) patch[key] = val;
+        };
+        put('displayName', name); put('phone', phone); put('email', email);
         if (!Object.keys(patch).length) return;
         const { db, doc } = window._fb;
         const { setDoc } = await import('https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js');
         await setDoc(doc(db, 'userProfiles', user.uid), { ...patch, updatedAt: window._fb.serverTimestamp() }, { merge: true });
         window._userProfile = { ...prof, ...patch };
         updateNavAvatar();
-      } catch (e) { console.warn('Could not save profile from booking:', e); }
+      } catch (e) { console.warn('Could not save contact details to profile:', e); }
     }
+    function _saveProfileFromBooking(name, phone, email) { return _rememberContact(name, phone, email, !!window._bmEditingGuest); }
 
     /* ══════ STAY TIMES ══════
        Change these two lines to change the times shown across the whole site. */
@@ -4194,6 +4205,7 @@ if (!window._localToday) {
       if (!window._currentUser) { openAccountModal(); return; }
       _svcPrefillBooking = bookingId || null;
       _svcSelected = null;
+      if (!window._userProfileLoaded) { try { await loadUserProfile(window._currentUser); } catch(e) {} }
 
       const scrim = document.getElementById('svcModalScrim');
       if (!scrim) return;
@@ -4288,6 +4300,7 @@ if (!window._localToday) {
           adminNote: null,
           createdAt: serverTimestamp()
         });
+        _rememberContact(name, phone, null, false);
         document.getElementById('svcFormWrap').style.display = 'none';
         document.getElementById('svcSuccess').style.display = 'block';
         loadUserRequests();
@@ -4488,6 +4501,8 @@ if (!window._localToday) {
     async function handleGuestSignOut() {
       try { await window._fb.signOut(window._fb.auth); } catch(e) {}
       window._userProfile = {};
+      window._userProfileLoaded = false;
+      ['bmName','bmPhone','bmEmail','formName','formPhone','formEmail'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       updateNavAvatar();
       // Stay in modal but switch to auth panel
       _showAuthPanel();
@@ -4627,13 +4642,16 @@ if (!window._localToday) {
       const now = new Date(); _eiCalMonth = now.getMonth(); _eiCalYear = now.getFullYear();
       renderEiCalendar();
       updateEiAuthBar();
-      // Pre-fill from profile if signed in
+      // Pre-fill from saved profile if signed in (waits for the profile if it hasn't loaded yet)
+      _eiPrefill();
+      if (window._currentUser && !window._userProfileLoaded) loadUserProfile(window._currentUser);
+    }
+    function _eiPrefill() {
       const user = window._currentUser; const profile = window._userProfile || {};
-      if (user) {
-        const n = document.getElementById('formName'); if (n && !n.value) n.value = profile.displayName || user.displayName || '';
-        const e = document.getElementById('formEmail'); if (e && !e.value) e.value = user.email || '';
-        const p = document.getElementById('formPhone'); if (p && !p.value) p.value = profile.phone || '';
-      }
+      if (!user || !document.getElementById('formName')) return;
+      const n = document.getElementById('formName'); if (n && !n.value) n.value = profile.displayName || user.displayName || '';
+      const e = document.getElementById('formEmail'); if (e && !e.value) e.value = profile.email || user.email || '';
+      const p = document.getElementById('formPhone'); if (p && !p.value) p.value = profile.phone || '';
     }
     function closeEventInquiryModal() {
       document.getElementById('eventInquiryScrim').classList.remove('open');
@@ -4827,6 +4845,7 @@ if (!window._localToday) {
           uid: user?.uid || null, authEmail: user?.email || null,
           status: 'new', createdAt: serverTimestamp()
         });
+        _rememberContact(name, phone, email, false);
         document.getElementById('eiWrap').style.display = 'none';
         const successEl = document.getElementById('eiSuccess');
         successEl.style.display = 'block';
